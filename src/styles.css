@@ -1,0 +1,45 @@
+:root { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #15283d; background: #f4f7fb; font-synthesis: none; }
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; }
+button, input, textarea, select { font: inherit; }
+.app-shell { min-height: 100vh; }
+.topbar { align-items: center; background: #102b46; color: #fff; display: flex; gap: 12px; min-height: 72px; padding: 0 max(24px, calc((100vw - 1120px) / 2)); }
+.brand-mark { align-items: center; background: #3dd2b4; border-radius: 10px; color: #102b46; display: flex; font-size: 12px; font-weight: 800; height: 36px; justify-content: center; letter-spacing: .04em; width: 36px; }
+.eyebrow { color: #71849a; font-size: 12px; font-weight: 700; letter-spacing: .1em; margin: 0 0 6px; text-transform: uppercase; }
+.topbar .eyebrow { color: #a9c0d3; margin-bottom: 2px; }
+.brand-name { font-size: 15px; font-weight: 650; margin: 0; }
+.internal-badge { border: 1px solid #54718b; border-radius: 999px; color: #d4e4ef; font-size: 12px; margin-left: auto; padding: 5px 10px; }
+.page-content { margin: 0 auto; max-width: 960px; padding: 56px 24px 80px; }
+.page-heading { margin-bottom: 36px; }
+h1, h2, p { margin-top: 0; }
+h1 { color: #102b46; font-size: clamp(30px, 5vw, 42px); letter-spacing: -.035em; line-height: 1.1; margin-bottom: 12px; }
+.intro { color: #5f7489; font-size: 17px; line-height: 1.5; margin-bottom: 0; }
+.case-form { background: #fff; border: 1px solid #dbe5ee; border-radius: 16px; box-shadow: 0 12px 35px rgba(24, 54, 82, .06); overflow: hidden; }
+.form-section { border-bottom: 1px solid #e5ebf1; padding: 32px; }
+.section-heading { align-items: flex-start; display: flex; gap: 16px; margin-bottom: 26px; }
+.section-number { align-items: center; background: #e6f7f3; border-radius: 8px; color: #087d6d; display: flex; flex: 0 0 36px; font-size: 12px; font-weight: 800; height: 36px; justify-content: center; }
+h2 { color: #18344f; font-size: 18px; letter-spacing: -.01em; margin-bottom: 5px; }
+.section-heading p { color: #71849a; font-size: 14px; margin-bottom: 0; }
+.field-grid { display: grid; gap: 22px; }
+.two-columns { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.three-columns { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.field { min-width: 0; }
+label { color: #29445d; display: block; font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+input, textarea, select { background: #fff; border: 1px solid #bdcbd8; border-radius: 8px; color: #15283d; min-height: 46px; padding: 11px 13px; transition: border-color .15s, box-shadow .15s; width: 100%; }
+textarea { min-height: 130px; resize: vertical; }
+select { cursor: pointer; }
+input:focus, textarea:focus, select:focus { border-color: #168e7e; box-shadow: 0 0 0 3px rgba(61, 210, 180, .22); outline: none; }
+[aria-invalid="true"] { border-color: #c34646; }
+.error-message { color: #b03131; font-size: 13px; line-height: 1.4; margin: 7px 0 0; }
+.helper-note { background: #f5f8fb; border-left: 3px solid #91a9bd; color: #5d7287; font-size: 13px; line-height: 1.5; margin: 25px 0 0; padding: 11px 13px; }
+.form-actions { background: #fbfcfd; display: flex; justify-content: flex-end; padding: 24px 32px; }
+.primary-button { background: #087d6d; border: 0; border-radius: 8px; color: #fff; cursor: pointer; font-size: 15px; font-weight: 750; min-height: 46px; padding: 0 22px; transition: background .15s, box-shadow .15s, transform .15s; }
+.primary-button:hover { background: #066a5d; }
+.primary-button:focus-visible { box-shadow: 0 0 0 3px #fff, 0 0 0 6px #3dd2b4; outline: none; }
+.primary-button:active { transform: translateY(1px); }
+.success-message { align-items: flex-start; background: #effaf7; border: 1px solid #a8e6d9; border-radius: 12px; display: flex; gap: 14px; margin-top: 20px; padding: 20px; }
+.success-icon { align-items: center; background: #087d6d; border-radius: 50%; color: #fff; display: flex; flex: 0 0 26px; font-weight: 800; height: 26px; justify-content: center; }
+.success-message h2 { margin-bottom: 6px; }
+.success-message p { color: #456b68; font-size: 14px; line-height: 1.5; margin-bottom: 4px; }
+.success-message .timestamp { color: #087d6d; font-size: 13px; font-weight: 700; margin-bottom: 0; }
+@media (max-width: 680px) { .page-content { padding: 36px 16px 56px; } .form-section { padding: 24px 20px; } .two-columns, .three-columns { grid-template-columns: 1fr; } .form-actions { padding: 20px; } .primary-button { width: 100%; } }
