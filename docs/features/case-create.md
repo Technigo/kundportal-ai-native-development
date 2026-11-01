@@ -26,6 +26,12 @@ En handläggare kan registrera ett ärende i UI:t. Frontend, API och SQLite vali
 | CASE-CREATE-007 | Ett ogiltigt anrop ger begripligt valideringsfel och skapar inget ärende. | `[CASE-CREATE-007]` felbesked och oförändrad lagring |
 | CASE-CREATE-008 | Ärende kan skapas utan anteckning. | `[CASE-CREATE-008]` anteckning är valfri vid skapande |
 
+## Testfiler
+
+- API, validering och SQLite: [cases.test.ts](../../packages/api/src/cases.test.ts)
+- Formulär, rullistor och felbesked: [CaseForm.test.tsx](../../packages/web/src/CaseForm.test.tsx)
+- Kör båda testsviterna med `npm test`.
+
 ## Definition av färdig
 
 - UI, API och beständig lagring fungerar tillsammans.
