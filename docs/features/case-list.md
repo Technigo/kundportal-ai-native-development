@@ -12,6 +12,12 @@ En handläggare kan se sparade ärenden i UI:t. Listan sorteras med nyaste ären
 | CASE-LIST-002 | Om det saknas ärenden visas ett begripligt tomt läge; API:t returnerar en tom lista. | `[CASE-LIST-002]` tom lista i API och UI |
 | CASE-LIST-003 | Fel vid hämtning visas begripligt och presenteras inte som en tom, lyckad lista. | `[CASE-LIST-003]` fel vid hämtning |
 
+## Testfiler
+
+- API och sortering: [caseList.test.ts](../../packages/api/src/caseList.test.ts)
+- Lista, tomläge och felbesked: [CaseList.test.tsx](../../packages/web/src/CaseList.test.tsx)
+- Kör båda testsviterna med `npm test`.
+
 ## Definition av färdig
 
 - Listan hämtar beständiga ärenden från API:t.

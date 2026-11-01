@@ -175,3 +175,58 @@ h1 {
   padding: 0.8rem 1rem;
   border-radius: 0.5rem;
 }
+
+.case-list {
+  margin-top: 3rem;
+  padding-top: 1.75rem;
+  border-top: 1px solid rgb(42 26 14 / 16%);
+}
+
+.case-list h2 {
+  margin: 0 0 1rem;
+  font-size: 1.5rem;
+}
+
+.case-items {
+  display: grid;
+  gap: 0.8rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.case-item {
+  padding: 1rem;
+  border: 1px solid rgb(42 26 14 / 15%);
+  border-radius: 0.65rem;
+  background: #fffaf1;
+}
+
+.case-item__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.case-item__heading h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.case-status {
+  flex: none;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  background: #f4ae52;
+  color: #2a1a0e;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.case-item__details {
+  margin: 0.7rem 0 0;
+  color: #554638;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}

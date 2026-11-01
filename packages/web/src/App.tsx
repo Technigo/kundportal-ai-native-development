@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { CaseForm, type CreatedCase } from './CaseForm';
+import { CaseList } from './CaseList';
 
 type ApiStatus = 'checking' | 'connected' | 'unavailable';
 
 export function App() {
   const [apiStatus, setApiStatus] = useState<ApiStatus>('checking');
   const [createdCase, setCreatedCase] = useState<CreatedCase | null>(null);
+  const [listRefresh, setListRefresh] = useState(0);
 
   useEffect(() => {
     fetch('/api/health')
@@ -23,6 +25,11 @@ export function App() {
       });
   }, []);
 
+  function handleCreated(caseItem: CreatedCase) {
+    setCreatedCase(caseItem);
+    setListRefresh((refresh) => refresh + 1);
+  }
+
   return (
     <main className="shell">
       <header className="topbar">
@@ -31,8 +38,8 @@ export function App() {
       </header>
       <section className="welcome" aria-labelledby="welcome-title">
         <p className="eyebrow">INTERNT VERKTYG</p>
-        <h1 id="welcome-title">Registrera ett kundärende.</h1>
-        <p className="intro">Samla ärendeuppgifter på ett ställe.</p>
+        <h1 id="welcome-title">Kundärenden.</h1>
+        <p className="intro">Registrera ett nytt ärende eller se sparade ärenden.</p>
         <div className={`connection connection--${apiStatus}`} role="status">
           <span className="connection-dot" aria-hidden="true" />
           {apiStatus === 'checking' && 'Kontrollerar anslutning till API…'}
@@ -44,12 +51,13 @@ export function App() {
             Det går inte att nå tjänsten. Starta om projektet och försök igen.
           </p>
         )}
-        <CaseForm onCreated={setCreatedCase} />
+        <CaseForm onCreated={handleCreated} />
         {createdCase && (
           <p className="created-summary">
             Ärende #{createdCase.id} sparades med status {createdCase.status}.
           </p>
         )}
+        <CaseList refreshKey={listRefresh} />
       </section>
     </main>
   );

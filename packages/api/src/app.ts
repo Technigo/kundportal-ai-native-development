@@ -12,6 +12,15 @@ interface CaseRow {
   createdAt: string;
 }
 
+interface CaseSummaryRow {
+  id: number;
+  title: string;
+  category: string;
+  priority: string;
+  status: string;
+  createdAt: string;
+}
+
 export function createApp(connection: Database.Database) {
   const app = express();
   app.use(express.json());
@@ -19,6 +28,18 @@ export function createApp(connection: Database.Database) {
   app.get('/api/health', (_request, response) => {
     connection.prepare('SELECT 1').get();
     response.json({ status: 'ok' });
+  });
+
+  app.get('/api/cases', (_request, response) => {
+    const cases = connection
+      .prepare(`
+        SELECT id, title, category, priority, status, created_at AS createdAt
+        FROM cases
+        ORDER BY created_at DESC, id DESC
+      `)
+      .all() as CaseSummaryRow[];
+
+    return response.json(cases);
   });
 
   app.post('/api/cases', (request, response) => {
