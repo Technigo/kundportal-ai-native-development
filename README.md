@@ -22,6 +22,10 @@ npm run dev
 
 Skapa produktionsbyggen med `npm run build`. Tester och fler körinstruktioner läggs till i kommande steg.
 
+## MVP-specifikationer
+
+MVP:ns vertikala featuretickets, krav-ID:n och testmappning finns i [docs/features](./docs/features/README.md).
+
 ## Kom igång
 
 Projektarbetet börjar vecka 5. Ni får börja frivilligt vecka 4; den veckans fristående kodövning finns kvar.
