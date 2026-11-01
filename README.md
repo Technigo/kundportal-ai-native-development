@@ -2,15 +2,15 @@
 
 ## Projektöversikt
 
-Kundserviceportalen är ett lokalt arbetsverktyg där en aktiv handläggare åt gången ska kunna registrera, läsa och följa kundärenden. Varje ärende innehåller obligatoriskt kund-ID och kundnamn som anges manuellt. Projektet har en körbar grund med användargränssnitt, backend och konfiguration för beständig MySQL-lagring; ärendeflödet är ännu inte implementerat. Första versionen prioriterar datorwebbläsare och ett kärnflöde som kan genomföras med tangentbord.
+Kundserviceportalen är ett lokalt arbetsverktyg där en aktiv handläggare åt gången ska kunna registrera, läsa och följa kundärenden. Varje ärende innehåller obligatoriskt kund-ID och kundnamn som anges manuellt. Backendens ticket API och MySQL-lagring finns; React-gränssnittet för ärenden byggs fortfarande. Första versionen prioriterar datorwebbläsare och ett kärnflöde som kan genomföras med tangentbord.
 
-**Projektstatus 2026-11-01:** teknikvalen är React + TypeScript + Vite, FastAPI och MySQL via Docker Compose. En manuellt rapporterad kontroll verifierade att MySQL-integrationen kördes utan att hoppas över, att `/health/db` svarade `{"status":"ok","database":"ok"}` och att React-vyn visade API och MySQL som tillgängliga. Detta verifierar anslutningsgrunden, inte registrering eller beständig lagring av ärenden. Produktkraven för ärenden är ännu inte implementerade. Se [verifieringsplanen](docs/verifieringsplan.md) för tidigare resultat och detaljer.
+**Projektstatus 2026-11-01:** teknikvalen är React + TypeScript + Vite, FastAPI och MySQL via Docker Compose. Backendens ärende-API har nu registrering, lista, detaljer, statusändring och statusfilter med Alembic-migration; dess 26 backendtester har passerat inklusive MySQL-integration. React-klientens ärendegränssnitt är inte implementerat. Se [API-kontraktet](docs/api-kontrakt.md) och [verifieringsplanen](docs/verifieringsplan.md) för implementationsbeslut och faktiska tester.
 
 ### Gruppens underlag
 
 - [Kravspecifikation och acceptanskriterier](docs/kravspecifikation.md)
 - [Verifieringsplan, planerade tester och resultat](docs/verifieringsplan.md)
-- [Utkast till API-kontrakt](docs/api-kontrakt.md)
+- [API-kontraktets backendbaslinje för frontendgranskning](docs/api-kontrakt.md)
 
 Länka till dessa underlag från teamets löpande PR. Kursens ursprungliga instruktioner finns kvar längre ned i denna README.
 
@@ -59,7 +59,7 @@ Gemensamma AI-instruktioner ska versionshanteras i repot. Varje medlem ska kunna
 
 ### Installation och körning
 
-Följande instruktioner gäller PowerShell från repots rot. Frontend och backend körs lokalt; Docker används endast för MySQL. Ärendefunktioner och demonstrationsdata finns ännu inte.
+Följande instruktioner gäller PowerShell från repots rot. Frontend och backend körs lokalt; Docker används endast för MySQL. Ärende-API:t är tillgängligt via FastAPI men frontendens ärendevyer finns ännu inte.
 
 #### Förutsättningar
 
@@ -82,7 +82,7 @@ docker compose up -d mysql
 docker compose ps
 ```
 
-Vänta tills tjänsten visar `healthy`. Utvecklingsdatabasen använder den namngivna volymen `mysql_data` och bevaras vid vanlig omstart. Ingen ärendetabell skapas i denna grund.
+Vänta tills tjänsten visar `healthy`. Utvecklingsdatabasen använder den namngivna volymen `mysql_data` och bevaras vid vanlig omstart. Vanlig backendstart skapar eller återställer inte tabeller; schemamigrering körs uttryckligen i nästa steg.
 
 För MySQL-integrationstester, starta den separata testservern:
 
@@ -93,7 +93,7 @@ docker compose --profile test ps
 
 Testservern använder port `3307`, databasen `kundportal_test` och användaren `kundportal_test`. Testet verifierar dessa värden innan anslutning och använder aldrig utvecklingsdatabasen. Testtjänsten har ingen uttryckligt konfigurerad namngiven volym.
 
-#### 3. Installera och starta backend
+#### 3. Installera backend
 
 Skapa miljön och installera beroenden från repots rot:
 
@@ -102,14 +102,38 @@ py -3.9 -m venv backend\.venv
 backend\.venv\Scripts\python.exe -m pip install -r backend\requirements.txt
 ```
 
-Starta backend i ett separat PowerShell-fönster:
+#### 4. Skapa eller uppdatera databasschemat
+
+Kör från ett PowerShell-fönster i repots rot efter att utvecklings-MySQL är `healthy`:
+
+```powershell
+Set-Location backend
+.\.venv\Scripts\alembic.exe upgrade head
+```
+
+Kommandot använder `DATABASE_URL` från projektets `.env` och skapar/uppdaterar endast schemat. Det körs inte automatiskt vid backendstart. Kör inte detta kommando med utvecklings-URL när avsikten är testkörning; integrationstester validerar separat `TEST_DATABASE_URL` och migrerar endast `kundportal_test`.
+
+#### 5. Skapa demonstrationsärenden (valfritt)
+
+Efter migration kan påhittad demonstrationsdata skapas med ett separat, uttryckligt kommando:
+
+```powershell
+Set-Location backend
+.\.venv\Scripts\python.exe -m app.seed_demo
+```
+
+Kommandot körs inte vid start och kan upprepas utan att lägga till samma demonstrationsärenden igen.
+
+#### 6. Starta backend
+
+Efter migration startar du backend i ett separat PowerShell-fönster:
 
 ```powershell
 Set-Location backend
 .\.venv\Scripts\python.exe -m uvicorn app.main:app --reload
 ```
 
-#### 4. Installera och starta frontend
+#### 7. Installera och starta frontend
 
 Starta frontend i ett annat PowerShell-fönster:
 
@@ -121,9 +145,11 @@ npm run dev
 
 Öppna adressen som Vite skriver ut, normalt `http://localhost:5173`. Vyn visar API-status separat från MySQL-status.
 
-#### 5. Kontrollera anslutningen
+#### 8. Prova ärende-API:t i FastAPI
 
-Med backend igång:
+Öppna `http://localhost:8000/docs`. Prova `POST /api/tickets` med registreringsexemplet i [API-kontraktet](docs/api-kontrakt.md), kontrollera svaret och dess `id`, läs det med `GET /api/tickets/{id}`, prova lista/filter via `GET /api/tickets?status=in_progress` och ändra enbart status med `PATCH /api/tickets/{id}/status`.
+
+#### 9. Kontrollera anslutningen
 
 ```powershell
 Invoke-RestMethod http://localhost:8000/health
@@ -132,7 +158,7 @@ Invoke-RestMethod http://localhost:8000/health/db
 
 `/health` kontrollerar endast att API:t svarar. `/health/db` kör `SELECT 1` mot `DATABASE_URL` och svarar `503` om databasen inte kan nås. Bekräfta även statusen i frontendvyn. Detta är den verkliga anslutningskontrollen; simulerade frontendtester bevisar inte MySQL-anslutningen.
 
-#### 6. Tester
+#### 10. Tester
 
 Backendtester som inte kräver databas:
 
@@ -147,6 +173,8 @@ MySQL-testet och hela backendsviten kräver att `mysql-test` är startad och fri
 Set-Location backend
 .\.venv\Scripts\python.exe -m pytest -q
 ```
+
+Integrationsfixturen kontrollerar att `TEST_DATABASE_URL` är riktad mot `kundportal_test` på port 3307 och verifierar databas- och användaridentitet före migration eller städning. Den migrerar testdatabasen och rensar endast dess ärenderader mellan tester. Tester använder aldrig `DATABASE_URL` mot utvecklingsdatabasen.
 
 Frontendtester och produktionsbygge:
 

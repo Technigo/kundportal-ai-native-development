@@ -1,6 +1,6 @@
 # Verifieringsplan – Kundserviceportalen
 
-Status: uppdaterad 2026-11-01. Grundtester för API-status och frontendens anslutningsvisning har körts. En senare, manuellt rapporterad körning verifierade MySQL-anslutningen; anslutningsgrunden är kontrollerad, men ärendefunktioner och lagring av ärenden har inte verifierats.
+Status: uppdaterad 2026-11-01. Ärende-API:t, migrationen och demonstrationskommandot har automatiserade integrationstester mot den isolerade MySQL-testdatabasen. Testerna verifierar backendens lagring; React har ännu inga ärendevyer och hela användarflödet är inte manuellt verifierat.
 
 Krav och acceptanskriterier finns i [kravspecifikationen](kravspecifikation.md). Installation, körning och demonstrationsflöde finns i [README](../README.md).
 
@@ -14,43 +14,44 @@ Urvalet utgår från risken att felaktiga uppgifter sparas, att lagrad informati
 
 - **Enhetstester av applikationslogik:** validering, standardvärden och regler för status. Ger snabb och precis återkoppling på regler och gränsfall.
 - **Integrationstester med verklig MySQL-testdatabas:** registrering, hämtning, statusändring, sortering och filtrering samt återöppning av lagring. Verifierar samspelet mellan logik och den valda lagringstekniken.
-- **Automatiserade tester med simulerat lagringsfel:** verifierar hur applikationslogiken rapporterar en misslyckad skrivning. Kompletterar integrationstesterna men bevisar inte hantering av alla verkliga disk- eller databasfel.
+- **Automatiserade tester med kontrollerade fel efter SQL-skrivning:** verifierar rollback på MySQL-testdatabasen via en ny hämtning. Ett SQLAlchemy-sessionsevent injicerar felet deterministiskt efter flush och före commit; läsning och skrivning sker fortfarande mot riktig MySQL. Ett separat commitfel testas som oklart utfall, inte som säker rollback. Dessa tester täcker inte alla verkliga nätverks- eller serverfel.
 - **Manuella kontroller av gränssnittet:** verifierar synlig återkoppling, navigation, formulärbeteende och demonstration enligt README.
 
-Enhetstester ska inte vara den enda verifieringen av lagringen. Integrationstester använder en separat MySQL-testdatabas som är skild från utvecklingsdatabasen och återställs isolerat mellan tester. Testkonfigurationen ska skydda mot anslutning till utvecklingsdatabasen. Tester får inte ändra utvecklarnas sparade ärenden eller bero på körordning.
+Enhetstester ska inte vara den enda verifieringen av lagringen. Integrationsfixturen kräver en `TEST_DATABASE_URL` till `kundportal_test` på port 3307 med den dedikerade testanvändaren. Innan migration eller rensning körs verifierar fixturen URL, faktisk databas och ansluten användare. Den migrerar testdatabasen och rensar endast dess ärenderader mellan tester. Tester får inte ändra utvecklingsdatabasens data eller bero på körordning.
 
 För beständighet stängs lagringsanslutningen och nya applikations-/lagringsinstanser öppnas mot samma testdata. Ett separat manuellt test stoppar och startar hela applikationen. Att endast läsa från samma minnesobjekt räcker inte.
 
-Teknikvalen är FastAPI, MySQL via Docker Compose, Pytest, Vitest och React Testing Library. Exakta testkommandon och inställningar för separat testdatabas dokumenteras när projektstrukturen finns. Testnivåerna kan anpassas efter implementationen, men kontrollerna och motiveringen ska behållas eller uppdateras uttryckligen.
+Teknikvalen är FastAPI, MySQL via Docker Compose, Pytest, Vitest och React Testing Library. Backendkommandon och testdatabasens skydd finns i [README](../README.md#installation-och-körning).
 
 ## 3. Planerade automatiserade tester
 
-T01–T18 är fortsatt **Planerade**. T19–T22 gäller den körbara grundens health- och anslutningsstatuskontroller. Resultat för körda tester redovisas i avsnitt 6.
+T01–T17 och T23 har backendtester länkade nedan. T18:s gemensamma frontend-/backendtest av trimningsregler är ännu inte färdigt; befintliga backendfall är inte bevis för frontendvalidering. T19–T22 gäller grundens health- och anslutningsstatuskontroller. Körresultat finns i avsnitt 6.
 
 | ID | Typ | Krav | Beteende och förväntat resultat | Föreslagen nivå | Testlänk |
 | --- | --- | --- | --- | --- | --- |
-| <a name="t01"></a>T01 | Happy path | K1 | Giltig registrering sparar ett ärende med rätt trimmade fält, unikt ID, status Nytt och giltig skapandetid. Två registreringar får olika ID:n. | Integration | Saknas |
-| <a name="t02"></a>T02 | Error path | K2 | Saknat eller tomt kund-ID, kundnamn, rubrik respektive beskrivning avvisas. Fel identifierar berört fält och antalet sparade ärenden är oförändrat. | Logik och integration | Saknas |
-| <a name="t03"></a>T03 | Gränsfall | K2 | Kund-ID, kundnamn, rubrik eller beskrivning med enbart blanksteg avvisas. Inget ärende sparas. | Logik och integration | Saknas |
-| <a name="t04"></a>T04 | Gränsfall | K1, K2 | Efter trimning godkänns rubrik på 1 och 100 tecken och beskrivning på 1 och 5 000 tecken; 101 respektive 5 001 avvisas. Kund-ID på 1 och 100 Unicode-kodpunkter och kundnamn på 1 och 200 godkänns; kund-ID på 101 och kundnamn på 201 avvisas. Längd räknas efter trimning. | Logik | Saknas |
-| <a name="t05"></a>T05 | Error path | K2 | Tom eller okänd kategori respektive prioritet avvisas i applikationslogiken även utan gränssnittets validering. Inget ärende sparas. | Logik och integration | Saknas |
-| <a name="t06"></a>T06 | Happy path | K3 | Ett registrerat ärende finns kvar med samma uppgifter när lagringen stängs och öppnas av nya instanser. | Integration | Saknas |
-| <a name="t07"></a>T07 | Happy path | K4, K5 | Flera ärenden listas med angivna listfält i fallande skapandetid. Hämtning med ett ID ger samtliga fält från rätt ärende. | Integration | Saknas |
-| <a name="t08"></a>T08 | Gränsfall | K4, K8 | Tom lagring ger en tom ärendelista utan fel. Ett giltigt filter utan träffar ger en tom resultatlista. | Integration | Saknas |
-| <a name="t09"></a>T09 | Error path | K5, K6 | Hämtning eller statusändring för ett okänt ID ger ett hanterat fel. Inget ärende skapas och befintliga uppgifter ändras inte. | Integration | Saknas |
-| <a name="t10"></a>T10 | Happy path | K3, K6 | Tillåtna statusändringar sparas och finns kvar efter återöppnad lagring. Övriga fält är oförändrade. Återöppning från Avslutat till Pågående ingår. | Logik och integration | Saknas |
-| <a name="t11"></a>T11 | Error path | K6 | Tom eller okänd status avvisas och tidigare lagrad status samt övriga ärendefält förblir oförändrade. | Logik och integration | Saknas |
-| <a name="t12"></a>T12 | Gränsfall | K6 | Att välja aktuell status igen lyckas utan att ändra några ärendeuppgifter. | Integration | Saknas |
-| <a name="t13"></a>T13 | Error path | K7 | Simulerat lagringsfel vid registrering ger ett hanterat misslyckat resultat och inget sparat ärende. Detta kompletterar, men ersätter inte, test mot verklig MySQL-transaktion. | Logik med simulerat fel | Saknas |
-| <a name="t14"></a>T14 | Error path | K7 | Simulerat lagringsfel vid statusändring ger ett hanterat misslyckat resultat och lämnar tidigare lagrad status oförändrad. Detta kompletterar, men ersätter inte, test mot verklig MySQL-transaktion. | Logik med simulerat fel | Saknas |
-| <a name="t15"></a>T15 | Kompletterande funktion / happy path | K8 | Bland ärenden med olika status returnerar varje statusfilter endast rätt ärenden i rätt sortering. Alla returnerar samtliga. Lagrade uppgifter ändras inte. | Integration | Saknas |
-| <a name="t16"></a>T16 | Gränsfall | K1, K2 | Planerat: verifiera trimning av inledande/avslutande mellanslag, tabbar, radbrytningar och U+00A0 från alla fyra textfält före validering och lagring; text som enbart består av dessa tecken avvisas. Kontrollera att inre mellanslag bevaras och att inre tabbar/radbrytningar i beskrivning bevaras. Efter trimning godkänns kund-ID med 100 och kundnamn med 200 Unicode-kodpunkter, medan 101 respektive 201 avvisas; längden före trimning får överstiga gränsen. | Logik och integration | Saknas |
-| <a name="t17"></a>T17 | Error path | K7 | Mot separat MySQL-testdatabas framkallas ett kontrollerat fel efter att en skrivning påbörjats men före commit. Efter rollback verifieras via en ny anslutning att tidigare beständiga data är oförändrade. | Integration med verklig MySQL | Saknas |
-| <a name="t18"></a>T18 | Gränsfall | K1, K2, Q2 | Planerat: använd samma exempel i Pytest och Vitest för inledande/avslutande mellanslag, tabbar, radbrytningar och U+00A0; avvisa text som bara består av dessa tecken; bevara inre mellanslag och inre tabbar/radbrytningar i beskrivning. Kontrollera efter trimning att kund-ID 100/101, kundnamn 200/201, rubrik 100/101 och beskrivning 5 000/5 001 Unicode-kodpunkter godkänns/avvisas vid respektive maxgräns; även testinnehåll som rått är längre än gränsen ska godkännas när det efter trimning är inom gränsen. | Pytest och Vitest med gemensamma exempel | Saknas |
+| <a name="t01"></a>T01 | Happy path | K1 | Giltig registrering ger trimmade fält, unikt ID, status `new`, UTC-tid med sex decimalsiffror och Location. | Integration | [test_tickets_api.py](../backend/tests/test_tickets_api.py) |
+| <a name="t02"></a>T02 | Error path | K2 | Tom text efter trimning och ogiltiga värden avvisas med fältnamn; inget ärende sparas. | Integration | [test_ticket_validation.py](../backend/tests/test_ticket_validation.py) |
+| <a name="t03"></a>T03 | Gränsfall | K2 | Kund-ID som enbart består av Unicode-blanksteg avvisas utan lagring. | Integration | [test_ticket_validation.py](../backend/tests/test_ticket_validation.py) |
+| <a name="t04"></a>T04 | Gränsfall | K1, K2 | Maxlängd accepteras och maxlängd +1 avvisas för kund-ID, kundnamn, rubrik och beskrivning. Längden kontrolleras efter trimning. | Integration | [test_ticket_validation.py](../backend/tests/test_ticket_validation.py) |
+| <a name="t05"></a>T05 | Error path | K2 | Ogiltig kategori och prioritet avvisas med fältspecifika valideringsfel. | Integration | [test_ticket_validation.py](../backend/tests/test_ticket_validation.py) |
+| <a name="t06"></a>T06 | Happy path | K3 | Ärendet läses tillbaka via API efter att anslutningspoolen stängts och en ny anslutning öppnats. | Integration med MySQL | [test_tickets_api.py](../backend/tests/test_tickets_api.py) |
+| <a name="t07"></a>T07 | Happy path | K4, K5 | Lista och detalj returnerar lagrade fält; listan sorteras med nyast först. | Integration | [test_tickets_api.py](../backend/tests/test_tickets_api.py), [test_ticket_status_and_listing.py](../backend/tests/test_ticket_status_and_listing.py) |
+| <a name="t08"></a>T08 | Gränsfall | K4, K8 | Tom lista och giltigt filter utan träff ger tom array. | Integration | [test_ticket_not_found.py](../backend/tests/test_ticket_not_found.py), [test_ticket_status_and_listing.py](../backend/tests/test_ticket_status_and_listing.py) |
+| <a name="t09"></a>T09 | Error path | K5, K6 | Okänt positivt ID ger 404 vid läsning och statusändring; icke-positiva ID:n avvisas som ogiltig indata med 422. | Integration | [test_ticket_not_found.py](../backend/tests/test_ticket_not_found.py) |
+| <a name="t10"></a>T10 | Happy path | K3, K6 | Alla giltiga statusar, återöppning och statusändring som inte ändrar andra fält verifieras. | Integration | [test_ticket_status_and_listing.py](../backend/tests/test_ticket_status_and_listing.py) |
+| <a name="t11"></a>T11 | Error path | K6 | Ogiltig status och extra PATCH-fält ger 422; ärendet förblir oförändrat. | Integration | [test_ticket_status_and_listing.py](../backend/tests/test_ticket_status_and_listing.py) |
+| <a name="t12"></a>T12 | Gränsfall | K6 | Samma status kan skickas igen utan att ärendets övriga fält ändras. | Integration | [test_ticket_status_and_listing.py](../backend/tests/test_ticket_status_and_listing.py) |
+| <a name="t13"></a>T13 | Error path | K7 | Kontrollerat fel efter SQL INSERT och flush men före commit ger 503 efter bekräftad rollback; ny hämtning visar att inget ärende sparats. | Integration med verklig MySQL | [test_ticket_storage_failures.py](../backend/tests/test_ticket_storage_failures.py) |
+| <a name="t14"></a>T14 | Error path | K7 | Kontrollerat fel efter status-UPDATE och flush men före commit återställer tidigare status. Oklart commitutfall rapporteras separat som 500, inte säker rollback. | Integration med verklig MySQL | [test_ticket_storage_failures.py](../backend/tests/test_ticket_storage_failures.py) |
+| <a name="t15"></a>T15 | Kompletterande funktion / happy path | K8 | Statusfilter returnerar endast matchande ärenden; okänt statusfilter ger 422. | Integration | [test_ticket_status_and_listing.py](../backend/tests/test_ticket_status_and_listing.py) |
+| <a name="t16"></a>T16 | Gränsfall | K1, K2 | Backendtest täcker omgivande blanksteg, tab, radbrytning, U+00A0, endast-blankstegstext, bevarade inre blanksteg och längd efter trimning. | Integration | [test_tickets_api.py](../backend/tests/test_tickets_api.py), [test_ticket_validation.py](../backend/tests/test_ticket_validation.py) |
+| <a name="t17"></a>T17 | Error path | K7 | Kontrollerat fel efter SQL-skrivning och före commit följs av rollback och verifiering via ny API-hämtning. | Integration med verklig MySQL | [test_ticket_storage_failures.py](../backend/tests/test_ticket_storage_failures.py) |
+| <a name="t18"></a>T18 | Gränsfall | K1, K2, Q2 | **Planerad för frontend:** dela samma trimnings- och längdexempel mellan Pytest och Vitest. Backenddelen finns, men frontendens ärendevalidering och gemensamma exempel saknas. | Pytest och Vitest | Backend: [test_ticket_validation.py](../backend/tests/test_ticket_validation.py); frontenddel saknas |
 | <a name="t19"></a>T19 | Grundbeteende | Q1 | `GET /health` returnerar `200` och `{"status":"ok"}` utan att kräva databasanslutning. | Backend med TestClient | [test_health.py](../backend/tests/test_health.py) |
 | <a name="t20"></a>T20 | Error path | Q1 | `GET /health/db` returnerar `503` och statusen otillgänglig när `DATABASE_URL` saknas; API:t ska inte rapportera lyckad DB-kontakt. | Backend med TestClient | [test_db_health.py](../backend/tests/test_db_health.py) |
 | <a name="t21"></a>T21 | Integration | Q1, Q2 | `GET /health/db` kör `SELECT 1` mot separat MySQL-testdatabas med `kundportal_test`-databas och -användare. Testet avvisar annan databas/driver/user och får inte använda utvecklingsdatabasen. | Integration med verklig MySQL | [test_db_health.py](../backend/tests/test_db_health.py) |
 | <a name="t22"></a>T22 | Grundbeteende | Q1, Q2 | React-vyn visar API tillgängligt separat från MySQL otillgängligt när motsvarande health-anrop ger lyckat respektive misslyckat HTTP-svar. Fetch är stubbat; testet verifierar inte nätverksintegration. | Vitest och React Testing Library | [App.test.tsx](../frontend/src/App.test.tsx) |
+| <a name="t23"></a>T23 | Error path | Q1, Q2 | Ticket-API utan konfigurerad databas svarar 503 med generiskt `storage_unavailable`; ingen anslutningsinformation exponeras. | Backend med TestClient utan databas | [test_ticket_database_configuration.py](../backend/tests/test_ticket_database_configuration.py) |
 
 Närliggande fall får grupperas och parametriseras. Exakta feltexter behöver inte låsas i logiktester om feltypen och kopplingen till fältet kan verifieras. Begripligheten i den text som användaren faktiskt ser bedöms manuellt.
 
@@ -70,18 +71,13 @@ Alla kontroller har status **Planerat**. Datum, utförare och utfall fylls i eft
 
 ## 5. Köra testerna
 
-Körkommandon finns i [README](../README.md#installation-och-körning). Backendtester utan databas körs med `pytest -q -m "not integration"`. MySQL-integrationen kräver den separata `mysql-test`-tjänsten och körs aldrig mot utvecklingsdatabasen.
+Exakta kommandon finns i [README](../README.md#installation-och-körning). Kör från `backend`:
 
-Före verifiering och inlämning ska följande fyllas i här eller länkas till i README:
+```powershell
+.\.venv\Scripts\python.exe -m pytest -q
+```
 
-1. Nödvändiga verktyg och versioner.
-2. Kommando för installation av beroenden.
-3. Hur separat MySQL-testdatabas skapas, konfigureras och isoleras från utvecklingsdatabasen.
-4. Exakta kommandon för att köra samtliga automatiserade tester från repots rot.
-5. Hur ett lyckat respektive misslyckat testresultat känns igen.
-6. Eventuella förberedelser och hur testdata städas bort.
-
-Se [README:s körinstruktioner](../README.md#installation-och-körning).
+Kommandot kräver att den separata `mysql-test`-tjänsten är frisk och att `TEST_DATABASE_URL` pekar på `kundportal_test`. Fixturen verifierar URL och ansluten databas/användare före migration och rensning. Tester lämnar inte ärenderader i testdatabasen.
 
 ## 6. Faktiska resultat
 
@@ -102,7 +98,7 @@ Resultaten visar grundbeteenden, inte att ärendefunktionerna är implementerade
 
 Vid dessa tidigare kontroller kunde `docker info --format '{{.ServerVersion}}'` inte ansluta till Docker Desktop Linux engine via dess named pipe. Detta beskriver den tidigare körningen och ersätts av den senare rapporterade verifieringen nedan.
 
-### Senare rapporterad körning och manuella kontroller
+### Tidigare manuellt rapporterad körning och kontroller
 
 Danielle rapporterade följande verifiering 2026-11-01. Resultatet är manuellt rapporterat och har inte körts om i denna dokumentationsändring.
 
@@ -113,7 +109,38 @@ Danielle rapporterade följande verifiering 2026-11-01. Resultatet är manuellt 
 | Manuell API-kontroll | `GET /health/db` | `{"status":"ok","database":"ok"}`. |
 | Manuell gränssnittskontroll | React-vyn | Visade `API: Tillgänglig` och `MySQL: Tillgänglig`. |
 
-Detta verifierar anslutningsgrunden från backend till MySQL och att gränssnittet visar tillgänglighetsstatus. Det verifierar inte registrering, beständig lagring, omläsning eller annan lagring av ärenden. `/health`-svaret rapporterades inte separat i denna körning.
+Detta verifierade då anslutningsgrunden från backend till MySQL och att gränssnittet visade tillgänglighetsstatus. Det verifierade inte ärendelagring.
+
+### Aktuell automatiserad körning för ticket API
+
+Körd 2026-11-01 i Windows PowerShell från arbetsbranchen `feature/ticket-api`, byggd från `7e170cb`. Integrationsfixturen verifierade `kundportal_test` och dess användare före Alembic-migration, och körde migrationen endast mot testdatabasen.
+
+| Exakt kommando (kört från `backend`) | Faktiskt resultat |
+| --- | --- |
+| `.\.venv\Scripts\python.exe -m pytest -q` | Godkänt: 26 passed in 1.55s. Inga tester hoppades över. Inkluderar verklig MySQL-testdatabas, ticket-API, migration, rollback, demo-idempotens, health- och CORS-kontroller. |
+| `.\.venv\Scripts\python.exe -m pytest -q -m "not integration"` | Godkänt: 6 passed, 20 deselected in 0.57s. |
+| `.\.venv\Scripts\python.exe -m pip check` | Godkänt: No broken requirements found. |
+| `.\.venv\Scripts\python.exe -m alembic heads` | Godkänt: `0001_create_tickets (head)`. Detta listar revisionen; den fullständiga sviten ovan applicerade den på testdatabasen. |
+| `.\.venv\Scripts\alembic.exe upgrade head` med `DATABASE_URL` tillfälligt satt till verifierad test-URL | Godkänt: Alembic anslöt till MySQL och kommandot avslutades med exitkod 0; inget dev-schema användes. |
+
+`docker compose --profile test ps --format "{{.Service}} {{.State}} {{.Health}}"` visade `mysql running healthy` och `mysql-test running healthy`. Testresultaten bekräftar backendbeteenden mot MySQL-testdatabasen, men inte en manuell kontroll av de startade HTTP-processerna eller frontendens ticket-gränssnitt.
+
+### Manuellt rapporterad API-verifiering
+
+Danielle rapporterade följande manuella verifiering 2026-11-01. Resultaten har inte körts om i denna dokumentationsändring.
+
+| Typ | Kommando eller kontroll | Rapporterat resultat |
+| --- | --- | --- |
+| Automatiserad testsvit, manuellt rapporterat | Från `backend`: `.\.venv\Scripts\python.exe -m pytest -q` | Hela backendtestsviten: 27 passed in 1.50s. |
+| Manuell migrationskontroll | Alembic revisionsstatus | `0001_create_tickets (head)`. |
+| Manuell API-kontroll | `POST /api/tickets` | `201`; ärende `1` skapades med status `new`. |
+| Manuell API-kontroll | `GET /api/tickets` | `200`; ärendet fanns i listan. |
+| Manuell API-kontroll | `GET /api/tickets/1` | `200`; rätt ärendedetaljer visades. |
+| Manuell API-kontroll | `PATCH /api/tickets/1/status` | `200`; status ändrades till `in_progress`. |
+| Manuell API-kontroll | Separat `GET` efter statusändringen | Bekräftade den sparade statusen `in_progress`. |
+| Manuell API-kontroll efter omstart av backend | Ny `GET` av ärendet | `200`; samma ärende och status `in_progress` fanns kvar. |
+
+Detta är manuellt rapporterad kontroll av backendens ärendeflöde och beständighet efter omstart av backend. Omstart av MySQL och frontendens ärendeflöde verifierades inte.
 
 Efter varje relevant verifieringstillfälle registreras verkliga resultat enligt följande mall. Ersätt platshållarna först efter genomförd körning.
 
@@ -126,14 +153,14 @@ Efter varje relevant verifieringstillfälle registreras verkliga resultat enligt
 | Manuella kontroller | M-ID:n, genomförda steg, observerat resultat och godkänt/underkänt. Redovisas separat från automatiserade tester. |
 | Avvikelser | Berörda krav, länk till felrapport/uppgift och resultat av eventuell omtestning. |
 
-Planerade, överhoppade eller ännu inte implementerade kontroller får inte redovisas som godkända. Den tidigare pytest-körningens T21 hoppades över; den senare rapporterade körningen anger att MySQL-integrationstestet kördes utan att hoppas över. Ärendefunktionernas planerade tester är fortfarande inte genomförda.
+Planerade, överhoppade eller ännu inte implementerade kontroller får inte redovisas som godkända. Den äldre körningen hoppade över T21, men senare manuellt rapporterade och automatiserade körningar genomförde MySQL-kontroller. T18:s gemensamma frontend-/backendtest och frontendens ärendeflöde återstår. Omstart av MySQL har inte verifierats.
 
 ## 7. Begränsningar
 
-- Planen är inte bevis för att kraven är uppfyllda. Testlänkar och verkliga körresultat återstår.
+- Backendtester verifierar de länkade API-beteendena mot testdatabasen. De visar inte att frontendens ännu ej byggda ärendegränssnitt fungerar.
 - Logik- och integrationstester visar inte i sig att gränssnittets texter, formulär eller navigation fungerar. Manuella kontroller kompletterar dessa.
 - Återöppnad MySQL-anslutning och nya applikations-/lagringsinstanser verifierar beständighet på integrationsnivå. Fullständig omstart av applikationen kontrolleras separat.
-- Simulerade skrivfel verifierar den valda felvägen, inte alla verkliga lagringsfel. Vid implementation ska det dokumenteras var felet injiceras och vilken återställning testet faktiskt visar.
+- Kontrollerade SQLAlchemy-fel verifierar rollback när fel injiceras efter flush och före commit; de täcker inte alla nätverksavbrott eller MySQL-serverfel. Ett fel i commit behandlas konservativt som oklart utfall.
 - Belastning, produktionsdrift, avancerad säkerhet, samtidiga uppdateringar från flera handläggare och externa integrationer ingår inte i denna verifieringsplan.
 - Ingen viss testtäckningsprocent utlovas. Slutsatser ska kopplas till verifierade beteenden och kvarvarande risker.
 
