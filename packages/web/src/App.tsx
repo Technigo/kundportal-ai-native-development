@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
+import { CaseForm, type CreatedCase } from './CaseForm';
 
 type ApiStatus = 'checking' | 'connected' | 'unavailable';
 
 export function App() {
   const [apiStatus, setApiStatus] = useState<ApiStatus>('checking');
+  const [createdCase, setCreatedCase] = useState<CreatedCase | null>(null);
 
   useEffect(() => {
     fetch('/api/health')
@@ -29,15 +31,25 @@ export function App() {
       </header>
       <section className="welcome" aria-labelledby="welcome-title">
         <p className="eyebrow">INTERNT VERKTYG</p>
-        <h1 id="welcome-title">En tydligare överblick över kundärenden.</h1>
-        <p className="intro">Här samlar vi arbetet med kundserviceportalen.</p>
+        <h1 id="welcome-title">Registrera ett kundärende.</h1>
+        <p className="intro">Samla ärendeuppgifter på ett ställe.</p>
         <div className={`connection connection--${apiStatus}`} role="status">
           <span className="connection-dot" aria-hidden="true" />
           {apiStatus === 'checking' && 'Kontrollerar anslutning till API…'}
           {apiStatus === 'connected' && 'Frontend och API är anslutna'}
           {apiStatus === 'unavailable' && 'API:et kunde inte nås'}
         </div>
-        <p className="coming-soon">Ärendehantering kommer i nästa steg.</p>
+        {apiStatus === 'unavailable' && (
+          <p className="form-message form-message--error" role="alert">
+            Det går inte att nå tjänsten. Starta om projektet och försök igen.
+          </p>
+        )}
+        <CaseForm onCreated={setCreatedCase} />
+        {createdCase && (
+          <p className="created-summary">
+            Ärende #{createdCase.id} sparades med status {createdCase.status}.
+          </p>
+        )}
       </section>
     </main>
   );

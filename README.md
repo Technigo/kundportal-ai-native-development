@@ -7,7 +7,7 @@ Här samlar ni teamets arbete med Kundserviceportalen i kursen AI Native Develop
 
 ## Om projektet
 
-Kundserviceportalen är ett lokalt internt verktyg för att samla och följa kundärenden. Den färdiga MVP:n ska låta handläggare skapa, hitta och hantera ärenden med status och interna anteckningar. Funktionerna byggs stegvis; just nu finns projektskelett och anslutningskontroll mellan frontend och API.
+Kundserviceportalen är ett lokalt internt verktyg för att samla och följa kundärenden. Handläggare kan registrera ärenden med rubrik, beskrivning, kategori och prioritet. Lista, detaljvy, statusändring och interna anteckningar byggs stegvis.
 
 ## Kör lokalt
 
@@ -20,7 +20,7 @@ npm run dev
 
 Öppna frontend på <http://127.0.0.1:5173>. API:ets anslutningskontroll finns på <http://127.0.0.1:3001/api/health>. Lokal SQLite-fil skapas i `data/kundportal.sqlite`.
 
-Skapa produktionsbyggen med `npm run build`. Tester och fler körinstruktioner läggs till i kommande steg.
+Kör automatiserade tester med `npm test` och skapa produktionsbyggen med `npm run build`.
 
 ## MVP-specifikationer
 

@@ -95,8 +95,83 @@ h1 {
   background: #a52e20;
 }
 
-.coming-soon {
-  margin-top: 3rem;
-  color: #6b594a;
+.case-form {
+  display: grid;
+  gap: 1.1rem;
+  margin-top: 2rem;
+}
+
+.form-field {
+  display: grid;
+  gap: 0.45rem;
+  color: #2a1a0e;
   font-size: 0.9rem;
+  font-weight: 650;
+}
+
+.form-field input,
+.form-field textarea,
+.form-field select {
+  width: 100%;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid #8a7767;
+  border-radius: 0.5rem;
+  background: #fffaf1;
+  color: #2a1a0e;
+  font: inherit;
+}
+
+.form-field textarea {
+  resize: vertical;
+}
+
+.form-field input:focus-visible,
+.form-field textarea:focus-visible,
+.form-field select:focus-visible,
+.primary-button:focus-visible {
+  outline: 3px solid #d4621a;
+  outline-offset: 2px;
+}
+
+.primary-button {
+  width: fit-content;
+  padding: 0.8rem 1.1rem;
+  border: 0;
+  border-radius: 0.55rem;
+  background: #2a1a0e;
+  color: #fef3e2;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primary-button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.form-message {
+  margin: 0;
+  padding: 0.8rem 1rem;
+  border-radius: 0.5rem;
+  line-height: 1.5;
+}
+
+.form-message--error {
+  border: 1px solid #a52e20;
+  background: #fff1ed;
+  color: #6d1d14;
+}
+
+.form-message--success,
+.created-summary {
+  border: 1px solid #3d6b3f;
+  background: #f0f7ed;
+  color: #254a28;
+}
+
+.created-summary {
+  margin-top: 1rem;
+  padding: 0.8rem 1rem;
+  border-radius: 0.5rem;
 }
