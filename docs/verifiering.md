@@ -61,20 +61,20 @@ Förväntat resultat är en kort sammanfattning av kravet i
 
 | Krav | Vad | Förväntat | Test | Ägare | För hand | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| HIST-01 | `created`-post när ärendet skapas | Status `new` och exakt en post `created` (`null` → `new`). | – | Azalea | Nej | Ej påbörjad |
-| HIST-02 | Statusbyte ger `status_changed`-post | Ny status och en post `status_changed` med rätt från och till. | – | Azalea | Ja | Ej påbörjad |
-| HIST-03 | Historiken äldst först | Äldst först, `to_status` i en post är `from_status` i nästa. | – | Azalea | Ja | Ej påbörjad |
-| HIST-04 | Historiken finns kvar efter omstart | Status och historik oförändrade med ny engine och session, alla fält. | – | Azalea | Ja | Ej påbörjad |
+| HIST-01 | `created`-post när ärendet skapas | Status `new` och exakt en post `created` (`null` → `new`). | [test_history.py](../backend/tests/test_history.py) (`test_hist01_…`, 3 tester) | Azalea | Nej | Grönt |
+| HIST-02 | Statusbyte ger `status_changed`-post | Ny status och en post `status_changed` med rätt från och till. | [test_history.py](../backend/tests/test_history.py) (`test_hist02_…`, 3 tester), och invarianten efter varje steg (`test_invariant_latest_entry_matches_ticket_status`) | Azalea | Ja | Grönt |
+| HIST-03 | Historiken äldst först | Äldst först, `to_status` i en post är `from_status` i nästa. | [test_read_history.py](../backend/tests/test_read_history.py) (`test_hist03_history_is_oldest_first_and_chained`) | Azalea | Ja | Grönt |
+| HIST-04 | Historiken finns kvar efter omstart | Status och historik oförändrade med ny engine och session, alla fält. | Inget än. Skrivs i KSP-40 (status och historik efter omstart) | Azalea | Ja | Ej påbörjad |
 | HIST-05 | Tidslinjen i detaljvyn | Varje post med svenska etiketter och lokal tid, senaste stämmer med status. | – | Amalia | Ja | Ej påbörjad |
 | HIST-06 | Ogiltig status ger 422 | 422 "Välj en giltig status." (fel datatyp: "Ogiltig indata."), status och historik oförändrade. | [test_error_format.py](../backend/tests/test_error_format.py) (saknad status och fel datatyp), resten i [PR #43](https://github.com/desiboli/kundportal-ai-native-development/pull/43) | Nicklas | Nej | Delvis: PR #43 väntar på statusbytet (KSP-24) |
 | HIST-07 | Samma status ger 409 | 409 "Ärendet har redan den statusen.", ingen ny post. Alla fyra statusar. | Servicedelen: [test_history.py](../backend/tests/test_history.py) (Azalea). API:t: [PR #43](https://github.com/desiboli/kundportal-ai-native-development/pull/43) | Nicklas | Nej | Delvis: API-delen väntar på statusbytet (KSP-24) |
-| HIST-08 | Okänt ärende ger 404 | 404 "Ärendet finns inte.", inget skapas. Även id som inte är heltal. | – | Azalea | Nej | Ej påbörjad |
-| HIST-09 | Inget ändras om historikposten inte kan sparas | 503 "Statusen kunde inte ändras. Försök igen.", gammal status kvar, nästa byte lyckas. | – | Azalea | Nej | Ej påbörjad |
-| HIST-10 | Ingen historikpost när ärendet inte kan skapas | Ingen historikpost kvar efter en avvisad `POST`. | – | Azalea | Nej | Ej påbörjad |
-| HIST-11 | Samma tid, ordnas efter id | Samma `occurred_at` ordnas efter `id`, alltid lika. | – | Azalea | Nej | Ej påbörjad |
-| HIST-12 | Ärende utan statusbyten har bara `created` | En lista med exakt en post (`created`), inte tom. | – | Azalea | Nej | Ej påbörjad |
+| HIST-08 | Okänt ärende ger 404 | 404 "Ärendet finns inte.", inget skapas. Även id som inte är heltal. | [test_read_history.py](../backend/tests/test_read_history.py) (`GET …/history` för `999` och `abc`), [test_history.py](../backend/tests/test_history.py) (`PATCH` för `999`), [test_error_format.py](../backend/tests/test_error_format.py) (`PATCH /tickets/abc/status`) | Azalea | Nej | Grönt |
+| HIST-09 | Inget ändras om historikposten inte kan sparas | 503 "Statusen kunde inte ändras. Försök igen.", gammal status kvar, nästa byte lyckas. | Inget än. Skrivs i KSP-41 (atomicitet med injicerat fel), koden i KSP-36 | Azalea | Nej | Ej påbörjad |
+| HIST-10 | Ingen historikpost när ärendet inte kan skapas | Ingen historikpost kvar efter en avvisad `POST`. | [test_history.py](../backend/tests/test_history.py) (`test_hist10_rejected_ticket_has_no_history`) | Azalea | Nej | Grönt |
+| HIST-11 | Samma tid, ordnas efter id | Samma `occurred_at` ordnas efter `id`, alltid lika. | [test_read_history.py](../backend/tests/test_read_history.py) (`test_hist11_same_time_is_ordered_by_id`, fast klocka) | Azalea | Nej | Grönt |
+| HIST-12 | Ärende utan statusbyten har bara `created` | En lista med exakt en post (`created`), inte tom. | [test_read_history.py](../backend/tests/test_read_history.py) (`test_hist12_new_ticket_history_has_only_created`) | Azalea | Nej | Grönt |
 | HIST-13 | Avslutat ärende kan öppnas igen | `closed` → `new` godkänns och loggas som vanligt statusbyte. | [PR #43](https://github.com/desiboli/kundportal-ai-native-development/pull/43) | Nicklas | Nej | Test skrivet: väntar på statusbytet (KSP-24) |
-| HIST-14 | Fel på svenska för status och historik | Svenska meddelanden, aldrig stacktrace eller databasdetaljer. | [test_error_format.py](../backend/tests/test_error_format.py) (backenddelen) | Azalea, Amalia (UI) | Ja | Delvis: UI-delen saknas |
+| HIST-14 | Fel på svenska för status och historik | Svenska meddelanden, aldrig stacktrace eller databasdetaljer. | [test_error_format.py](../backend/tests/test_error_format.py) (backenddelen, `test_hist14_…`, 2 tester) | Azalea, Amalia (UI) | Ja | Delvis: UI-delen saknas |
 
 Ägare enligt [Teststrategin](teststrategi.md) (avsnitt 2). Azalea fyller i test och status
 för sina rader i KSP-48. Nicklas tester för HIST-06, 07 och 13 (KSP-27) finns i PR #43.
@@ -113,6 +113,7 @@ att klicka sig till exakt den version som kördes.
 | Datum | Commit | Typ | Resultat | Körd av |
 | --- | --- | --- | --- | --- |
 | 2026-10-28 | https://github.com/desiboli/kundportal-ai-native-development/commit/65c9f4dc98f9c496e8bf980db8b7f2fe6deb2da6 | automatiskt (pytest) | 107 passed | Nicklas |
+| 2026-10-29 | https://github.com/desiboli/kundportal-ai-native-development/commit/115912b509d56346811927b9f67f10180e1032ed | automatiskt (pytest), efter PR #49 (ändra status) | 163 passed, varav 38 HIST-tester (`-k "hist or invariant"`) | Azalea |
 | 2026-10-29 | https://github.com/desiboli/kundportal-ai-native-development/commit/e24a30978d47bf71141dfb53a84877b336846cd4 | automatiskt (pytest) | 163 passed | Nicklas |
 | 2026-10-29 | https://github.com/desiboli/kundportal-ai-native-development/commit/e24a30978d47bf71141dfb53a84877b336846cd4 | för hand | Frontend finns inte än, så avsnitt 3 gjordes mot API:t i `/docs`. Skapa, lista, öppna, byta status och historiken gav förväntat svar. Tom rubrik, bara mellanslag och 101 tecken gav rätt meddelande, och inget sparades. Å, ä, ö och emoji oförändrade. Efter omstart fanns ärendet och historiken kvar. | Nicklas |
 
