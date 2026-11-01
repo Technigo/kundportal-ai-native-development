@@ -33,7 +33,13 @@ export function TicketDetailPage() {
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-8 p-6">
       {result === null && <TicketDetailsSkeleton />}
-      {result?.state === "ok" && <TicketDetails ticket={result.ticket} />}
+      {result?.state === "ok" && (
+        <TicketDetails
+          ticket={result.ticket}
+          // A saved status replaces the ticket, so the view shows the answer from the API.
+          onStatusSaved={(ticket) => setLoaded({ id: ticketId, result: { state: "ok", ticket } })}
+        />
+      )}
       {/* The detail from the API as it is (KSP-31 AC7), in the same alert as the ticket list.
           A link back to the list comes with KSP-38 (error messages in the UI). */}
       {result?.state === "error" && (
