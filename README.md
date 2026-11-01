@@ -5,6 +5,23 @@ Här samlar ni teamets arbete med Kundserviceportalen i kursen AI Native Develop
 **Uppgift, betygskriterier, veckoförväntningar och deadline finns under Kursexamination i Disco.** Börja där och återvänd dit under arbetet.
 [Länk till Disco](https://technigo.disco.co/p/fall-2026-ai-native-development/collection/Q29sbGVjdGlvbjozNzg3Ng==?u=25dab1f8-7abb-463e-a19e-d379efb7caae&drawerTab=comments)
 
+## Om projektet
+
+Kundserviceportalen är ett lokalt internt verktyg för att samla och följa kundärenden. Den färdiga MVP:n ska låta handläggare skapa, hitta och hantera ärenden med status och interna anteckningar. Funktionerna byggs stegvis; just nu finns projektskelett och anslutningskontroll mellan frontend och API.
+
+## Kör lokalt
+
+Kräver Node.js 22 eller senare.
+
+```sh
+npm install
+npm run dev
+```
+
+Öppna frontend på <http://127.0.0.1:5173>. API:ets anslutningskontroll finns på <http://127.0.0.1:3001/api/health>. Lokal SQLite-fil skapas i `data/kundportal.sqlite`.
+
+Skapa produktionsbyggen med `npm run build`. Tester och fler körinstruktioner läggs till i kommande steg.
+
 ## Kom igång
 
 Projektarbetet börjar vecka 5. Ni får börja frivilligt vecka 4; den veckans fristående kodövning finns kvar.
