@@ -21,8 +21,8 @@
 | --- | --- |
 | **Azalea** (Azaalea) | Backend som helhet: skelett, kärnans API, statuslogik och historik, API-kontraktet |
 | **Nicklas** (yrrving) | CORE-specen, tester för statusregler och validering, verifieringsplanen, teknikbeslutet om stacken |
-| **Mustafa** (desiboli) | Frontend: lista, formulär och genererade typer. Linear |
-| **Amalia** (amaliaa-91) | Frontend: detaljvy och statusbyte, tidslinje (HIST-05), UI-delen av HIST-14 (hur felmeddelanden visas), testverktyg och CI för frontend |
+| **Mustafa** (desiboli) | Frontend och Linear. Föreslaget 2026-11-01: frontend avgränsas till lista, formulär och genererade typer |
+| **Amalia** (amaliaa-91) | Tidslinje (HIST-05) och UI-delen av HIST-14 (hur felmeddelanden visas). Föreslaget 2026-11-01: även detaljvy och statusbyte, testverktyg och CI för frontend |
 
 ## Ansvarstabell
 
@@ -41,7 +41,7 @@
 | Mutationsprövning, **korsvis**: var och en prövar sina egna tester, den andra lägger in en okänd mutation | Azalea, Nicklas | den andra | Bekräftat 2026-10-25 |
 | Instruktion för testförslag: v1 | Nicklas | Azalea | Bekräftat 2026-10-25 |
 | Förbättring av instruktionen: **var och en gör en egen, namngiven förbättring**, prövad på egna kriterier och jämförd med v1 | Azalea, Nicklas (var för sig) | den andra | Bekräftat 2026-10-25 |
-| Frontend: lista och formulär för att skapa ärenden (KSP-29, KSP-30), TypeScript-typer från OpenAPI (KSP-28) | Mustafa | Azalea, Amalia | Bekräftat 2026-10-25, delad 2026-11-01 |
+| Frontend: lista och formulär för att skapa ärenden (KSP-29, KSP-30), TypeScript-typer från OpenAPI (KSP-28) | Mustafa | Azalea, Amalia | Bekräftat 2026-10-25, delning föreslagen 2026-11-01 |
 | Frontend: detaljvy och statusbyte (KSP-31, KSP-32), med komponenttester | Amalia | Mustafa, Azalea | Föreslagen 2026-11-01, enligt Linear och veckostatus V6 |
 | Testverktyg i frontend (vitest, Testing Library, jest-axe, KSP-64) och frontendtester i CI (KSP-18) | Amalia | Azalea | Föreslagen 2026-11-01, enligt Linear |
 | Tidslinje (HIST-05) och UI-delen av HIST-14 (hur felmeddelanden visas), inklusive komponenttest för tidslinjen (vitest + Testing Library) | Amalia | Mustafa, Azalea | Bekräftat 2026-10-25 |
