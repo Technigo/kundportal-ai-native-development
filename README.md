@@ -7,7 +7,7 @@ Här samlar ni teamets arbete med Kundserviceportalen i kursen AI Native Develop
 
 ## Om projektet
 
-Kundserviceportalen är ett lokalt internt verktyg för att samla och följa kundärenden. Handläggare kan registrera ärenden med rubrik, beskrivning, kategori och prioritet. Lista, detaljvy, statusändring och interna anteckningar byggs stegvis.
+Kundserviceportalen är ett lokalt internt verktyg för att samla och följa kundärenden. Handläggare kan registrera ärenden med rubrik, beskrivning, kategori och prioritet samt se sparade ärenden. Detaljvy, statusändring och interna anteckningar byggs stegvis.
 
 ## Kör lokalt
 
@@ -25,6 +25,7 @@ Kör automatiserade tester med `npm test` och skapa produktionsbyggen med `npm r
 ## MVP-specifikationer
 
 MVP:ns vertikala featuretickets, krav-ID:n och testmappning finns i [docs/features](./docs/features/README.md).
+Planerade delsteg och aktuell status finns i [plan.md](./plan.md).
 
 ## Kom igång
 
