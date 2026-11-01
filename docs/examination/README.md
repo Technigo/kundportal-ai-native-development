@@ -23,6 +23,7 @@ Använd detta som arbetsunderlag för kursens G- och VG-kriterier. Det visar vad
 ## Länkar
 
 - [Kriteriematris: G och VG](./criteria-matrix.md)
+- [Beslutslogg från projektsessionen](./decision-log.md)
 - [Verifieringsplan och faktiska resultat](./verification-plan.md)
 - [AI-arbetsflöde och reflektionslogg](./ai-workflow.md)
 - [Veckostatusmall](./weekly-status-template.md)

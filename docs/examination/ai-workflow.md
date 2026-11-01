@@ -20,6 +20,7 @@ Detta dokumenterar kravförtydligande och verifiering. Studenten behöver själv
 ## Spår från planerings- och implementeringssessionen
 
 Följande konkreta beslut och kontroller från sessionen kan användas som kompletterande evidens. De ersätter inte studentens egen förklaring.
+Fler produkt- och processbeslut finns i [beslutsloggen](./decision-log.md).
 
 | Händelse | AI:s bidrag och teamets beslut | Beständigt underlag |
 |---|---|---|
