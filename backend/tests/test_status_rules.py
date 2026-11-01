@@ -3,13 +3,14 @@
 Covers the rules in API conventions section 1: every change between two *different*
 statuses is allowed, HIST-07 (the same status as now gives 409 "Ärendet har redan den
 statusen." for all four statuses), HIST-06 (an unknown status gives 422 "Välj en giltig
-status.", a wrong type gives "Ogiltig indata.") and HIST-13 (a closed ticket can be opened
-again and is logged as a normal status change). A rejected change leaves the status and the
-history as they were. Part of KSP-27 (tests for the status rules).
+status.", a wrong type or null gives "Ogiltig indata."), other fields than status in PATCH
+("Ogiltig indata.", HIST spec v0.9) and HIST-13 (a closed ticket can be opened again and is
+logged as a normal status change). A rejected change leaves the status and the history as
+they were. Part of KSP-27 (tests for the status rules).
 
-PATCH /tickets/{id}/status and GET /tickets/{id}/history answer 501 until KSP-24 (PATCH
-with status rules) is built, so these tests fail until then. A missing status and a missing
-body are already tested in test_error_format.py (KSP-21). Unknown ids (HIST-08), history
+Written before KSP-24 (PATCH with status rules), when the endpoint answered 501, and run
+against it in PR #49. A missing status and a missing body are already tested in
+test_error_format.py (KSP-21). Unknown ids (HIST-08), history
 order (HIST-03, 11) and atomicity (HIST-09) are Azalea's tests.
 """
 
@@ -115,8 +116,9 @@ def test_hist07_same_status_gives_409_and_nothing_changes(client, status):
         ("", INVALID_STATUS),
         (" closed", INVALID_STATUS),
         (5, INVALID_INPUT),
+        (None, INVALID_INPUT),
     ],
-    ids=["unknown", "swedish_label", "upper_case", "empty", "leading_space", "wrong_type"],
+    ids=["unknown", "swedish_label", "upper_case", "empty", "leading_space", "wrong_type", "null"],
 )
 def test_hist06_unknown_status_gives_422_and_nothing_changes(client, value, message):
     """HIST-06 (unknown status): 422, the status stays and no history entry is made."""
@@ -131,6 +133,29 @@ def test_hist06_unknown_status_gives_422_and_nothing_changes(client, value, mess
     assert response.status_code == 422
     assert response.json() == {"detail": message}
     assert_nothing_changed(client, ticket["id"], "in_progress", history_before)
+
+
+# --- Other fields than status (HIST spec v0.9, answer in PR #43) ---
+
+
+@pytest.mark.parametrize(
+    "extra",
+    [{"title": "x"}, {"note": "x"}],
+    ids=["ticket_field", "unknown_field"],
+)
+def test_other_fields_in_patch_give_422_and_nothing_changes(client, extra):
+    """Other fields than status in PATCH give 422 "Ogiltig indata." and nothing changes."""
+    # Catches: extra fields silently ignored, so the status changes and the client thinks the
+    # title changed too, or a title sent here actually being saved.
+    ticket = ticket_with_status(client, "in_progress")
+    history_before = history(client, ticket["id"])
+
+    response = client.patch(f"/tickets/{ticket['id']}/status", json={"status": "closed", **extra})
+
+    assert response.status_code == 422
+    assert response.json() == {"detail": INVALID_INPUT}
+    assert_nothing_changed(client, ticket["id"], "in_progress", history_before)
+    assert client.get(f"/tickets/{ticket['id']}").json()["title"] == ticket["title"]
 
 
 # --- Open a closed ticket again (HIST-13) ---

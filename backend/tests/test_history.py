@@ -108,6 +108,7 @@ def test_hist01_created_entry_time_equals_ticket_created_at(client, database_url
 
     [entry] = saved_history(database_url, ticket["id"])
     assert entry["occurred_at"] == ticket["created_at"]
+    assert_invariant(database_url, ticket["id"])
 
 
 def test_hist01_each_ticket_gets_its_own_created_entry(client, database_url):
@@ -119,6 +120,8 @@ def test_hist01_each_ticket_gets_its_own_created_entry(client, database_url):
     history = saved_history(database_url)
     assert sorted(entry["ticket_id"] for entry in history) == sorted([first["id"], second["id"]])
     assert all(entry["event_type"] == "created" for entry in history)
+    assert_invariant(database_url, first["id"])
+    assert_invariant(database_url, second["id"])
 
 
 # --- A rejected ticket leaves no history (HIST-10) ---
@@ -174,6 +177,7 @@ def test_hist02_change_status_is_saved_after_commit(client, database_url):
     with TestClient(create_app(database_url)) as fresh:
         assert fresh.get(f"/tickets/{ticket['id']}").json()["status"] == "in_progress"
     assert len(saved_history(database_url, ticket["id"])) == 2
+    assert_invariant(database_url, ticket["id"])
 
 
 def test_hist02_from_status_is_previous_status(client, database_url):

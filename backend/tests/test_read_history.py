@@ -159,6 +159,7 @@ def test_history_entry_has_exactly_the_contract_fields(client):
 
     for entry in read_history(client, ticket["id"]):
         assert set(entry) == CONTRACT_FIELDS
+    assert_invariant_via_api(client, ticket["id"])
 
 
 # --- Unknown id (HIST-08) ---

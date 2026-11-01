@@ -39,19 +39,20 @@ Förväntat resultat är en kort sammanfattning av kravet i [SPEC-karna.md](spec
 | CORE-08 | Okänd kategori eller prioritet | 422 "Välj en giltig kategori." (eller prioritet), inget sparas. | Samma som CORE-06 | Integration | Nej | Grönt |
 | CORE-09 | `status` skickas vid skapande | 422 "Status sätts automatiskt och kan inte anges när ett ärende skapas.", inget sparas. | Samma som CORE-06 (`test_core09_…`) | Integration | Nej | Grönt |
 | CORE-10 | Okänt id eller id som inte är heltal ger 404 | 404 "Ärendet finns inte.", även för `GET /tickets/abc`. | [test_core_read.py](../backend/tests/test_core_read.py) (okänt heltal), [test_error_format.py](../backend/tests/test_error_format.py) (inte heltal) | Integration | Nej | Grönt |
-| CORE-11 | Bara blanktecken eller osynliga tecken | Fältet räknas som tomt: 422 "… måste fyllas i.", inget sparas. | [test_create_ticket.py](../backend/tests/test_create_ticket.py) (rubriken), beskrivningen i [PR #39](https://github.com/desiboli/kundportal-ai-native-development/pull/39) | Integration | Ja | Delvis: beskrivningen grön i PR #39, inte mergad |
+| CORE-11 | Bara blanktecken eller osynliga tecken | Fältet räknas som tomt: 422 "… måste fyllas i.", inget sparas. | [test_create_ticket.py](../backend/tests/test_create_ticket.py) (rubriken), [test_core_rules.py](../backend/tests/test_core_rules.py) (beskrivningen, `test_core11_…`) | Integration | Ja | Grönt |
 | CORE-12 | Rubrik högst 100 tecken, efter trimning | 100 tecken godkänns, 101 ger 422 och inget sparas. Räknas efter trimning. | [test_create_ticket.py](../backend/tests/test_create_ticket.py) (`test_core12_…`, 2 tester) | Integration | Ja | Grönt |
-| CORE-13 | Beskrivning högst 2000 tecken | 2000 tecken godkänns, 2001 ger 422 och inget sparas. | [PR #39](https://github.com/desiboli/kundportal-ai-native-development/pull/39) (`test_core_rules.py`) | Integration | Nej | Grönt i PR #39, inte mergad |
-| CORE-14 | Svenska tecken och emoji oförändrade | Texten sparas och visas oförändrad. Sammansatta emoji räknas som sina kodpunkter (B11). | [test_create_ticket.py](../backend/tests/test_create_ticket.py) (`test_core14_…`), räkningen i [PR #39](https://github.com/desiboli/kundportal-ai-native-development/pull/39) | Integration | Ja | Delvis: räkningen (B11) grön i PR #39, inte mergad |
+| CORE-13 | Beskrivning högst 2000 tecken | 2000 tecken godkänns, 2001 ger 422 och inget sparas. | [test_core_rules.py](../backend/tests/test_core_rules.py) (`test_core13_…`, 2 tester) | Integration | Nej | Grönt |
+| CORE-14 | Svenska tecken och emoji oförändrade | Texten sparas och visas oförändrad. Sammansatta emoji räknas som sina kodpunkter (B11). | [test_create_ticket.py](../backend/tests/test_create_ticket.py) (`test_core14_…`), räkningen i [test_core_rules.py](../backend/tests/test_core_rules.py) (`test_b11_…`, `test_length_is_counted_…`) | Integration | Ja | Grönt |
 | CORE-15 | Tom lista är inte ett fel | 200 med `[]`. | [test_core_read.py](../backend/tests/test_core_read.py) (`test_core15_empty_list_returns_200`) | Integration | Nej | Grönt |
 | CORE-16 | Fel på svenska, `{"detail": ...}` | Svenska meddelanden, aldrig stacktrace, SQL eller engelska fältnamn. | [test_error_format.py](../backend/tests/test_error_format.py) | Integration | Ja | Grönt |
-| CORE-17 | Fel datatyp, trasig JSON, ogiltig UTF-8 | 422 med bara "Ogiltig indata.", inget sparas. | [test_error_format.py](../backend/tests/test_error_format.py) (`test_core17_…`), inget sparas i [PR #39](https://github.com/desiboli/kundportal-ai-native-development/pull/39) | Integration | Nej | Delvis: "inget sparas" grönt i PR #39, inte mergad |
-| CORE-18 | Flera fel samtidigt, i fältordningen | 422 med alla meddelanden i ordningen rubrik, beskrivning, kategori, prioritet, status. Inget sparas. | [test_error_format.py](../backend/tests/test_error_format.py) (`test_core18_…`), inget sparas i [PR #39](https://github.com/desiboli/kundportal-ai-native-development/pull/39) | Integration | Nej | Delvis: "inget sparas" grönt i PR #39, inte mergad |
+| CORE-17 | Fel datatyp, trasig JSON, ogiltig UTF-8 | 422 med bara "Ogiltig indata.", inget sparas. | [test_error_format.py](../backend/tests/test_error_format.py) (`test_core17_…`), inget sparas i [test_core_rules.py](../backend/tests/test_core_rules.py) (`test_rejected_ticket_saves_nothing`) | Integration | Nej | Grönt |
+| CORE-18 | Flera fel samtidigt, i fältordningen | 422 med alla meddelanden i ordningen rubrik, beskrivning, kategori, prioritet, status. Inget sparas. | [test_error_format.py](../backend/tests/test_error_format.py) (`test_core18_…`), inget sparas i [test_core_rules.py](../backend/tests/test_core_rules.py) (`test_rejected_ticket_saves_nothing`) | Integration | Nej | Grönt |
 
-Inget krav är *Verifierat* än: mutationsprövningen (KSP-44) görs när statusbytet (KSP-24)
-finns. Felsvaren kommer från KSP-21 (Azalea, PR #30),
+Inget krav är *Verifierat* än: statusbytet (KSP-24) finns nu, så mutationsprövningen (KSP-44)
+är nästa steg. Felsvaren kommer från KSP-21 (Azalea, PR #30),
 https://github.com/desiboli/kundportal-ai-native-development/pull/30, och skapa, lista och
-visa från KSP-22 och KSP-23. Nicklas tester för CORE (KSP-25 och KSP-26) finns i PR #39.
+visa från KSP-22 och KSP-23. Nicklas tester för CORE (KSP-25 och KSP-26) finns i
+`test_core_read.py` och `test_core_rules.py`.
 
 ### Statuslogik och historik (HIST)
 
@@ -113,6 +114,8 @@ att klicka sig till exakt den version som kördes.
 | --- | --- | --- | --- | --- |
 | 2026-10-28 | https://github.com/desiboli/kundportal-ai-native-development/commit/65c9f4dc98f9c496e8bf980db8b7f2fe6deb2da6 | automatiskt (pytest) | 107 passed | Nicklas |
 | 2026-10-29 | https://github.com/desiboli/kundportal-ai-native-development/commit/115912b509d56346811927b9f67f10180e1032ed | automatiskt (pytest), efter PR #49 (ändra status) | 163 passed, varav 38 HIST-tester (`-k "hist or invariant"`) | Azalea |
+| 2026-10-29 | https://github.com/desiboli/kundportal-ai-native-development/commit/e24a30978d47bf71141dfb53a84877b336846cd4 | automatiskt (pytest) | 163 passed | Nicklas |
+| 2026-10-29 | https://github.com/desiboli/kundportal-ai-native-development/commit/e24a30978d47bf71141dfb53a84877b336846cd4 | för hand | Frontend finns inte än, så avsnitt 3 gjordes mot API:t i `/docs`. Skapa, lista, öppna, byta status och historiken gav förväntat svar. Tom rubrik, bara mellanslag och 101 tecken gav rätt meddelande, och inget sparades. Å, ä, ö och emoji oförändrade. Efter omstart fanns ärendet och historiken kvar. | Nicklas |
 
 Kommando (macOS/Linux): `cd backend && .venv/bin/python -m pytest -q`. Windows: se
 [Teststrategin](teststrategi.md) (avsnitt 5).
