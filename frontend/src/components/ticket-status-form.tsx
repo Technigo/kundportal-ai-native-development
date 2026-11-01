@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { Pencil, X } from "lucide-react"
 
-import { changeTicketStatus } from "@/api/tickets"
+import { changeTicketStatus, fetchTicket } from "@/api/tickets"
 import type { Ticket, TicketStatus } from "@/api/types"
 import { StatusBadge } from "@/components/status-badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -17,15 +17,16 @@ const statuses = Object.keys(statusLabels) as TicketStatus[]
 // that the status is being edited, with the four statuses, a save button and a cancel cross
 // (AC5). Saving is disabled while the saved status is chosen, and while a save is
 // running the button shows a spinner. On errors the view stays in edit mode, the message is
-// shown and the select goes back to the saved status (AC6).
+// shown and the select goes back to the saved status. On 409 the ticket is fetched again, so
+// the view shows the status that someone else has saved (AC6).
 export function TicketStatusForm({
   ticket,
   labelId,
-  onSaved,
+  onChanged,
 }: {
   ticket: Ticket
   labelId: string
-  onSaved: (ticket: Ticket) => void
+  onChanged: (ticket: Ticket) => void
 }) {
   const [editing, setEditing] = useState(false)
   const [chosen, setChosen] = useState<TicketStatus>(ticket.status)
@@ -65,12 +66,23 @@ export function TicketStatusForm({
     setSaving(false)
     if (result.state === "ok") {
       // Back to the badge, which now shows the new status from the API (HIST-02, AC5).
-      onSaved(result.ticket)
+      onChanged(result.ticket)
       close()
     } else {
       // The detail from the API as it is (HIST-06, HIST-07, HIST-14), and the saved status.
       setError(result.message)
       setChosen(ticket.status)
+      if (result.httpStatus === 409) await showCurrentStatus()
+    }
+  }
+
+  // Save is disabled for the saved status, so 409 means that someone else has changed the
+  // status since the page was loaded. The ticket is fetched again to show it (AC6, HIST-07).
+  async function showCurrentStatus() {
+    const current = await fetchTicket(String(ticket.id))
+    if (current.state === "ok") {
+      setChosen(current.ticket.status)
+      onChanged(current.ticket)
     }
   }
 

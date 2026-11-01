@@ -37,7 +37,7 @@ export function TicketDetails({
           </div>
           <div className="flex flex-col gap-4">
             <Field label="Status" labelId={statusLabelId}>
-              <TicketStatusForm ticket={ticket} labelId={statusLabelId} onSaved={onStatusSaved} />
+              <TicketStatusForm ticket={ticket} labelId={statusLabelId} onChanged={onStatusSaved} />
             </Field>
             <Field label="Prioritet">{priorityLabel(ticket.priority)}</Field>
           </div>

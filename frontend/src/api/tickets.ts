@@ -1,7 +1,10 @@
 import type { ErrorResponse, Ticket, TicketStatus } from "@/api/types"
 import { BACKEND_UNREACHABLE } from "@/pages/HealthPage"
 
-export type TicketResult = { state: "ok"; ticket: Ticket } | { state: "error"; message: string }
+// httpStatus is missing when the backend could not be reached.
+export type TicketResult =
+  | { state: "ok"; ticket: Ticket }
+  | { state: "error"; message: string; httpStatus?: number }
 
 // Both endpoints answer with the ticket, or with {"detail": "<Swedish message>"} on errors
 // (KSP-31 AC7). The detail is shown as it is.
@@ -12,7 +15,7 @@ async function toTicketResult(request: Promise<Response>): Promise<TicketResult>
       return { state: "ok", ticket: (await response.json()) as Ticket }
     }
     const error = (await response.json()) as ErrorResponse
-    return { state: "error", message: error.detail }
+    return { state: "error", message: error.detail, httpStatus: response.status }
   } catch {
     // Same text as the ticket list until the error messages in the UI are decided (KSP-38).
     return { state: "error", message: BACKEND_UNREACHABLE }

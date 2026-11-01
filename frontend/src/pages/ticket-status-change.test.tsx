@@ -40,10 +40,15 @@ function jsonResponse(body: unknown, status = 200): Response {
   })
 }
 
-type PatchAnswer = (ticket: Ticket, status: TicketStatus) => Promise<Response>
+type PatchAnswer = (
+  ticket: Ticket,
+  status: TicketStatus,
+  tickets: Record<string, Ticket>
+) => Promise<Response>
 
-// GET answers with the ticket. PATCH answers like the backend on success (200 with the
-// ticket in its new status), unless a test replaces the answer.
+// GET answers with the ticket as it is stored. PATCH answers like the backend on success
+// (200 with the ticket in its new status), unless a test replaces the answer. An answer can
+// change the stored tickets, as when someone else changes the status.
 function fakeBackend(patchAnswer: { current: PatchAnswer }): Mock {
   const tickets: Record<string, Ticket> = { "5": ticket5, "7": ticket7 }
   return vi.fn(async (url: string, init?: RequestInit) => {
@@ -51,10 +56,16 @@ function fakeBackend(patchAnswer: { current: PatchAnswer }): Mock {
     const ticket = tickets[id]
     if (init?.method === "PATCH") {
       const { status } = JSON.parse(String(init.body)) as { status: TicketStatus }
-      return patchAnswer.current(ticket, status)
+      return patchAnswer.current(ticket, status, tickets)
     }
     return jsonResponse(ticket)
   })
+}
+
+function getCalls(fetchMock: Mock): string[] {
+  return fetchMock.mock.calls
+    .filter((call) => (call[1] as RequestInit | undefined)?.method === undefined)
+    .map((call) => call[0] as string)
 }
 
 const succeed: PatchAnswer = async (ticket, status) => jsonResponse({ ...ticket, status })
@@ -191,10 +202,14 @@ describe("Status change in the detail view", () => {
     expect(patchCalls(fetchMock)).toHaveLength(1)
   })
 
-  it("HIST-07: same status shows the message and keeps the saved status", async () => {
-    // The status can have been changed by someone else after the page was loaded.
+  it("HIST-07: same status shows the message and fetches the current status again", async () => {
+    // Someone else closed the ticket after the page was loaded, so the backend answers 409.
+    // The view fetches the ticket again and shows the current status (KSP-32 AC6).
     const user = userEvent.setup()
-    patchAnswer.current = async () => jsonResponse({ detail: "Ärendet har redan den statusen." }, 409)
+    patchAnswer.current = async (ticket, _status, tickets) => {
+      tickets["5"] = { ...ticket, status: "closed" }
+      return jsonResponse({ detail: "Ärendet har redan den statusen." }, 409)
+    }
     renderAt("/tickets/5")
     const select = await openEditor(user)
 
@@ -202,9 +217,11 @@ describe("Status change in the detail view", () => {
     await user.click(saveButton())
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Ärendet har redan den statusen.")
-    // The view stays in edit mode, so the user can try again (KSP-32 AC6).
+    await vi.waitFor(() => expect(select).toHaveDisplayValue("Avslutat"))
+    expect(getCalls(fetchMock)).toEqual(["/api/tickets/5", "/api/tickets/5"])
+    // The view stays in edit mode, and the current status cannot be saved again.
     expect(select).toBeInTheDocument()
-    expect(select).toHaveDisplayValue("Pågående")
+    expect(saveButton()).toBeDisabled()
   })
 
   it("HIST-06: invalid status shows the message and keeps the saved status", async () => {
