@@ -26,6 +26,7 @@ Kör automatiserade tester med `npm test` och skapa produktionsbyggen med `npm r
 
 MVP:ns vertikala featuretickets, krav-ID:n och testmappning finns i [docs/features](./docs/features/README.md).
 Planerade delsteg och aktuell status finns i [plan.md](./plan.md).
+Kursens G/VG-evidens, verifieringsplan och veckostatus finns i [docs/examination](./docs/examination/README.md).
 
 ## Kom igång
 

@@ -8,4 +8,5 @@
 - Validate input at the API boundary and return clear errors. Do not silently hide failures.
 - Reuse shared UI components and follow the project's palette and accessibility guidance in the `ui-consistency` skill.
 - Run the narrowest relevant tests and build before reporting a change as verified. Report commands and actual results.
+- Help the team preserve course evidence using `docs/examination/`; distinguish completed evidence from planned work and ask a focused reflection question when personal evidence is missing. Never infer one student's contribution from team work.
 - Do not add authentication, hosting or external integrations unless a feature ticket requires them.
