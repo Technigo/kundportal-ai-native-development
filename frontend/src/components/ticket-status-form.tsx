@@ -76,8 +76,10 @@ export function TicketStatusForm({
     }
   }
 
-  // Save is disabled for the saved status, so 409 means that someone else has changed the
-  // status since the page was loaded. The ticket is fetched again to show it (AC6, HIST-07).
+  // Save is disabled for the saved status, so 409 means that someone else has already saved
+  // the status chosen here since the page was loaded. The ticket is fetched again so that the
+  // view shows it (AC6, HIST-07). If someone saved a different status, saving here succeeds
+  // and the latest change wins.
   async function showCurrentStatus() {
     const current = await fetchTicket(String(ticket.id))
     if (current.state === "ok") {
