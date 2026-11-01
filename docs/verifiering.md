@@ -127,6 +127,13 @@ resultatet: vilket test som föll, eller att inget föll och vad som ändrades i
 
 | Datum | Steg | Mutation | Krav | Test som föll | Gjord av |
 | --- | --- | --- | --- | --- | --- |
+| 2026-10-31 | 1 | M1b: historikposten `created` tas bort i `TicketService.create` | HIST-01, 02, 03 | 11 failed: HIST-01 ×3, HIST-02 ×2, HIST-03, HIST-11, HIST-12, invarianten och samma status (`test_history.py`, `test_read_history.py`). Alla på saknad `created`-post | Azalea |
+| 2026-10-31 | 1 | M1: historikposten `status_changed` tas bort i `TicketService.change_status` | HIST-02, 03 | 9 failed: HIST-02 ×3, HIST-03, HIST-11, invarianten, historiken per ärende, kontraktsfälten (tack vare invariantraden från PR #61) och HIST-13 i `test_status_rules.py`. Alla på saknad `status_changed`-post | Azalea |
+| 2026-11-01 | 1 | M2: `commit` flyttad före historikposten i `change_status` | HIST-09 | 9 failed, samma som M1: posten commitas aldrig och ser ut att saknas. **Delvis fångad:** inget test kontrollerar att statusen är oförändrad när historiken inte kan sparas. Testerna för HIST-09 med injicerat fel (KSP-41) behövs | Azalea |
+| 2026-11-01 | 1 | M3: `commit` tas bort i `create` (bara `flush`) | HIST-04, CORE-02 | 52 failed, bland annat `test_core02_ticket_survives_restart`: inget sparas, så nästa begäran får 404 eller tomma listor | Azalea |
+| 2026-11-01 | 1 | M3b: `commit` tas bort i `change_status` | HIST-04, HIST-02 | 32 failed: HIST-02 ×3, HIST-03, HIST-11 och 25 tester för statusreglerna (statusen sparas inte). Testet för kontraktsfälten klarade sig, eftersom status och post försvann tillsammans och invarianten höll | Azalea |
+
+*Steg 1 kördes för hand på `335fe45` (main efter PR #61), en mutation i taget i en egen arbetskopia. Nollpunkt: 166 passed. Underlag: Azaleas loggbok och jämförelsetabell (lokalt).*
 
 ## 6. Testförslag från AI
 
