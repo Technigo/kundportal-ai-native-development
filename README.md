@@ -2,14 +2,15 @@
 
 ## Projektöversikt
 
-Kundserviceportalen är ett lokalt arbetsverktyg där en aktiv handläggare åt gången registrerar, läser och följer kundärenden. Varje ärende innehåller obligatoriskt kund-ID och kundnamn som anges manuellt. Lösningen planeras innehålla ett användargränssnitt, applikationslogik och beständig lagring. Första versionen prioriterar datorwebbläsare och ett kärnflöde som kan genomföras med tangentbord.
+Kundserviceportalen är ett lokalt arbetsverktyg där en aktiv handläggare åt gången ska kunna registrera, läsa och följa kundärenden. Varje ärende innehåller obligatoriskt kund-ID och kundnamn som anges manuellt. Projektet har en körbar grund med användargränssnitt, backend och konfiguration för beständig MySQL-lagring; ärendeflödet är ännu inte implementerat. Första versionen prioriterar datorwebbläsare och ett kärnflöde som kan genomföras med tangentbord.
 
-**Projektstatus 2026-10-30:** produktkraven är fastställda och grundtekniken är vald. Danielle väljer backendramverket separat; API-kontrakt och övriga teknikdetaljer återstår att dokumentera. Applikationskod och automatiserade tester återstår. Verifieringen är planerad och inga produktkontroller är genomförda.
+**Projektstatus 2026-11-01:** teknikvalen är React + TypeScript + Vite, FastAPI och MySQL via Docker Compose. En manuellt rapporterad kontroll verifierade att MySQL-integrationen kördes utan att hoppas över, att `/health/db` svarade `{"status":"ok","database":"ok"}` och att React-vyn visade API och MySQL som tillgängliga. Detta verifierar anslutningsgrunden, inte registrering eller beständig lagring av ärenden. Produktkraven för ärenden är ännu inte implementerade. Se [verifieringsplanen](docs/verifieringsplan.md) för tidigare resultat och detaljer.
 
 ### Gruppens underlag
 
 - [Kravspecifikation och acceptanskriterier](docs/kravspecifikation.md)
 - [Verifieringsplan, planerade tester och resultat](docs/verifieringsplan.md)
+- [Utkast till API-kontrakt](docs/api-kontrakt.md)
 
 Länka till dessa underlag från teamets löpande PR. Kursens ursprungliga instruktioner finns kvar längre ned i denna README.
 
@@ -30,17 +31,17 @@ Endast påhittade uppgifter används. Kunduppgifterna sparas på respektive äre
 | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | Teamnamn                          | Jiriga                                                                                                                      |
 | Medlemmar och GitHub-användarnamn | `Daniel - /danielleven` `Danielle - /danielleroslund` `Lukas - /LurreT` `Alvar - /AlvarArias` `Nora - /NoraAljuburiMasamra` |
-| Språk och ramverk                 | `TypeScript`, `React`, `Python`                                                                                              |
-| Backendramverk                    | Danielle väljer separat. Beslutet dokumenteras när det är fattat.                                                            |
+| Språk och ramverk                 | `TypeScript`, `React`, `Vite`, `Python`, `FastAPI`                                                                            |
+| Backendramverk                    | `FastAPI`                                                                                                                     |
 | Klientplattform                   | `Webbapplikation`                                                                                                           |
-| Databas/beständig lagring         | `SQLite`                                                                                                                    |
+| Databas/beständig lagring         | `MySQL` via `Docker Compose`                                                                                                 |
 | Testverktyg                       | `Vitest`, `Pytest`                                                                                                          |
 
 ### Ansvarsfördelning
 
 | Medlem | Huvudansvar | Konkreta uppgifter |
 | --- | --- | --- |
-| Danielle | Backend | Välja backendramverk samt bygga API, databas, validering och hantering av ärendestatus. |
+| Danielle | Backend | Bygga API, databas, validering och hantering av ärendestatus med FastAPI och MySQL. |
 | Daniel | Frontend, delat med Lukas, Nora och Alvar | Bygga formulär, ärendelista, detaljvy och statusfilter i React. |
 | Lukas | Integration och utvecklingsmiljö samt delat frontendansvar med Daniel, Nora och Alvar | Koppla ihop frontend och backend, samordna API-format, ordna startkommandon och automatiska testkörningar i GitHub Actions samt utveckla frontend. |
 | Nora | UX samt delat frontendansvar med Daniel, Lukas och Alvar | Skissa användarflöden och vyer, precisera acceptanskriterier, utforma felmeddelanden och utveckla frontend. |
@@ -58,19 +59,106 @@ Gemensamma AI-instruktioner ska versionshanteras i repot. Varje medlem ska kunna
 
 ### Installation och körning
 
-Applikationen är ännu inte implementerad. Det finns därför inga installations-, start- eller testkommandon att köra. Instruktionerna ska kompletteras med faktiska, verifierade kommandon när projektstrukturen finns.
+Följande instruktioner gäller PowerShell från repots rot. Frontend och backend körs lokalt; Docker används endast för MySQL. Ärendefunktioner och demonstrationsdata finns ännu inte.
 
-En vanlig start eller omstart ska bevara befintliga ärenden. Återställning av utvecklingsdata och skapande av demonstrationsdata ska ha separata, uttryckliga kommandon. Automatiserade tester ska använda separat temporär lagring.
+#### Förutsättningar
 
-Före demonstration och inlämning ska detta avsnitt beskriva:
+- Python 3.9 eller senare.
+- Node.js 20.19+ eller 22.12+ och npm.
+- Docker Desktop med Linux-containrar startad.
 
-1. Nödvändiga verktyg och versioner samt hur teamets repo klonas.
-2. Installation av beroenden från repots rot.
-3. Eventuell lokal konfiguration och initiering av lagring, utan riktiga kunduppgifter eller hemligheter.
-4. Start av lösningens samtliga delar och hur användargränssnittet öppnas.
-5. Exakt kommando för att köra alla automatiserade tester och hur separat testlagring används.
-6. Hur applikationen stoppas och startas igen samt var ärenden lagras beständigt.
-7. Separata kommandon för att återställa utvecklingsdata respektive skapa påhittade demonstrationsdata.
+#### 1. Lokal konfiguration
+
+```powershell
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+```
+
+Byt exempelvärdena för lösenord i `.env` mot lokala lösenord och håll filen privat. Om du byter användarnamn eller lösenord ska du även uppdatera motsvarande `DATABASE_URL` eller `TEST_DATABASE_URL`. `.env` ignoreras av Git; checka aldrig in lokala anslutningsuppgifter. Behåll `DATABASE_URL` riktad mot `kundportal_dev` och `TEST_DATABASE_URL` riktad mot separat `kundportal_test`.
+
+#### 2. Starta MySQL
+
+```powershell
+docker compose up -d mysql
+docker compose ps
+```
+
+Vänta tills tjänsten visar `healthy`. Utvecklingsdatabasen använder den namngivna volymen `mysql_data` och bevaras vid vanlig omstart. Ingen ärendetabell skapas i denna grund.
+
+För MySQL-integrationstester, starta den separata testservern:
+
+```powershell
+docker compose --profile test up -d mysql-test
+docker compose --profile test ps
+```
+
+Testservern använder port `3307`, databasen `kundportal_test` och användaren `kundportal_test`. Testet verifierar dessa värden innan anslutning och använder aldrig utvecklingsdatabasen. Testtjänsten har ingen uttryckligt konfigurerad namngiven volym.
+
+#### 3. Installera och starta backend
+
+Skapa miljön och installera beroenden från repots rot:
+
+```powershell
+py -3.9 -m venv backend\.venv
+backend\.venv\Scripts\python.exe -m pip install -r backend\requirements.txt
+```
+
+Starta backend i ett separat PowerShell-fönster:
+
+```powershell
+Set-Location backend
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --reload
+```
+
+#### 4. Installera och starta frontend
+
+Starta frontend i ett annat PowerShell-fönster:
+
+```powershell
+Set-Location frontend
+npm ci
+npm run dev
+```
+
+Öppna adressen som Vite skriver ut, normalt `http://localhost:5173`. Vyn visar API-status separat från MySQL-status.
+
+#### 5. Kontrollera anslutningen
+
+Med backend igång:
+
+```powershell
+Invoke-RestMethod http://localhost:8000/health
+Invoke-RestMethod http://localhost:8000/health/db
+```
+
+`/health` kontrollerar endast att API:t svarar. `/health/db` kör `SELECT 1` mot `DATABASE_URL` och svarar `503` om databasen inte kan nås. Bekräfta även statusen i frontendvyn. Detta är den verkliga anslutningskontrollen; simulerade frontendtester bevisar inte MySQL-anslutningen.
+
+#### 6. Tester
+
+Backendtester som inte kräver databas:
+
+```powershell
+Set-Location backend
+.\.venv\Scripts\python.exe -m pytest -q -m "not integration"
+```
+
+MySQL-testet och hela backendsviten kräver att `mysql-test` är startad och frisk:
+
+```powershell
+Set-Location backend
+.\.venv\Scripts\python.exe -m pytest -q
+```
+
+Frontendtester och produktionsbygge:
+
+```powershell
+Set-Location frontend
+npm test
+npm run build
+```
+
+Frontendtestet stubbar HTTP-svaren och kontrollerar bara att API-status och MySQL-status visas separat. Det ersätter inte MySQL-integrationstestet eller manuell kontroll av hela anslutningskedjan.
+
+Avsluta lokala utvecklingsservrar med `Ctrl+C`. Stoppa MySQL utan att radera data med `docker compose stop mysql`; starta igen med `docker compose up -d mysql`. Start/omstart tömmer eller återställer inte utvecklingsdatabasen. Inga återställnings- eller seedkommandon finns ännu.
 
 En annan person ska kunna följa instruktionerna utan ett personligt betalkonto. Körinstruktionerna verifieras från en ren klon enligt M06 i verifieringsplanen.
 
@@ -90,9 +178,9 @@ Detta flöde är en plan för den färdiga lösningen och har ännu inte genomf�
 
 ### Arbetsplan
 
-Utgå från de fastställda produktkraven. Danielle väljer backendramverket och teamet dokumenterar ett gemensamt API-kontrakt samt återstående teknikdetaljer. Fördela arbetet flexibelt i uppgifter kopplade till krav-ID:n och verifiering.
+Utgå från de fastställda produktkraven och granska [API-kontraktsutkastet](docs/api-kontrakt.md) tillsammans innan frontend och backend utvecklas parallellt. Fördela arbetet flexibelt i uppgifter kopplade till krav-ID:n och verifiering.
 
-Det första integrationsmålet är att skapa ett ärende i React, spara det via backend i SQLite och visa det igen efter omladdning. Lukas samordnar denna kedja så snart grunderna finns. Bygg därefter vidare på lista och detaljer, statusändring och felhantering samt statusfilter. Integrera och verifiera löpande och uppdatera tester och dokumentation tillsammans med respektive funktion. Teamet fastställer interna leveransdatum.
+Det första integrationsmålet är att skapa ett ärende i React, spara det via FastAPI i MySQL och läsa tillbaka det efter omladdning. Lukas samordnar denna kedja så snart grunderna finns. Bygg därefter vidare på lista och detaljer, statusändring och felhantering samt statusfilter. Integrera och verifiera löpande och uppdatera tester och dokumentation tillsammans med respektive funktion. Teamet fastställer interna leveransdatum.
 
 Körresultat redovisas i verifieringsplanen först efter faktisk körning. Kursens regler för gemensamma och individuella underlag gäller enligt instruktionerna nedan.
 

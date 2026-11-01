@@ -1,0 +1,17 @@
+:root {
+  font-family: system-ui, 'Segoe UI', sans-serif;
+  color: #202124;
+  background: #f7f8fa;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+}
+
+#root {
+  min-height: 100vh;
+}

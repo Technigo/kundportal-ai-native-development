@@ -58,8 +58,8 @@ Ett felregistrerat kund-ID eller kundnamn, eller en felregistrerad rubrik, beskr
 | Fält | Regel |
 | --- | --- |
 | Ärende-ID | Unikt heltal, skapas automatiskt och ändras inte under ärendets livstid. Ingen obruten nummerföljd utlovas. |
-| Kund-ID | Obligatorisk text som anges manuellt. Får inte vara tom efter trimning. Identifierar kunden och är separat från det automatiskt skapade ärende-ID:t. |
-| Kundnamn | Obligatorisk text som anges manuellt. Får inte vara tom efter trimning. |
+| Kund-ID | Obligatorisk text som anges manuellt. 1–100 Unicode-kodpunkter efter trimning. Inget särskilt formatmönster krävs. Identifierar kunden och är separat från det automatiskt skapade ärende-ID:t. |
+| Kundnamn | Obligatorisk text som anges manuellt. 1–200 Unicode-kodpunkter efter trimning. Inget särskilt formatmönster krävs. |
 | Rubrik | Obligatorisk. 1–100 tecken efter trimning. |
 | Beskrivning | Obligatorisk. 1–5 000 tecken efter trimning. |
 | Kategori | Obligatoriskt val: Faktura, Teknisk support eller Övrigt. |
@@ -67,11 +67,11 @@ Ett felregistrerat kund-ID eller kundnamn, eller en felregistrerad rubrik, beskr
 | Status | Nytt, Pågående, Väntar på kund eller Avslutat. Sätts automatiskt till Nytt vid registrering. |
 | Skapad | Sätts automatiskt av backend när ärendet skapas och lagras i UTC. Kan inte ändras av användaren och bevaras vid statusändring. |
 
-Inledande och avslutande blanksteg tas bort från kund-ID, kundnamn, rubrik och beskrivning före validering och lagring. Text som enbart innehåller blanksteg räknas som tom. Inre blanksteg i kundnamn samt inre blanksteg och radbrytningar i beskrivningen bevaras.
+Före validering och lagring tas inledande och avslutande tecken med Unicode-egenskapen `White_Space` bort från kund-ID, kundnamn, rubrik och beskrivning. Uppsättningen är U+0009–U+000D, U+0020, U+0085, U+00A0, U+1680, U+2000–U+200A, U+2028, U+2029, U+202F, U+205F och U+3000. Endast tecken i början och slutet tas bort. Text som blir tom efter trimning avvisas. Inre mellanslag bevaras; inre tabbar och radbrytningar i beskrivningen bevaras.
 
-Kund-ID skapas inte automatiskt och behöver inte vara unikt mellan ärenden. Samma kund-ID får anges för flera ärenden. Kund-ID och kundnamn sparas på varje ärende utan uppslagning eller kontroll mot ett separat kundregister. Exakta formatregler och eventuella längdgränser för kundfälten fastställs och dokumenteras av teamet i API-kontraktet.
+Kund-ID skapas inte automatiskt och behöver inte vara unikt mellan ärenden. Samma kund-ID får anges för flera ärenden. Kund-ID och kundnamn sparas på varje ärende utan uppslagning eller kontroll mot ett separat kundregister.
 
-Längd räknas i Unicode-kodpunkter efter trimning, inte i UTF-16-kodenheter eller synliga symboler. En sammansatt emoji kan därför räknas som flera tecken. Frontend och backend ska använda samma längddefinition och samma trimningsregler. Exakt vilka blankstegstecken trimningen omfattar fastställs i det gemensamma API-kontraktet. Gemensamma testexempel ska omfatta blanksteg, tabbar, radbrytningar och emoji samt de fastställda längdgränserna.
+Längd räknas i Unicode-kodpunkter efter trimning, inte i UTF-16-kodenheter eller synliga symboler. En sammansatt emoji kan därför räknas som flera tecken. Frontend och backend ska använda samma längddefinition och den uttryckliga `White_Space`-uppsättningen ovan; förlita er inte på att Python `strip()` och JavaScript `trim()` hanterar exakt samma tecken. Gemensamma testexempel ska omfatta blanksteg, tabbar, radbrytningar, U+00A0 och emoji samt de fastställda längdgränserna.
 
 Kategori och prioritet väljs bland tillåtna värden. Ett tomt val eller ett värde utanför listan avvisas. Ärende-ID, startstatus och skapandetid bestäms av applikationslogiken.
 
@@ -193,7 +193,7 @@ Motivering: filtret hjälper handläggaren att hitta ärenden som behöver hante
 | <a name="q6"></a>Q6 | Integration, granskning och merge | En funktion räknas som färdig först efter verifiering mot den riktiga motparten, relevanta körda tester, uppdaterad dokumentation och granskning av en annan teammedlem. Både backend- och frontendtester ska vara godkända för den aktuella PR-versionen i GitHub Actions före merge till teamets main. |
 | <a name="q7"></a>Q7 | Gemensamt arbetssätt för AI-stöd | Gemensamma AI-instruktioner versionshanteras i repot. Varje medlem ska kunna förklara sitt bidrag, vilka kontroller som genomförts och vad dessa faktiskt visar, även för AI-genererad kod. |
 
-Verifieringen av K7 ska omfatta minst ett integrationstest med verklig SQLite-lagring där ett kontrollerat fel framkallas efter att en skrivoperation påbörjats men före commit. Efteråt kontrolleras via en ny anslutning att den tidigare beständiga datan är oförändrad. Simulerade felsvar kan komplettera denna kontroll men ersätter den inte.
+Verifieringen av K7 ska omfatta minst ett integrationstest mot verklig MySQL-testlagring där ett kontrollerat fel framkallas efter att en skrivoperation påbörjats men före commit. Efteråt kontrolleras via en ny anslutning att den tidigare beständiga datan är oförändrad. Simulerade felsvar kan komplettera denna kontroll men ersätter den inte. Testet får aldrig använda utvecklingsdatabasen.
 
 Simulerade API-svar får användas för parallell utveckling. De räcker inte för att godkänna den integrerade funktionen enligt Q6. Automatiserade och manuella resultat ska fortsatt redovisas separat enligt Q3; fastställda krav innebär inte att några tester redan är genomförda.
 
@@ -203,8 +203,9 @@ Simulerade API-svar får användas för parallell utveckling. De räcker inte f�
 
 | Beslut | Fastställt läge |
 | --- | --- |
-| Språk och klientplattform | React och TypeScript i en webbapplikation med Python-backend. |
-| Beständig lagring | SQLite. |
+| Språk och klientplattform | React och TypeScript med Vite i en webbapplikation med Python-backend. |
+| Backendramverk | FastAPI. |
+| Beständig lagring | MySQL via Docker Compose. |
 | Testverktyg och automatisk körning | Pytest för backend, Vitest för frontend och testkörningar i GitHub Actions. |
 | Fältregler, statusflöde och kompletterande funktion | Reglerna i avsnitt 4–6 gäller, inklusive statusfilter enligt K8. |
 | Kunduppgifter | Obligatoriskt, manuellt angivet kund-ID och kundnamn lagras på varje ärende. Inget separat kundregister ingår. |
@@ -215,17 +216,16 @@ Simulerade API-svar får användas för parallell utveckling. De räcker inte f�
 
 | Beslut | Nuvarande läge |
 | --- | --- |
-| Python-ramverk | Danielle väljer backendramverk separat. Beslutet dokumenteras när det är fattat. |
-| Gemensamt API-kontrakt | Teamet fastställer och versionshanterar API-adresser, operationer, JSON-format, tillåtna värden och felstruktur, med exempel på lyckade svar och felsvar. Kontraktet ska följa de fastställda produktreglerna. |
-| Tekniska preciseringar | Exakta trimningsregler, formatregler och eventuella längdgränser för kundfälten, tidsprecision, beroendeversioner, projektstruktur och konfiguration väljs av teamet och dokumenteras gemensamt. |
-| Lagring och körkommandon | Databasens plats, initiering, separata kommandon för återställning och demonstrationsdata samt installations-, start- och testkommandon dokumenteras i README och verifieringsplanen där det är relevant. |
+| Granskning av API-kontrakt | [Utkastet](api-kontrakt.md) föreslår API-adresser, operationer, JSON-format, tillåtna värden och felstruktur. Teamet behöver granska och godkänna kontraktet innan implementation. |
+| Tekniska preciseringar | Kundfältens format, längdgränser och trimningsregler är beslutade enligt avsnitt 4. Tidsprecision, beroendeversioner, projektstruktur och konfiguration återstår att fastställa och dokumentera. |
+| Lagring och körkommandon | MySQL via Docker Compose är valt. Databasens konfiguration, migration/initiering, separata kommandon för återställning och demonstrationsdata samt installations-, start- och testkommandon dokumenteras i README och verifieringsplanen där det är relevant. |
 | Uppgiftsfördelning och interna leveransdatum | Planeras flexibelt av teamet utifrån huvudansvaret i README. Inga fasta uppgiftsägare eller interna datum har beslutats i denna genomgång. |
 
 ## 9. Arbetsordning och gemensamt arbetssätt
 
-1. Fastställ återstående teknikdetaljer och dokumentera ett gemensamt API-kontrakt som stödjer parallell utveckling.
+1. Granska och fastställ API-kontraktsutkastet och återstående preciseringar gemensamt så att parallell utveckling följer samma interface.
 2. Skapa körbar projektstruktur, startkommandon och automatiska testkörningar samt uppdatera installationsinstruktionerna.
-3. Bygg den första integrerade kedjan: skapa ett ärende i React, spara det via backend i SQLite och visa det igen efter omladdning. Lukas samordnar denna integration så snart grunderna finns. Utveckla registrering, validering och lagring med tester för K1–K3.
+3. Bygg den första integrerade kedjan: skapa ett ärende i React, spara det via FastAPI i MySQL och visa det igen efter omladdning. Lukas samordnar denna integration så snart grunderna finns. Utveckla registrering, validering och lagring med tester för K1–K3.
 4. Bygg lista och detaljvy med tester för K4–K5.
 5. Bygg statusändring och felhantering med tester för K6–K7.
 6. Bygg statusfiltret med tester för K8.

@@ -1,2 +1,21 @@
 # Personliga dokument som bara ska finnas lokalt.
 /docs/personal/
+
+# Local environment variables (keep the example file tracked).
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/coverage/
