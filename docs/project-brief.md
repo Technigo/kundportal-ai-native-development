@@ -62,6 +62,8 @@ Status: **Done** = implemented and tested, **Planned** = not built yet. Each cri
 
 - AC4.1: Given a ticket in the list, when the handler opens it, then the full description and requester details are shown.
 
+Detailed specification: [docs/specs/ticket-list-and-details.md](specs/ticket-list-and-details.md)
+
 ### 5. Change status and track history (Planned)
 
 - AC5.1: The handler can change a ticket's status between `open`, `in_progress` and `closed`.
