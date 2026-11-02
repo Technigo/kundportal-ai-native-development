@@ -17,14 +17,14 @@ En handläggare kan registrera ett ärende i UI:t. Frontend, API och SQLite vali
 
 | Krav-ID | Acceptanskriterium | Minst ett automatiserat test |
 |---|---|---|
-| CASE-CREATE-001 | Giltig rubrik sparas trimmad. Saknad, tom eller blank rubrik avvisas. Längd 120 godtas; 121 avvisas. | `[CASE-CREATE-001]` giltig, blank och längdgräns för rubrik |
-| CASE-CREATE-002 | Giltig beskrivning sparas trimmad. Saknad, tom eller blank beskrivning avvisas. Längd 2 000 godtas; 2 001 avvisas. | `[CASE-CREATE-002]` giltig, blank och längdgräns för beskrivning |
-| CASE-CREATE-003 | Kategori krävs och väljs i en rullista som bara visar de fyra tillåtna kategorierna. API:t avvisar okänd kategori. | `[CASE-CREATE-003]` rullistans alternativ och API-validering |
-| CASE-CREATE-004 | Prioritet krävs och väljs i en rullista som bara visar de tre tillåtna prioriteterna. API:t avvisar okänd prioritet. | `[CASE-CREATE-004]` rullistans alternativ och API-validering |
+| CASE-CREATE-001 | Giltig rubrik sparas trimmad. Saknad, tom eller blank rubrik avvisas. Längd 120 godtas; 121 avvisas. | `CaseForm.test.tsx`: kräver rubrik, begränsar längden och skickar trimmade textvärden. `cases.test.ts`: validerar rubrik. |
+| CASE-CREATE-002 | Giltig beskrivning sparas trimmad. Saknad, tom eller blank beskrivning avvisas. Längd 2 000 godtas; 2 001 avvisas. | `CaseForm.test.tsx`: kräver beskrivning, begränsar längden och skickar trimmade textvärden. `cases.test.ts`: validerar beskrivning. |
+| CASE-CREATE-003 | Kategori krävs och väljs i en rullista som bara visar de fyra tillåtna kategorierna. API:t avvisar okänd kategori. | `CaseForm.test.tsx`: kräver kategori och visar tillåtna alternativ. `cases.test.ts`: validerar kategori. |
+| CASE-CREATE-004 | Prioritet krävs och väljs i en rullista som bara visar de tre tillåtna prioriteterna. API:t avvisar okänd prioritet. | `CaseForm.test.tsx`: kräver prioritet och visar tillåtna alternativ. `cases.test.ts`: validerar prioritet. |
 | CASE-CREATE-005 | Giltigt ärende får status `Nytt` och systemgenererad skapandetid. | `[CASE-CREATE-005]` standardstatus och skapandetid |
 | CASE-CREATE-006 | Sparat ärende finns kvar och kan läsas efter ny databasanslutning. | `[CASE-CREATE-006]` beständig lagring efter ny anslutning |
-| CASE-CREATE-007 | Ett ogiltigt anrop ger begripligt valideringsfel och skapar inget ärende. | `[CASE-CREATE-007]` felbesked och oförändrad lagring |
-| CASE-CREATE-008 | Ärende kan skapas utan anteckning. | `[CASE-CREATE-008]` anteckning är valfri vid skapande |
+| CASE-CREATE-007 | Ett ogiltigt anrop ger begripligt valideringsfel och skapar inget ärende. | `CaseForm.test.tsx`: visar begripligt API-valideringsfel. `cases.test.ts`: avvisar ogiltig indata utan att spara. |
+| CASE-CREATE-008 | Ärende kan skapas utan anteckning. | `CaseForm.test.tsx` och `cases.test.ts`: skapar ärende utan intern anteckning. |
 
 ## Testfiler
 
