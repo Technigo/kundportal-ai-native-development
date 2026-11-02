@@ -1,6 +1,8 @@
 # Beslutslogg
 
-Beslut och förtydliganden som användaren lämnade i projektsessionen 2026-11-01. Loggen visar inte i sig att båda teammedlemmarna har godkänt besluten eller uppfyller individuella betygskriterier. När användaren valde ett rekommenderat alternativ markeras det som sådant; bakomliggande motiv anges bara när de uttrycktes.
+Beslut och förtydliganden som användaren lämnade i projektsessionerna 2026-11-01 och 2026-11-02. Loggen visar inte i sig att båda teammedlemmarna har godkänt besluten eller uppfyller individuella betygskriterier. När användaren valde ett rekommenderat alternativ markeras det som sådant; bakomliggande motiv anges bara när de uttrycktes.
+
+## Beslut 2026-11-01
 
 | # | Beslut | Typ | Följd/evidens |
 |---|---|---|---|
@@ -25,9 +27,33 @@ Beslut och förtydliganden som användaren lämnade i projektsessionen 2026-11-0
 | 19 | Vid osäkerhet ska agenten fråga i stället för att själv bestämma; frågor får gärna innehålla tre alternativ och en rekommendation. | Uttrycklig samarbetsregel | Förtydliganden om anteckningar, indata, testbarhet och sortering hämtades in innan de skrevs in som krav. |
 | 20 | Skapa dokumentation som hjälper teamet följa G/VG-kriterier och ställer reflektionsfrågor där individuell evidens saknas. | Uttryckligt mål | [Examinationsunderlag](./README.md), [kriteriematris](./criteria-matrix.md) och evidens-skillen. |
 | 21 | Bevara relevanta beslut från sessionen för framtida redovisning och committera dokumentationen. | Uttrycklig begäran | [AI-arbetsflöde och sessionspår](./ai-workflow.md); commit `b58878ee`. |
-| 22 | Efter dokumentationssteget: committa och pausa; fortsätt MVP-arbetet en annan dag. | Uttrycklig instruktion | Nästa oavslutade feature är CASE-DETAIL i [MVP-planen](../../plan.md). |
+| 22 | Efter dokumentationssteget: committa och pausa; fortsätt MVP-arbetet en annan dag. | Uttrycklig instruktion | Vid pausen var nästa oavslutade feature CASE-DETAIL. Arbetet återupptogs 2026-11-02; se besluten nedan och [MVP-planen](../../plan.md). |
 
-## Godkännanden som påverkade arbetsflödet
+## Beslut 2026-11-02
+
+Underlaget är användarens uttryckliga instruktioner och svar i sessionschatten. Commitreferenserna visar genomförda ändringar, inte vem som skrivit varje kodrad eller vilka manuella kontroller användaren själv utfört.
+
+| # | Beslut | Typ | Följd/evidens |
+|---|---|---|---|
+| 23 | Skriv tester som testar en sak i taget. Dela först upp det utpekade testet och gå sedan igenom hela formulärets testfil enligt samma princip. | Uttrycklig korrigering av AI-förslag: ”Kom ihåg att i framtiden skriv tester som testar en sak per test.” | [CaseForm.test.tsx](../../packages/web/src/CaseForm.test.tsx) delades upp i mer fokuserade tester och [testmappningen](../features/case-create.md) uppdaterades; commit `d2f7dd1`. Principen kompletterar beslut 9: flera krav-ID:n får bara samlas när testet fortfarande har ett sammanhängande fokus. |
+| 24 | Testprincipen om ett beteende per test ska gälla detta repository. | Uttryckligt val av omfattning i följdfråga | Sparades som repositorypreferens efter användarens svar ”repository”. Ingen motsvarande preferens för alla användarens repositoryn beslutades. |
+| 25 | Ta bort testet som kontrollerar att fältet Intern anteckning inte renderas. | Uttryckligt avvisande av ett AI-genererat test: ”Denna funktionalitet finns inte, så ta bort det testet.” | Det utpekade testet togs bort ur [CaseForm.test.tsx](../../packages/web/src/CaseForm.test.tsx); commit `d2f7dd1`. Användaren avvisade testet, inte den planerade anteckningsfeaturen. |
+| 26 | Skapa framöver inte tester vars enda syfte är att kontrollera att element saknas eller inte syns. Regeln ska gälla detta repository. | Uttrycklig testpreferens och val av omfattning | Instruktionen gavs efter borttagningen i beslut 25 och sparades som repositorypreferens. Beslutet är inte evidens på att alla äldre tester i projektet har granskats eller ändrats. |
+| 27 | Skapa ett dokument över vad som skulle göras annorlunda i ett riktigt projekt. Dokumentera att `handleCreated` och den manuella uppdateringsräknaren skulle ersättas med gemensam state-/server-state-hantering. | Uttrycklig dokumentationsbegäran, förtydligad med ”Ja, skulle ersättas med state management” | [Produktionsöverväganden](../production-considerations.md); commit `f746501`. Detta är ett framtida förbättringsförslag, inte ett beslut att införa state management i MVP:n. |
+| 28 | Dokumentera att ett riktigt projekt bör ha tydligare felmeddelanden. | Uttrycklig dokumentationsbegäran | Avsnittet om mer vägledande felmeddelanden lades till i [produktionsövervägandena](../production-considerations.md); commit `444b72c`. Specifika meddelanden, nästa steg och teknisk loggning är dokumenterade förslag, inte genomförda produktionsförbättringar. |
+| 29 | Fortsätt enligt planen med ärendedetalj, därefter statusändring och sedan intern anteckning, med separat commit efter respektive godkännande. | Upprepade uttryckliga instruktioner att implementera nästa steg och därefter göra commit | Steg 6–8 i [MVP-planen](../../plan.md); commits `444b72c`, `6392011` och `639e319`. Inga nya beslut om statusregler eller anteckningsregler behövdes; tidigare krav följdes. |
+
+### Godkännanden 2026-11-02
+
+- Bad om commit av teständringarna: `d2f7dd1`.
+- Bad om commit av dokumentet med produktionsöverväganden: `f746501`.
+- Angav uttryckligen ”Vi har granskat klart, gör en commit” för ärendedetaljen: `444b72c`.
+- Bad om commit efter redovisningen av statussteget: `6392011`.
+- Bad om commit efter redovisningen av anteckningssteget: `639e319`.
+
+Commitbegärandena visar godkännande för commit. För status- och anteckningsstegen beskrev användaren inte vilka delar som granskades eller vilka kontroller som utfördes personligen. AI:ns rapporterade testresultat finns i respektive [featureticket](../features/README.md) och ska inte tillskrivas användaren som egna testkörningar.
+
+## Godkännanden som påverkade arbetsflödet 2026-11-01
 
 - Godkände projektskelettet och bad om commit innan steg 2.
 - Godkände teaminstruktioner/skills och bad om commit innan steg 3.
