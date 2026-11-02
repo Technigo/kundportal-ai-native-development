@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { isCreatedCase, type CreatedCase } from './caseTypes';
+import { CaseStatusForm } from './CaseStatusForm';
 
 type DetailState =
   | { status: 'loading' }
@@ -8,9 +9,10 @@ type DetailState =
 
 interface CaseDetailProps {
   caseId: number;
+  onUpdated?: (caseItem: CreatedCase) => void;
 }
 
-export function CaseDetail({ caseId }: CaseDetailProps) {
+export function CaseDetail({ caseId, onUpdated }: CaseDetailProps) {
   const [state, setState] = useState<DetailState>({ status: 'loading' });
 
   useEffect(() => {
@@ -81,6 +83,18 @@ export function CaseDetail({ caseId }: CaseDetailProps) {
               </time>
             </dd>
           </dl>
+          <CaseStatusForm
+            key={state.caseItem.id}
+            caseItem={state.caseItem}
+            onUpdated={(updated) => {
+              setState((current) =>
+                current.status === 'loaded' && current.caseItem.id === updated.id
+                  ? { status: 'loaded', caseItem: updated }
+                  : current
+              );
+              onUpdated?.(updated);
+            }}
+          />
         </>
       )}
     </section>

@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { act, cleanup, render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { CaseDetail } from './CaseDetail';
 
@@ -26,6 +27,40 @@ afterEach(() => {
 });
 
 describe('CaseDetail', () => {
+  it('[CASE-STATUS-002] retains the displayed status when a save is rejected', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn()
+        .mockResolvedValueOnce(jsonResponse(caseItem))
+        .mockResolvedValueOnce(jsonResponse({ error: 'Välj en giltig status.' }, 400))
+    );
+    const user = userEvent.setup();
+    render(<CaseDetail caseId={7} />);
+    await user.selectOptions(await screen.findByRole('combobox', { name: 'Ändra status' }), 'Avslutat');
+    await user.click(screen.getByRole('button', { name: 'Spara status' }));
+    await screen.findByRole('alert');
+
+    const term = screen.getByText('Status', { selector: 'dt' });
+    expect(term.nextElementSibling).toHaveTextContent('Pågående');
+  });
+
+  it('[CASE-STATUS-003] displays the status saved from the detail view', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn()
+        .mockResolvedValueOnce(jsonResponse(caseItem))
+        .mockResolvedValueOnce(jsonResponse({ ...caseItem, status: 'Avslutat' }))
+    );
+    const user = userEvent.setup();
+    render(<CaseDetail caseId={7} />);
+    await user.selectOptions(await screen.findByRole('combobox', { name: 'Ändra status' }), 'Avslutat');
+    await user.click(screen.getByRole('button', { name: 'Spara status' }));
+    await screen.findByText('Status sparad.');
+
+    const term = screen.getByText('Status', { selector: 'dt' });
+    expect(term.nextElementSibling).toHaveTextContent('Avslutat');
+  });
+
   it('[CASE-DETAIL-001] fetches the selected case from the detail endpoint', async () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse(caseItem));
     vi.stubGlobal('fetch', fetchMock);

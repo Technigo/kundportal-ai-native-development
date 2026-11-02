@@ -31,6 +31,26 @@ afterEach(() => {
 });
 
 describe('CaseList', () => {
+  it('[CASE-STATUS-003] updates the list status after saving from the detail view', async () => {
+    const selectedCase = cases[1];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn()
+        .mockResolvedValueOnce(new Response(JSON.stringify(cases)))
+        .mockResolvedValueOnce(new Response(JSON.stringify(selectedCase)))
+        .mockResolvedValueOnce(new Response(JSON.stringify({ ...selectedCase, status: 'Avslutat' })))
+    );
+    const user = userEvent.setup();
+    render(<CaseList />);
+    await user.click(await screen.findByRole('button', { name: selectedCase.title }));
+    await user.selectOptions(await screen.findByRole('combobox', { name: 'Ändra status' }), 'Avslutat');
+    await user.click(screen.getByRole('button', { name: 'Spara status' }));
+
+    const list = screen.getByRole('list', { name: 'Ärenden' });
+    const item = within(list).getAllByRole('listitem')[1];
+    expect(await within(item).findByText('Avslutat')).toBeInTheDocument();
+  });
+
   it('[CASE-DETAIL-001] opens details for the case chosen from the list', async () => {
     const selectedCase = cases[1];
     vi.stubGlobal(
