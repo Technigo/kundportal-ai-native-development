@@ -4,6 +4,7 @@
 
 - No ticket detail view and no status change yet. Tickets always stay `open`.
 - No status history is stored.
+- The status history does not record who made a change, because there is no sign-in.
 - No email is sent to the requester.
 - Data is stored in a local SQLite file. The app is meant to run locally only.
 - End-to-end tests run in Chrome only.
