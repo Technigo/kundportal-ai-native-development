@@ -1,6 +1,6 @@
 # API-kontrakt – utkast för granskning
 
-Utkast till gemensamt arbetsunderlag för React-klient och FastAPI-backend. **Mina förslag för gruppens granskning. Gruppen har ännu inte godkänt kontraktet.** Produkt- och valideringsregler finns i [kravspecifikationen](kravspecifikation.md).
+Arbetsunderlag för React-klient och FastAPI-backend. **Maskinvärden, felstruktur och preciseringarna nedan är Danielles beslut för backendimplementationen och ska granskas av frontendgruppen. De är inte ett påstående om gruppgodkännande.** Produkt- och valideringsregler finns i [kravspecifikationen](kravspecifikation.md).
 
 ## Anrop
 
@@ -12,16 +12,16 @@ Utkast till gemensamt arbetsunderlag för React-klient och FastAPI-backend. **Mi
 
 | Metod | Endpoint | Funktion | Svarskoder |
 |---|---|---|---|
-| `POST` | `/tickets` | Registrera ett ärende; returnerar det skapade ärendet och `Location: /api/tickets/{id}`. | `201`, `422`, `503` |
+| `POST` | `/tickets` | Registrera ett ärende; returnerar det skapade ärendet och `Location: /api/tickets/{id}`. | `201`, `422`, `503`, `500` vid oklart commitutfall |
 | `GET` | `/tickets` | Lista ärenden. Valfri `?status={status}` filtrerar på exakt en status, exempelvis `/api/tickets?status=in_progress`; utelämnad parameter betyder Alla. | `200`, `422`, `503` |
 | `GET` | `/tickets/{id}` | Hämta alla fält för ett ärende. | `200`, `404`, `503` |
-| `PATCH` | `/tickets/{id}/status` | Ändra endast status; alla giltiga statusövergångar tillåts. | `200`, `404`, `422`, `503` |
+| `PATCH` | `/tickets/{id}/status` | Ändra endast status; alla giltiga statusövergångar tillåts. | `200`, `404`, `422`, `503`, `500` vid oklart commitutfall |
 
-`200` betyder lyckad läsning eller statusändring, `201` bekräftad registrering, `404` okänt ärende-ID, `422` ogiltiga eller saknade fält/statusfilter och `503` bekräftat tillfälligt lagringsfel. Oväntade serverfel ger `500` med generiskt felmeddelande. Klienten skickar inte `id`, `status` eller `created_at` vid registrering.
+`200` betyder lyckad läsning eller statusändring, `201` bekräftad registrering, `404` okänt giltigt ärende-ID och `422` ogiltig indata, JSON, statusfilter eller okända request-fält. `503` används för databasfel endast när skrivningen säkert har misslyckats. Om commitutfallet är oklart svarar backend `500` med `save_outcome_unknown`; det får inte beskrivas som säker rollback. Klienten skickar inte `id`, `status` eller `created_at` vid registrering.
 
 ## Värden i API:t och texter i gränssnittet
 
-API:t föreslås använda de engelska värdena nedan i JSON och statusfilter. Gränssnittet visar motsvarande svenska text enligt kravspecifikationen.
+Backend använder de engelska värdena nedan i JSON och statusfilter. Gränssnittet visar motsvarande svenska text enligt kravspecifikationen.
 
 | Fält | Värde i API:t | Text i gränssnittet |
 |---|---|---|
@@ -65,11 +65,11 @@ Kund-ID och kundnamn är obligatorisk text efter trimning: kund-ID 1–100 och k
   "category": "billing",
   "priority": "normal",
   "status": "new",
-  "created_at": "2026-10-31T22:08:34Z"
+  "created_at": "2026-10-31T22:08:34.123456Z"
 }
 ```
 
-Listsvaret föreslås vara en JSON-array av sådana ärenden. Tidpunkter skickas i UTC som ISO 8601 med `Z`; exakt precision är ett öppet beslut.
+Listsvaret är en JSON-array av sådana ärenden. Tid lagras i UTC och skickas som ISO 8601 med UTC-markeringen `Z` och exakt sex decimalsiffror.
 
 ### Statusändring – `PATCH /api/tickets/{id}/status`
 
@@ -83,7 +83,7 @@ Lyckat svar innehåller det uppdaterade ärendet. Ogiltig/saknad status ger `422
 
 ## Fel
 
-Föreslagen gemensam struktur:
+Backendens felstruktur:
 
 ```json
 {
@@ -97,7 +97,9 @@ Föreslagen gemensam struktur:
 }
 ```
 
-`fields` tas bara med när felet gäller ett eller flera fält och använder samma fältnamn som JSON-begäran. Skicka inte SQL, tekniska feldetaljer eller interna anslutningsuppgifter till klienten.
+`fields` tas bara med när felet gäller ett eller flera fält och använder samma fältnamn som JSON-begäran. Ogiltig JSON får `422` med `code: "validation_error"`. Ett okänt giltigt ID får `404` med `code: "not_found"`. Tillfälligt databasfel med säkert misslyckad operation får `503` med `code: "storage_unavailable"`. Skicka inte SQL, tekniska feldetaljer eller interna anslutningsuppgifter till klienten.
+
+Om commit kastar ett fel vars utfall inte kan fastställas svarar backend `500` med `code: "save_outcome_unknown"` och ett generiskt besked om att sparandet inte kunde bekräftas. Detta är inte en bekräftad rollback.
 
 Om klienten inte kan avgöra om ändringen sparades ska den behålla inmatningen och visa att sparandet inte kunde bekräftas. Den får inte visa att ändringen säkert sparats eller misslyckats och får inte automatiskt skicka samma skrivning igen. Användaren ska kunna hämta ärendelistan igen för att kontrollera resultatet. Om inget svar når klienten finns ingen HTTP-statuskod eller feltext från servern att tolka.
 
@@ -105,7 +107,4 @@ Om klienten inte kan avgöra om ändringen sparades ska den behålla inmatningen
 
 Punkterna nedan är öppna beslut. AI:n ska inte behandla dem som godkända krav.
 
-- **Engelska värden:** Ska vi använda mina förslag på engelska värden i API:t och motsvarande svenska texter i gränssnittet?
-- **Felsvar:** Ska vi använda den föreslagna felstrukturen och svarskoderna? Bestäm också hur vi hanterar ogiltig JSON, saknade eller felaktiga värden och extra fält som API:t inte förväntar sig.
-- **Tid:** Ska skapandetiden skickas med hela sekunder eller även delar av en sekund?
-- **Gemensam genomgång:** Gå igenom anrop, JSON-fält och felsvar med Lukas och frontendgruppen så att båda delarna följer samma kontrakt.
+- **Frontendgranskning:** Bekräfta att frontendgruppen kan använda maskinvärdena, JSON-fälten, svarskoderna och felstrukturen som implementerade; återkoppla eventuella integrationsbehov. Detta är fortfarande backendbeslut, inte gruppgodkännande.
