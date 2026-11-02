@@ -2,7 +2,7 @@
 
 Gäller alla AI-agenter som arbetar i det här repot (Claude Code, GitHub Copilot, Cursor, Codex m.fl.).
 
-Teamet Jiriga bygger Kundserviceportalen: React + TypeScript (Vite) i `frontend/`, Python + FastAPI i `backend/`, SQLite för lagring, Vitest och pytest för tester.
+Teamet Jiriga bygger Kundserviceportalen: React + TypeScript (Vite) i `frontend/`, Python i `backend/` (ramverket väljs av Danielle), SQLite för lagring, Vitest och pytest för tester som körs i GitHub Actions.
 
 ## Code-design – läs innan du skriver kod
 
@@ -12,7 +12,7 @@ Teamets gemensamma code-design finns i [.claude/skills/code-design/](.claude/ski
 |---|---|
 | Mappstruktur, domänmodell, API, felformat | [arkitektur.md](.claude/skills/code-design/references/arkitektur.md) |
 | React, TypeScript, komponenter | [frontend.md](.claude/skills/code-design/references/frontend.md) |
-| Python, FastAPI, SQLite | [backend.md](.claude/skills/code-design/references/backend.md) |
+| Python, SQLite | [backend.md](.claude/skills/code-design/references/backend.md) |
 | Tester | [tester.md](.claude/skills/code-design/references/tester.md) |
 | Färger, layout, tillgänglighet, UI-texter | [ui-design.md](.claude/skills/code-design/references/ui-design.md) |
 
@@ -26,6 +26,7 @@ Krav och tester: [docs/kravspecifikation.md](docs/kravspecifikation.md) (K1–K8
 - Följ mappstrukturen och lagren. Lägg inte till bibliotek, mappar eller funktioner utanför kravspecifikationen utan att fråga.
 - Skriv tester i samma ändring som koden, med test-ID i testnamnet (t.ex. `test_t04_...`).
 - Använd bara färger från `frontend/src/styles/tokens.css`.
+- Fatta inte beslut som står under "Öppna beslut" i SKILL.md (t.ex. backendramverk) – fråga.
 - Bara påhittade uppgifter. Inga hemligheter eller databasfiler i git.
 - Kör lint och tester innan du säger att något är klart, och redovisa det faktiska utfallet.
 

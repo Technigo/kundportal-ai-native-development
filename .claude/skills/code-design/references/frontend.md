@@ -34,8 +34,10 @@ export const CATEGORY_LABELS: Record<Category, string> = {
 export const TITLE_MAX_LENGTH = 100;
 
 // Längd i Unicode-kodpunkter efter trimning, samma som backend.
-export const textLength = (value: string): number => [...value.trim()].length;
+export const textLength = (value: string): number => [...trimText(value)].length;
 ```
+
+`trimText` ligger i `src/domain/text.ts` och tar bort exakt samma tecken som backendens `trim_text` (se [arkitektur.md](arkitektur.md#fältregler)). Använd aldrig `.trim()` direkt för fältvalidering.
 
 Samma mönster för `PRIORITIES`/`PRIORITY_LABELS` och `STATUSES`/`STATUS_LABELS`. Skriv aldrig `'Pågående'` eller `'in_progress'` som lös sträng i en komponent – importera härifrån.
 
@@ -61,8 +63,9 @@ export function StatusBadge({ status }: StatusBadgeProps) {
 
 - Inget globalt state-bibliotek. `useState`, `useReducer` och egna hooks räcker.
 - Datahämtning sker i hooks i `features/tickets/` som anropar `src/api/`. Varje hook exponerar `data`, `error` och `isLoading` (eller `isSaving`).
-- Valt statusfilter och valt ärende lagras i URL:en (`?status=in_progress`, `/tickets/1042`), så att vyn överlever omladdning och kan länkas (K5, K8).
-- **Ingen optimistisk uppdatering** (K7). Efter lyckat `POST`/`PATCH`: uppdatera med ärendet backend returnerade. Efter fel: behåll tidigare data och visa felet.
+- **Statusfiltret (K8)** ligger i React-state högt upp i trädet, så att det finns kvar när användaren öppnar ett ärende och går tillbaka till listan. Det sparas **inte** i URL:en, `localStorage` eller `sessionStorage` – efter en fullständig omladdning ska det återgå till Alla.
+- **Ingen optimistisk uppdatering** (K6, K7). Efter lyckat `POST`/`PATCH`: uppdatera med ärendet backend returnerade och hämta listan på nytt med det valda filtret. Ett ärende som bytt status från Nytt till Pågående ska alltså försvinna ur listan när filtret Nytt är valt. Efter fel: behåll tidigare data och visa felet.
+- Det finns ingen redigering eller radering av ärenden. Bygg inga knappar eller formulär för det.
 
 ## API-klienten `src/api/`
 
@@ -72,6 +75,7 @@ export function StatusBadge({ status }: StatusBadgeProps) {
 
 ## Formulär (K1, K2)
 
+- Fält i ordning: Kund-ID, Kundnamn, Rubrik, Beskrivning, Kategori, Prioritet. Alla är obligatoriska.
 - Kontrollerade fält (`value` + `onChange`).
 - Validera med samma regler som backend när användaren skickar, och visa felet vid fältet. Backendens svar har alltid sista ordet: fält-fel från en `422` visas på samma sätt.
 - Rensa formuläret bara efter lyckat svar. Vid fel finns inmatningen kvar.
@@ -88,6 +92,10 @@ export function StatusBadge({ status }: StatusBadgeProps) {
 | Inga träffar för filtret (K8) | "Inga ärenden matchar vald status" |
 | Okänt ärende (K5) | "Ärendet kunde inte hittas" + länk tillbaka till listan |
 | Laddar | Kort text eller skelett, aldrig en tom yta |
+
+## Datum och tid
+
+Formatera `created_at` på ett ställe, `src/domain/formatDate.ts`, med `Intl.DateTimeFormat('sv-SE', …)` utan `timeZone`, så att användarens lokala tidszon används. Tolka aldrig tidssträngar för hand.
 
 ## Styling
 

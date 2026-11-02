@@ -6,9 +6,10 @@ Gränssnittet följer det valda designförslaget: **Förslag 1, lista + detaljpa
 
 - **Sidomeny** (220 px) till vänster: logotyp, "Kundservice", navigering. Krämvit bakgrund, tunn kant mot innehållet.
 - **Toppfält**: sidrubrik till vänster, primärknappen "+ Registrera ärende" till höger.
-- **Innehåll**: ärendelistan (cirka 60 %) och detaljpanelen (cirka 40 %) bredvid varandra. Under 1024 px visas de under varandra.
-- Statusfiltret ligger överst i listkortet som chips: Alla, Nytt, Pågående, Väntar på kund, Avslutat, med antal.
-- Detaljpanelen visar ID och kategori, rubrik, prioritet, skapad, beskrivning och statusväljare.
+- **Innehåll**: ärendelistan (cirka 60 %) och detaljpanelen (cirka 40 %) bredvid varandra. Datorgränssnittet prioriteras – mobilanpassning är inte ett leveranskrav i första versionen, men layouten får inte gå sönder i ett smalare fönster.
+- **Ärendelistan** har kolumnerna ID, Kund-ID, Kundnamn, Rubrik, Kategori, Prio, Status och Skapad (K4). Bilden saknar kundkolumnerna eftersom den gjordes innan de blev krav. Kund-ID och Kundnamn läggs efter ID.
+- Statusfiltret ligger överst i listkortet som chips: Alla, Nytt, Pågående, Väntar på kund, Avslutat, med antal. Det finns ingen fritextsökning i första versionen – sökfältet i bilden byggs inte.
+- Detaljpanelen visar ID och kategori, rubrik, kund-ID och kundnamn, prioritet, skapad, beskrivning och statusväljare.
 
 ## Färgtokens: `frontend/src/styles/tokens.css`
 
@@ -81,5 +82,5 @@ Komponenternas CSS använder bara `var(--…)`. Behövs en ny färg läggs den t
 - Svenska, kort och vänligt. Säg vad som hänt och vad användaren kan göra: "Ändringen kunde inte sparas. Försök igen."
 - Knappar beskriver handlingen med verb: "Registrera ärende", "Spara ärende", "Avbryt".
 - Sentence case: "Väntar på kund", inte "Väntar På Kund".
-- Datum: `27 okt 09:14` i listan, `27 okt 2026, 09:14` i detaljvyn.
+- Datum: `27 okt 09:14` i listan, `27 okt 2026 09:14` i detaljvyn, i användarens lokala tidszon.
 - Ärende-ID visas med `#` framför: `#1042`.

@@ -1,13 +1,26 @@
 ---
 name: code-design
-description: Teamet Jirigas gemensamma code-design för Kundserviceportalen (React + TypeScript-frontend, Python/FastAPI-backend, SQLite). Använd ALLTID innan du skriver, ändrar, granskar eller planerar kod, tester, API-endpoints, databasschema, komponenter eller styling i det här repot – även för små ändringar – så att alla teammedlemmar och deras AI-agenter följer samma struktur, namngivning, felhantering och design.
+description: Teamet Jirigas gemensamma code-design för Kundserviceportalen (React + TypeScript-frontend, Python-backend, SQLite, Vitest och pytest). Använd ALLTID innan du skriver, ändrar, granskar eller planerar kod, tester, API-endpoints, databasschema, komponenter eller styling i det här repot – även för små ändringar – så att alla teammedlemmar och deras AI-agenter följer samma struktur, namngivning, felhantering och design.
 ---
 
 # Code-design för Kundserviceportalen
 
 Den här skillen är teamets gemensamma kontrakt. Fem personer arbetar på olika datorer, med olika erfarenhet och i olika delar av projektet. Koden ska ändå se ut som om en person skrivit den. När du är osäker: följ reglerna här framför egna vanor, och framför mönster du sett i andra projekt.
 
-Kraven finns i [docs/kravspecifikation.md](../../../docs/kravspecifikation.md) (K1–K8, Q1–Q4) och testerna i [docs/verifieringsplan.md](../../../docs/verifieringsplan.md) (T01–T16, M01–M07). Skillen ersätter dem inte – den beskriver *hur* kraven byggs.
+Kraven finns i [docs/kravspecifikation.md](../../../docs/kravspecifikation.md) (K1–K8, Q1–Q6) och testerna i [docs/verifieringsplan.md](../../../docs/verifieringsplan.md) (T01–T16, M01–M07). Skillen ersätter dem inte – den beskriver *hur* kraven byggs. Vid konflikt gäller kravspecifikationen, och skillen ska då rättas.
+
+## Öppna beslut
+
+Följande är inte fastställt. Hitta inte på ett eget val – fråga användaren eller lämna en tydlig `TODO` med hänvisning hit.
+
+| Beslut | Ansvarig | Tills vidare |
+|---|---|---|
+| Python-ramverk för backend | Danielle | Bara API-lagret är ramverksberoende. Domän, service och lagring skrivs i ren Python. |
+| API-kontrakt | Teamet | [references/arkitektur.md](references/arkitektur.md) innehåller ett **förslag**. |
+| Format och längdgränser för kund-ID och kundnamn | Teamet, i API-kontraktet | Bara regeln "obligatorisk, inte tom efter trimning". |
+| Exakt vilka blankstegstecken som trimmas | Teamet, i API-kontraktet | Förslag i [references/arkitektur.md](references/arkitektur.md#fältregler). |
+
+När ett beslut fattas: uppdatera tabellen och berörd referensfil i samma PR.
 
 ## Arbetsgång för agenten
 
@@ -24,7 +37,7 @@ Kraven finns i [docs/kravspecifikation.md](../../../docs/kravspecifikation.md) (
 |---|---|
 | Mappstruktur, domänmodell, API-kontrakt, felformat | [references/arkitektur.md](references/arkitektur.md) |
 | React, TypeScript, komponenter, hooks, API-klient | [references/frontend.md](references/frontend.md) |
-| Python, FastAPI, service-lager, SQLite | [references/backend.md](references/backend.md) |
+| Python, API-lager, service-lager, SQLite | [references/backend.md](references/backend.md) |
 | Vitest, pytest, testdata, testlagring | [references/tester.md](references/tester.md) |
 | Färger, layout, tillgänglighet, UI-texter | [references/ui-design.md](references/ui-design.md) |
 
@@ -60,6 +73,7 @@ Kraven finns i [docs/kravspecifikation.md](../../../docs/kravspecifikation.md) (
 - Branch per uppgift: `feat/k1-registrera-arende`, `fix/k7-lagringsfel-status`, `test/t04-langdgranser`, `docs/readme-korning`.
 - Commits enligt Conventional Commits med svensk beskrivning: `feat: lägg till statusfilter (K8)`, `test: gränsfall för rubriklängd (T04)`. Ange krav- eller test-ID när det finns.
 - En PR gäller ett krav eller en sammanhängande del. Beskrivningen anger krav-ID, test-ID, hur det verifierats och faktiska testresultat.
+- Merge till main först när en annan teammedlem granskat och både backend- och frontendtester är gröna i GitHub Actions (Q6). En funktion är färdig först när den verifierats mot den riktiga motparten – frontend mot riktig backend och tvärtom.
 
 ## Innan du säger att du är klar
 
@@ -68,4 +82,5 @@ Kraven finns i [docs/kravspecifikation.md](../../../docs/kravspecifikation.md) (
 - [ ] Felvägar är hanterade och ger svenska, begripliga meddelanden.
 - [ ] Tester finns för happy path, error path och gränsfall, med test-ID i namnet.
 - [ ] `npm run lint`, `npm run test`, `ruff check`, `ruff format --check` och `pytest` har körts, och utfallet redovisas som det faktiskt blev.
+- [ ] Inga beslut från tabellen "Öppna beslut" har fattats på egen hand.
 - [ ] UI följer färgtokens och tillgänglighetsreglerna.
