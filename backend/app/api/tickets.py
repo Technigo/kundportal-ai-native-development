@@ -13,9 +13,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.db import get_session
-from app.errors import SAME_STATUS, TICKET_NOT_FOUND
+from app.errors import SAME_STATUS, STATUS_NOT_CHANGED, TICKET_NOT_FOUND
 from app.schemas.tickets import ErrorResponse, HistoryEntry, StatusChange, Ticket, TicketCreate
-from app.services.tickets import SameStatus, TicketNotFound, TicketService
+from app.services.tickets import SameStatus, StatusNotSaved, TicketNotFound, TicketService
 
 # All paths below start with /tickets and are grouped as "tickets" in /docs.
 router = APIRouter(prefix="/tickets", tags=["tickets"])
@@ -75,7 +75,9 @@ def change_status(
     Every change between two different statuses is allowed, also closed -> new (HIST-13).
     404 unknown ticket (HIST-08), 409 same status as now (HIST-07). 422 for an invalid
     status (HIST-06) comes from StatusChange and the error handlers (KSP-21) before this
-    runs. 503 when the history entry cannot be saved (HIST-09) is built in KSP-36.
+    runs. 503 when a database error stops the history entry from being saved (HIST-09,
+    KSP-36): the service has rolled the change back, so the old status is kept. Other
+    errors are not caught here and give 500 through the general handler.
     """
     try:
         row = TicketService(session).change_status(ticket_id, change.status)
@@ -83,6 +85,11 @@ def change_status(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=TICKET_NOT_FOUND)
     except SameStatus:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=SAME_STATUS)
+    except StatusNotSaved:
+        # HIST-09: only the spec's message, never the database error (HIST-14).
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=STATUS_NOT_CHANGED
+        )
     return Ticket.model_validate(row, from_attributes=True)
 
 
