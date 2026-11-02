@@ -92,7 +92,12 @@ export function CreateTicketForm({ onCreated }: CreateTicketFormProps) {
     setPending(true)
     setError(null)
     const result = await createTicket(draft)
-    if (id !== requestId.current) return
+    // The ticket is already saved if this returns ok. Reload the list even when the
+    // draft was discarded while the request was in flight. An error is not shown then.
+    if (id !== requestId.current) {
+      if (result.state === "ok") onCreated()
+      return
+    }
     setPending(false)
     if (result.state === "error") {
       setError(result.message)

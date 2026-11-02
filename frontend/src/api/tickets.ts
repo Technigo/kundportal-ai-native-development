@@ -2,19 +2,30 @@ import type {
   ErrorResponse,
   Ticket,
   TicketCategory,
+  TicketCreate,
   TicketPriority,
 } from "@/api/types"
 import { BACKEND_UNREACHABLE } from "@/pages/HealthPage"
 
 export type TicketResult = { state: "ok"; ticket: Ticket } | { state: "error"; message: string }
 
-// Empty strings are an unselected category or priority (CORE-08). The API answers
-// "Välj en giltig kategori." or "Välj en giltig prioritet." Status is never sent (CORE-09).
-export type TicketDraft = {
-  title: string
-  description: string
+// Same fields as TicketCreate. Empty strings are an unselected category or priority
+// (CORE-08). The API answers "Välj en giltig kategori." or "Välj en giltig prioritet."
+// Status is not a field on TicketCreate, so it is never sent (CORE-09).
+export type TicketDraft = Omit<TicketCreate, "category" | "priority"> & {
   category: TicketCategory | ""
   priority: TicketPriority | ""
+}
+
+// The return type is exactly the keys of TicketCreate, so a new schema field must be
+// added here and status cannot be included (CORE-09).
+function requestBody(draft: TicketDraft): { [K in keyof TicketCreate]: TicketDraft[K] } {
+  return {
+    title: draft.title,
+    description: draft.description,
+    category: draft.category,
+    priority: draft.priority,
+  }
 }
 
 export async function createTicket(draft: TicketDraft): Promise<TicketResult> {
@@ -22,12 +33,7 @@ export async function createTicket(draft: TicketDraft): Promise<TicketResult> {
     const response = await fetch("/api/tickets", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title: draft.title,
-        description: draft.description,
-        category: draft.category,
-        priority: draft.priority,
-      }),
+      body: JSON.stringify(requestBody(draft)),
     })
     if (response.ok) {
       return { state: "ok", ticket: (await response.json()) as Ticket }

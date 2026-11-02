@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event"
 import { MemoryRouter } from "react-router"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
+import type { TicketDraft } from "@/api/tickets"
 import type { Ticket, TicketCreate } from "@/api/types"
 import { BACKEND_UNREACHABLE } from "@/pages/HealthPage"
 import { TicketListPage } from "@/pages/TicketListPage"
@@ -12,7 +13,15 @@ import { TicketListPage } from "@/pages/TicketListPage"
 const TITLE = "Fakturan har fel belopp"
 const DESCRIPTION = "Kunden har fått dubbel debitering för oktober."
 
-function createdTicket(body: TicketCreate): Ticket {
+// The form posts a draft, which may have an empty category or priority (CORE-08).
+function isTicketCreate(body: TicketDraft): body is TicketCreate {
+  return body.category !== "" && body.priority !== ""
+}
+
+function createdTicket(body: TicketDraft): Ticket {
+  if (!isTicketCreate(body)) {
+    throw new Error("The mock stored a draft that is not a valid ticket.")
+  }
   return {
     id: 1,
     title: body.title,
@@ -30,10 +39,10 @@ function calls(): FetchCall[] {
   return vi.mocked(fetch).mock.calls as unknown as FetchCall[]
 }
 
-function postBodies(): TicketCreate[] {
+function postBodies(): TicketDraft[] {
   return calls()
     .filter(([, init]) => init?.method === "POST")
-    .map(([, init]) => JSON.parse(String(init?.body)) as TicketCreate)
+    .map(([, init]) => JSON.parse(String(init?.body)) as TicketDraft)
 }
 
 function getCount(): number {
@@ -42,14 +51,14 @@ function getCount(): number {
 
 // GET returns whatever has been stored. POST stores the body and answers 201,
 // unless respond overrides the POST result.
-function mockApi(respond?: (body: TicketCreate) => Response | Promise<Response>) {
+function mockApi(respond?: (body: TicketDraft) => Response | Promise<Response>) {
   const stored: Ticket[] = []
   vi.stubGlobal(
     "fetch",
     vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
       const method = init?.method ?? "GET"
       if (method === "POST") {
-        const body = JSON.parse(String(init?.body)) as TicketCreate
+        const body = JSON.parse(String(init?.body)) as TicketDraft
         const response = respond ? await respond(body) : json(201, createdTicket(body))
         // A 201 is what the next GET returns, so the list only updates when it is fetched again.
         if (response.ok) stored.unshift(createdTicket(body))
@@ -466,7 +475,7 @@ describe("Create ticket form", () => {
     expect(await screen.findByRole("heading", { name: TITLE })).toBeInTheDocument()
   })
 
-  // KSP-30: a response that arrives after the draft was discarded is not shown on the list.
+  // KSP-30: an error that arrives after the draft was discarded is not shown.
   it("test_discard_during_request_ignores_late_response", async () => {
     const user = userEvent.setup()
     let release: (response: Response) => void = () => {}
@@ -491,5 +500,30 @@ describe("Create ticket form", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument()
     expect(screen.queryByText("Rubrik måste fyllas i.")).not.toBeInTheDocument()
     expect(screen.queryByText(BACKEND_UNREACHABLE)).not.toBeInTheDocument()
+  })
+
+  // KSP-30: discarding while the request is in flight still reloads the list when the ticket was created.
+  it("test_discard_during_request_reloads_list_on_success", async () => {
+    const user = userEvent.setup()
+    let release: (response: Response) => void = () => {}
+    const pending = new Promise<Response>((resolve) => {
+      release = resolve
+    })
+    mockApi(() => pending as unknown as Response)
+    await openForm(user)
+    await user.type(screen.getByLabelText("Rubrik"), TITLE)
+    await user.type(screen.getByLabelText("Beskrivning"), DESCRIPTION)
+    await chooseCodes(user)
+    await user.click(screen.getByRole("button", { name: "Registrera ärende" }))
+    await user.keyboard("{Escape}")
+    await user.click(await screen.findByRole("button", { name: "Släng utkastet" }))
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+
+    const body = postBodies()[0]
+    if (body === undefined) throw new Error("The form did not post a draft.")
+    release(json(201, createdTicket(body)))
+
+    expect(await screen.findByRole("heading", { name: TITLE })).toBeInTheDocument()
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
   })
 })
