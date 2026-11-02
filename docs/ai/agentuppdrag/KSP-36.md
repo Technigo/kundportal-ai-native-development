@@ -126,12 +126,46 @@ Från `01-Plan.md`:
 
 ---
 
-## Hinder och frågor under körningen (fylls i)
+## Hinder och frågor under körningen
 
 | Kontrollpunkt | Hinder eller fråga | Hur det löstes | Mitt beslut |
 | --- | --- | --- | --- |
+| 1 | Var ska konstanten för 503-meddelandet ligga? Uppdraget tillät `errors.py` bara för en hanterare | Agenten stannade och frågade i stället för att tänja på gränsen | A: i `errors.py` bredvid `SAME_STATUS`, ingen hanterare, så att alla meddelanden ligger på ett ställe |
+| 1 | `create` har samma risk som `change_status` hade: `commit` utan `rollback` | Rapporterat, inte byggt, eftersom det låg utanför uppdraget | Eget ärende i Linear. Samma lösning som i `change_status`, med tester först |
+| 2 | Inga | – | Godkände steg 2 efter diffen och `test_atomicity.py` (2 failed, 5 passed, som väntat) |
+| 3 | Jag slog på auto mode i agentens session efter kontrollpunkt 2, så filändringarna i steg 3 godkändes inte en och en | Kontrollen låg i att agenten stannade vid kontrollpunkt 3, vilket den gjorde | Planen var godkänd och steg 2 hade fungerat, så jag litade på att kontrollpunkt 3 räckte |
+| 3 | Två meddelanden som inte var till agenten kom in i dess session ("kan du börja anteckna och dokumentera", "nej vänta") | Agenten skrev inget och stannade före rapporten | – |
+| 3 | Kommentaren i `change_status` påstod att databasfelet finns kvar i serverns logg. Det loggas aldrig, eftersom vägen gör om det till en hanterad `HTTPException` | Upptäckt i huvudsessionen (AI provade med ett skript), inte av agenten, fast agentens rapport sa det. Agenten rättade kommentaren på min instruktion | Rätta kommentaren, ingen loggning. Saknad loggning blir en känd begränsning |
+| 3 | 500-grenen (andra fel än databasfel) prövades inte av något test. Agenten påpekade det själv | Två tester skrivna efter koden i huvudsessionen (`ba84f13`). Båda faller vid var sin mutation | Eget test efteråt |
+| 3 | Mitt meddelande om kommentaren kom fram avklippt | Agenten tolkade det, sa öppet att den tolkat, och tolkningen var rätt | – |
 
-## Min granskning (fylls i efter körningen)
+## Min granskning
 
 | Del av diffen | Accepterade / ändrade / avvisade | Varför |
 | --- | --- | --- |
+| Planen (kontrollpunkt 1): eget fel `StatusNotSaved` från tjänsten, 503 i vägen | Accepterade | Samma mönster som `TicketNotFound` (404) och `SameStatus` (409). En hanterare för `SQLAlchemyError` i `errors.py` hade också gällt `POST /tickets` med fel text |
+| `services/tickets.py`: `try` runt bytet, posten och `commit`, `rollback` i båda grenarna | Accepterade | `except SQLAlchemyError` (rad 120) kommer före `except Exception` (rad 127), annars blir inget 503 |
+| `errors.py`: `STATUS_NOT_CHANGED` | Accepterade | Exakt specens text (HIST-specen rad 197 och 240), kontrollerat av både mig och AI |
+| `api/tickets.py`: `except StatusNotSaved` → 503 (rad 88–92) | Accepterade | Bara den svenska texten skickas, aldrig databasfelet (HIST-14) |
+| Kommentaren "The cause stays in the server log" | Ändrade | Stämde inte. Nu: orsaken sparas som `__cause__` men loggas inte |
+| Agentens rapport, raden om loggkommentaren | Rättad här | Rapporten sa att agenten upptäckte felet själv. Det gjorde den inte |
+
+**Testkörningar:** före koden `3 failed, 170 passed`. Efter steg 2 `2 failed, 5 passed` i
+`test_atomicity.py`. Efter steg 3 `173 passed`. Jag körde hela sviten själv och fick
+`173 passed`. Efter de två testerna för 500-grenen `175 passed`.
+
+**Mitt manuella prov (port 8010, `/docs`):** statusbyte 200, samma status 409 "Ärendet har redan
+den statusen.", okänt ärende 404 "Ärendet finns inte.", och historiken för ärendet hade två
+poster (`created` och `new` → `in_progress`). Det nekade bytet lämnade ingen post.
+
+**Vad agenten gjorde fel eller missade:**
+
+- Den påstod i planen och i en kodkommentar att orsaken till databasfelet hamnar i serverns
+  logg, utan att ha kontrollerat det.
+- Rapporten tog åt sig upptäckten av det felet.
+
+**Kända begränsningar:** databasfel som ger 503 loggas inte. `create` gör fortfarande `commit`
+utan `rollback` (eget ärende i Linear).
+
+**Commits:** `fa54194` (testerna före koden), `b1e4c60` (uppdraget före körningen), `eb806a4`
+(koden), `ba84f13` (testerna för 500-grenen, efter koden).
