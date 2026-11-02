@@ -14,7 +14,8 @@ been created. Only database errors (SQLAlchemyError) give 503 (Azalea, 2026-11-0
 Test proposals: run 4 with docs/ai/testforslag-v2-azalea.md, reviewed by Azalea 2026-11-01
 (test 3 changed, test 7 struck). The service test at the end is Azalea's own addition
 (2026-11-02): over HTTP every request gets a new session, so only the service can show
-that the session is not left broken.
+that the session is not left broken. The two tests for other errors than database errors
+(500) were added after the code in KSP-36, see the comment above them.
 """
 
 import sqlite3
@@ -29,6 +30,7 @@ from app.schemas.tickets import Status
 from app.services.tickets import TicketService
 
 STATUS_NOT_CHANGED = "Statusen kunde inte ändras. Försök igen."
+UNEXPECTED_ERROR = "Något gick fel. Försök igen."
 
 # A valid body (made-up data).
 VALID_TICKET = {
@@ -70,6 +72,12 @@ def fail_after_flush(self, row):
     """Variant B: the status UPDATE reaches the transaction, then the entry fails."""
     self.session.flush()
     raise SQLAlchemyError("simulated failure: INSERT INTO ticket_history failed")
+
+
+def bug_after_flush(self, row):
+    """Not a database error: a bug in the code after the status UPDATE reached the transaction."""
+    self.session.flush()
+    raise RuntimeError("simulated bug while writing the history entry")
 
 
 def connect(database_url):
@@ -210,6 +218,44 @@ def test_hist09_same_service_works_after_failure(api, database_url, monkeypatch)
         service = TicketService(session)
         monkeypatch.setattr(HistoryRepository, "add", fail_after_flush)
         with pytest.raises(Exception):
+            service.change_status(ticket_id, Status.IN_PROGRESS)
+        monkeypatch.undo()
+
+        service.change_status(ticket_id, Status.IN_PROGRESS)
+
+    assert saved_status(database_url, ticket_id) == "in_progress"
+    assert len(saved_history(database_url, ticket_id)) == 2
+    assert_invariant(database_url, ticket_id)
+
+
+# --- Other errors than database errors: rollback, but 500 (Azalea, 2026-11-02) ---
+# Written after the code in KSP-36, because the agent's report showed that no test reached
+# this branch. Shown to fail by removing rollback() in the branch for other errors.
+
+
+def test_hist09_bug_gives_500_and_keeps_old_status(api, database_url, monkeypatch):
+    """HIST-09: an error that is not a database error gives 500, and nothing is saved."""
+    # Catches: every error turned into 503, which would hide a bug behind "try again".
+    ticket_id = create(api)
+    monkeypatch.setattr(HistoryRepository, "add", bug_after_flush)
+
+    response = patch_status(api, ticket_id, "in_progress")
+
+    assert response.status_code == 500
+    assert response.json() == {"detail": UNEXPECTED_ERROR}
+    assert saved_status(database_url, ticket_id) == "new"
+    assert [entry["event_type"] for entry in saved_history(database_url, ticket_id)] == ["created"]
+
+
+def test_hist09_same_service_works_after_bug(api, database_url, monkeypatch):
+    """HIST-09: after an error that is not a database error, the same session still works."""
+    # Catches: rollback missing in the branch for other errors. The session then still holds
+    # in_progress, so the second change is taken for the same status.
+    ticket_id = create(api)
+    with api.app.state.session_factory() as session:
+        service = TicketService(session)
+        monkeypatch.setattr(HistoryRepository, "add", bug_after_flush)
+        with pytest.raises(RuntimeError):
             service.change_status(ticket_id, Status.IN_PROGRESS)
         monkeypatch.undo()
 
