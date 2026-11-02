@@ -18,6 +18,8 @@ order (HIST-03, 11) and atomicity (HIST-09) are Azalea's tests.
 
 import pytest
 
+from conftest import assert_invariant_via_api
+
 STATUSES = ["new", "in_progress", "waiting_on_customer", "closed"]
 # Every pair of two different statuses: 12 changes.
 CHANGES = [(old, new) for old in STATUSES for new in STATUSES if old != new]
@@ -62,19 +64,13 @@ def history(client, ticket_id):
     return response.json()
 
 
-def assert_invariant(client, ticket_id):
-    """ADR-001 invariant: the latest to_status in the history equals the ticket's status."""
-    latest = history(client, ticket_id)[-1]
-    assert latest["to_status"] == client.get(f"/tickets/{ticket_id}").json()["status"]
-
-
 def assert_nothing_changed(client, ticket_id, status, history_before):
     """A rejected change: same status as before, saved, and no new history entry."""
     response = client.get(f"/tickets/{ticket_id}")
     assert response.status_code == 200
     assert response.json()["status"] == status
     assert history(client, ticket_id) == history_before
-    assert_invariant(client, ticket_id)
+    assert_invariant_via_api(client, ticket_id)
 
 
 # --- Every change between different statuses is allowed (API conventions, section 1) ---
@@ -93,7 +89,7 @@ def test_change_between_different_statuses_is_allowed(client, old, new):
     assert response.json() == {**ticket, "status": new}
     # Saved, not just in the answer.
     assert client.get(f"/tickets/{ticket['id']}").json()["status"] == new
-    assert_invariant(client, ticket["id"])
+    assert_invariant_via_api(client, ticket["id"])
 
 
 # --- Same status as now (HIST-07) ---
@@ -186,4 +182,4 @@ def test_hist13_closed_ticket_can_be_opened_again(client):
     assert latest["to_status"] == "new"
     # The reopened ticket works like any other: it can be moved on again.
     assert change(client, ticket["id"], "in_progress").status_code == 200
-    assert_invariant(client, ticket["id"])
+    assert_invariant_via_api(client, ticket["id"])
