@@ -17,4 +17,4 @@ Implementera backendens ticket-API enligt kravspecifikationen och API-kontraktet
 
 ## Underlag
 
-Implementationens testresultat finns i [verifieringsplanen](verifieringsplan.md). API-baslinjen och vad frontendgruppen ska granska finns i [API-kontraktet](api-kontrakt.md). Ingen mänsklig kodgranskning eller frontendgruppsgodkännande påstås här.
+Implementationens testresultat finns i [verifieringsplanen](../../verifieringsplan.md). API-baslinjen och vad frontendgruppen ska granska finns i [API-kontraktet](../../api-kontrakt.md). Ingen mänsklig kodgranskning eller frontendgruppsgodkännande påstås här.
