@@ -132,8 +132,18 @@ resultatet: vilket test som föll, eller att inget föll och vad som ändrades i
 | 2026-11-01 | 1 | M2: `commit` flyttad före historikposten i `change_status` | HIST-09 | 9 failed, samma som M1: posten commitas aldrig och ser ut att saknas. **Delvis fångad:** inget test kontrollerar att statusen är oförändrad när historiken inte kan sparas. Testerna för HIST-09 med injicerat fel (KSP-41) behövs | Azalea |
 | 2026-11-01 | 1 | M3: `commit` tas bort i `create` (bara `flush`) | HIST-04, CORE-02 | 52 failed, bland annat `test_core02_ticket_survives_restart`: inget sparas, så nästa begäran får 404 eller tomma listor | Azalea |
 | 2026-11-01 | 1 | M3b: `commit` tas bort i `change_status` | HIST-04, HIST-02 | 32 failed: HIST-02 ×3, HIST-03, HIST-11 och 25 tester för statusreglerna (statusen sparas inte). Testet för kontraktsfälten klarade sig, eftersom status och post försvann tillsammans och invarianten höll | Azalea |
+| 2026-11-02 | 1 | N1: 409-kontrollen för samma status tas bort i `TicketService.change_status` | HIST-07 | 4 failed: `test_hist07_same_status_gives_409_and_nothing_changes` för alla fyra statusar (`test_status_rules.py`), på `status_code == 409` | Nicklas (agent) |
+| 2026-11-02 | 1 | N2: trimningen tas bort i `trim_ends` | CORE-11 | 6 failed: tom beskrivning ×3 och blandade tecken (201 i stället för 422), längd efter trimning ×2 (`test_core_rules.py`) | Nicklas (agent) |
+| 2026-11-02 | 1 | N3: nollbreddstecken trimmas inte, bara vanliga blanktecken | CORE-11 | 3 failed: de tre fallen med U+200B (`test_core_rules.py`). Bara U+200B prövas, inte de fyra andra tecknen i `ZERO_WIDTH_CHARS` | Nicklas (agent) |
+| 2026-11-02 | 1 | N4: `max_length` för rubriken blir 99 (`<= 100` blir `< 100`) | CORE-12 | 4 failed: rubrikerna på exakt 100 tecken i `test_length_is_counted_in_code_points_after_trimming` | Nicklas (agent) |
+| 2026-11-02 | 1 | N5: den svenska hanteraren för valideringsfel tas bort | CORE-16, CORE-17 | 18 failed: 9 i `test_core_rules.py` och 9 i `test_status_rules.py`, alla på jämförelsen med `{"detail": ...}`. Statuskoden var fortfarande 422 | Nicklas (agent) |
+| 2026-11-02 | 1 | N6: valideringen visar bara det första felet | CORE-18 | 1 failed: `test_rejected_ticket_saves_nothing[core18_two_errors]`, det andra meddelandet saknades | Nicklas (agent) |
+| 2026-11-02 | 1 | N7: sparningen kopplas bort, `commit` tas bort i `create` | CORE-02 | 33 failed, bland annat `test_core02_ticket_survives_restart` (404 efter omstart). Statustesterna föll redan när ärendet skulle förberedas. Längdtesterna klarade sig, eftersom de inte läser tillbaka ärendet. Kontrollerat för hand av Nicklas: samma resultat | Nicklas (agent) |
+| 2026-11-02 | 2 | Korsvis på Azaleas tester: poster med samma tid sorteras med högst id först (`id.desc()` i `HistoryRepository`) | HIST-11 | 1 failed, 165 passed i hela sviten: `test_hist11_same_time_is_ordered_by_id` (`[3, 2, 1]` i stället för `[1, 2, 3]`). Bara det testet har en fast klocka, så bara det kan se felet | Nicklas (för hand) |
 
 *Steg 1 kördes för hand på `335fe45` (main efter PR #61), en mutation i taget i en egen arbetskopia. Nollpunkt: 166 passed. Underlag: Azaleas loggbok och jämförelsetabell (lokalt).*
+
+*Nicklas steg 1 (N1–N7, KSP-44) kördes av en agent i en egen session, med [uppdraget](ai/agentuppdrag/KSP-44.md) som enda instruktion, på `d795736` (main efter PR #70), en mutation i taget. Nicklas gissade före varje körning. Steg 2 kördes för hand. Nollpunkt och slut: 166 passed.*
 
 ## 6. Testförslag från AI
 
