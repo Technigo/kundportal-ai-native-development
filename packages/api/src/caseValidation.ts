@@ -52,6 +52,21 @@ export function validateCaseStatus(input: unknown):
   return { success: true, value: input.status };
 }
 
+export function validateCaseNote(input: unknown):
+  | { success: true; value: string | null }
+  | { success: false; error: string } {
+  if (!isRecord(input) || typeof input.note !== 'string') {
+    return { success: false, error: 'Anteckningen måste skickas som text.' };
+  }
+
+  const note = input.note.trim();
+  if (note.length > 2000) {
+    return { success: false, error: 'Anteckningen får innehålla högst 2000 tecken.' };
+  }
+
+  return { success: true, value: note.length === 0 ? null : note };
+}
+
 export function validateCreateCase(input: unknown): ValidationResult {
   if (!isRecord(input)) {
     return { success: false, error: 'Ärendeuppgifterna måste skickas som ett objekt.' };

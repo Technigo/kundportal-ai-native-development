@@ -83,6 +83,7 @@ describe('CaseForm', () => {
       category: 'Tekniskt',
       priority: 'Hög',
       status: 'Nytt',
+      note: null,
       createdAt: '2026-11-01T12:00:00.000Z'
     };
     const fetchMock = vi.fn().mockResolvedValue(
@@ -122,6 +123,7 @@ describe('CaseForm', () => {
       category: 'Tekniskt',
       priority: 'Hög',
       status: 'Nytt',
+      note: null,
       createdAt: '2026-11-01T12:00:00.000Z'
     };
     vi.stubGlobal(
@@ -153,6 +155,7 @@ describe('CaseForm', () => {
       category: 'Tekniskt',
       priority: 'Hög',
       status: 'Nytt',
+      note: null,
       createdAt: '2026-11-01T12:00:00.000Z'
     };
     vi.stubGlobal(

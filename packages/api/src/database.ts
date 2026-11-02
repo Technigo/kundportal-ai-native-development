@@ -23,6 +23,10 @@ export function openDatabase(path = databasePath): Database.Database {
       created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
     )
   `);
+  const columns = connection.prepare('PRAGMA table_info(cases)').all() as { name: string }[];
+  if (!columns.some((column) => column.name === 'note')) {
+    connection.exec('ALTER TABLE cases ADD COLUMN note TEXT');
+  }
   return connection;
 }
 

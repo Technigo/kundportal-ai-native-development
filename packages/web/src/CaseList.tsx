@@ -92,7 +92,9 @@ export function CaseList({ refreshKey = 0 }: CaseListProps) {
           key={selectedCaseId}
           caseId={selectedCaseId}
           onUpdated={(updated) => {
-            setCases((current) => current.map((item) => item.id === updated.id ? updated : item));
+            setCases((current) => current.map((item) =>
+              item.id === updated.id ? { ...item, status: updated.status } : item
+            ));
           }}
         />
       )}

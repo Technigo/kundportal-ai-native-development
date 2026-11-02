@@ -1,6 +1,6 @@
 import express from 'express';
 import type Database from 'better-sqlite3';
-import { isValidCaseId, validateCaseStatus, validateCreateCase } from './caseValidation.js';
+import { isValidCaseId, validateCaseNote, validateCaseStatus, validateCreateCase } from './caseValidation.js';
 
 interface CaseRow {
   id: number;
@@ -10,6 +10,7 @@ interface CaseRow {
   priority: string;
   status: string;
   createdAt: string;
+  note: string | null;
 }
 
 interface CaseSummaryRow {
@@ -51,7 +52,7 @@ export function createApp(connection: Database.Database) {
     try {
       const caseItem = connection
         .prepare(`
-          SELECT id, title, description, category, priority, status, created_at AS createdAt
+          SELECT id, title, description, category, priority, status, created_at AS createdAt, note
           FROM cases WHERE id = ?
         `)
         .get(id) as CaseRow | undefined;
@@ -81,7 +82,7 @@ export function createApp(connection: Database.Database) {
       const updated = connection
         .prepare(`
           UPDATE cases SET status = ? WHERE id = ?
-          RETURNING id, title, description, category, priority, status, created_at AS createdAt
+          RETURNING id, title, description, category, priority, status, created_at AS createdAt, note
         `)
         .get(validation.value, Number(request.params.id)) as CaseRow | undefined;
 
@@ -93,6 +94,35 @@ export function createApp(connection: Database.Database) {
     } catch (error) {
       console.error('Failed to update case status:', error);
       return response.status(500).json({ error: 'Status kunde inte sparas. Försök igen.' });
+    }
+  });
+
+  app.patch('/api/cases/:id/note', (request, response) => {
+    if (!isValidCaseId(request.params.id)) {
+      return response.status(400).json({ error: 'Ärende-ID måste vara ett positivt heltal.' });
+    }
+
+    const validation = validateCaseNote(request.body);
+    if (!validation.success) {
+      return response.status(400).json({ error: validation.error });
+    }
+
+    try {
+      const updated = connection
+        .prepare(`
+          UPDATE cases SET note = ? WHERE id = ?
+          RETURNING id, title, description, category, priority, status, created_at AS createdAt, note
+        `)
+        .get(validation.value, Number(request.params.id)) as CaseRow | undefined;
+
+      if (!updated) {
+        return response.status(404).json({ error: 'Ärendet hittades inte.' });
+      }
+
+      return response.json(updated);
+    } catch (error) {
+      console.error('Failed to update case note:', error);
+      return response.status(500).json({ error: 'Anteckningen kunde inte sparas. Försök igen.' });
     }
   });
 
@@ -110,7 +140,7 @@ export function createApp(connection: Database.Database) {
       .run(validation.value);
     const created = connection
       .prepare(`
-        SELECT id, title, description, category, priority, status, created_at AS createdAt
+        SELECT id, title, description, category, priority, status, created_at AS createdAt, note
         FROM cases WHERE id = ?
       `)
       .get(result.lastInsertRowid) as CaseRow | undefined;

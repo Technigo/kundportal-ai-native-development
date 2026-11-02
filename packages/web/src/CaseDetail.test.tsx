@@ -11,6 +11,7 @@ const caseItem = {
   category: 'Fakturering',
   priority: 'Hög',
   status: 'Pågående',
+  note: null,
   createdAt: '2026-02-01T10:00:00.000Z'
 };
 
@@ -27,6 +28,66 @@ afterEach(() => {
 });
 
 describe('CaseDetail', () => {
+  it('[CASE-NOTE-003] keeps a confirmed status when a note response contains an older status', async () => {
+    let resolveNote!: (response: Response) => void;
+    const noteResponse = new Promise<Response>((resolve) => {
+      resolveNote = resolve;
+    });
+    vi.stubGlobal('fetch', vi.fn()
+      .mockResolvedValueOnce(jsonResponse(caseItem))
+      .mockReturnValueOnce(noteResponse)
+      .mockResolvedValueOnce(jsonResponse({ ...caseItem, note: 'Text.', status: 'Avslutat' })));
+    const user = userEvent.setup();
+    render(<CaseDetail caseId={7} />);
+    await user.type(await screen.findByRole('textbox', { name: 'Intern anteckning' }), 'Text.');
+    await user.click(screen.getByRole('button', { name: 'Spara anteckning' }));
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Ändra status' }), 'Avslutat');
+    await user.click(screen.getByRole('button', { name: 'Spara status' }));
+    await screen.findByText('Status sparad.');
+    await act(async () => {
+      resolveNote(jsonResponse({ ...caseItem, note: 'Text.' }));
+    });
+
+    expect(screen.getByText('Status', { selector: 'dt' }).nextElementSibling).toHaveTextContent('Avslutat');
+  });
+
+  it('[CASE-NOTE-003] reads the saved note after reopening the detail view', async () => {
+    let stored = { ...caseItem, note: 'Första anteckningen.' };
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((_url: string, options?: RequestInit) => {
+      if (options?.method === 'PATCH') {
+        stored = { ...stored, note: 'Redigerad anteckning.' };
+      }
+      return Promise.resolve(jsonResponse(stored));
+    }));
+    const user = userEvent.setup();
+    const { unmount } = render(<CaseDetail caseId={7} />);
+    const editor = await screen.findByRole('textbox', { name: 'Intern anteckning' });
+    await user.clear(editor);
+    await user.type(editor, 'Redigerad anteckning.');
+    await user.click(screen.getByRole('button', { name: 'Spara anteckning' }));
+    await screen.findByText('Anteckning sparad.');
+    unmount();
+
+    render(<CaseDetail caseId={7} />);
+
+    expect(await screen.findByRole('textbox', { name: 'Intern anteckning' }))
+      .toHaveValue('Redigerad anteckning.');
+  });
+
+  it('[CASE-NOTE-003] preserves an unsaved note draft when status is saved', async () => {
+    vi.stubGlobal('fetch', vi.fn()
+      .mockResolvedValueOnce(jsonResponse(caseItem))
+      .mockResolvedValueOnce(jsonResponse({ ...caseItem, status: 'Avslutat' })));
+    const user = userEvent.setup();
+    render(<CaseDetail caseId={7} />);
+    await user.type(await screen.findByRole('textbox', { name: 'Intern anteckning' }), 'Utkast.');
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Ändra status' }), 'Avslutat');
+    await user.click(screen.getByRole('button', { name: 'Spara status' }));
+    await screen.findByText('Status sparad.');
+
+    expect(screen.getByRole('textbox', { name: 'Intern anteckning' })).toHaveValue('Utkast.');
+  });
+
   it('[CASE-STATUS-002] retains the displayed status when a save is rejected', async () => {
     vi.stubGlobal(
       'fetch',
