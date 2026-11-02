@@ -1,20 +1,17 @@
 import { FormEvent, useState } from "react";
-import { caseOptions } from "./caseOptions";
+import { caseOptions, CaseStatus } from "./caseOptions";
+import { CaseApiError, createCase, CreatedCase } from "./caseService";
 
 type CaseFormValues = {
-  customerName: string;
   customerEmail: string;
   issueTitle: string;
   description: string;
   category: string;
   priority: string;
-  status: string;
+  status: CaseStatus | "";
 };
 
-type CaseRecord = CaseFormValues & { createdAt: string };
-
 const initialValues: CaseFormValues = {
-  customerName: "",
   customerEmail: "",
   issueTitle: "",
   description: "",
@@ -24,7 +21,6 @@ const initialValues: CaseFormValues = {
 };
 
 const fieldLabels: Record<keyof CaseFormValues, string> = {
-  customerName: "Customer name",
   customerEmail: "Customer email",
   issueTitle: "Issue title",
   description: "Description",
@@ -36,20 +32,21 @@ const fieldLabels: Record<keyof CaseFormValues, string> = {
 function App() {
   const [values, setValues] = useState(initialValues);
   const [errors, setErrors] = useState<Partial<Record<keyof CaseFormValues, string>>>({});
-  const [submittedCase, setSubmittedCase] = useState<CaseRecord | null>(null);
+  const [submittedCase, setSubmittedCase] = useState<CreatedCase | null>(null);
+  const [submitError, setSubmitError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   function updateField(field: keyof CaseFormValues, value: string) {
     setValues((current) => ({ ...current, [field]: value }));
     setErrors((current) => ({ ...current, [field]: undefined }));
     setSubmittedCase(null);
+    setSubmitError("");
   }
 
   function validate() {
     const nextErrors: Partial<Record<keyof CaseFormValues, string>> = {};
     (Object.keys(values) as Array<keyof CaseFormValues>).forEach((field) => {
-      if (!values[field].trim()) {
-        nextErrors[field] = `${fieldLabels[field]} is required.`;
-      }
+      if (!values[field].trim()) nextErrors[field] = `${fieldLabels[field]} is required.`;
     });
 
     if (values.customerEmail.trim() && !/^\S+@\S+\.\S+$/.test(values.customerEmail.trim())) {
@@ -58,20 +55,31 @@ function App() {
     return nextErrors;
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const nextErrors = validate();
     setErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0) {
-      setSubmittedCase(null);
-      return;
-    }
+    setSubmittedCase(null);
+    setSubmitError("");
+    if (Object.keys(nextErrors).length > 0 || !values.status) return;
 
-    const newCase: CaseRecord = {
-      ...values,
-      createdAt: new Date().toISOString(),
-    };
-    setSubmittedCase(newCase);
+    setIsSubmitting(true);
+    try {
+      const created = await createCase({
+        title: values.issueTitle.trim(),
+        description: values.description.trim(),
+        category: values.category,
+        priority: values.priority,
+        status: values.status,
+        customer_email: values.customerEmail.trim(),
+      });
+      setSubmittedCase(created);
+      setValues(initialValues);
+    } catch (error) {
+      setSubmitError(error instanceof CaseApiError ? error.message : "The case could not be saved. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -100,11 +108,10 @@ function App() {
               <div className="section-number">01</div>
               <div>
                 <h2 id="customer-section-title">Customer details</h2>
-                <p>Who is contacting your team?</p>
+                <p>What email address can your team use to follow up?</p>
               </div>
             </div>
-            <div className="field-grid two-columns">
-              <Field label="Customer name" name="customerName" value={values.customerName} error={errors.customerName} onChange={(value) => updateField("customerName", value)} />
+            <div className="field-grid">
               <Field label="Customer email" name="customerEmail" type="email" value={values.customerEmail} error={errors.customerEmail} onChange={(value) => updateField("customerEmail", value)} />
             </div>
           </section>
@@ -140,21 +147,23 @@ function App() {
               <SelectField label="Priority" name="priority" options={caseOptions.priorities} value={values.priority} error={errors.priority} onChange={(value) => updateField("priority", value)} />
               <SelectField label="Status" name="status" options={caseOptions.statuses} value={values.status} error={errors.status} onChange={(value) => updateField("status", value)} />
             </div>
-            <p className="helper-note">Category, priority, and status are placeholder options for this MVP. Confirm their final values with Daniel before backend integration.</p>
           </section>
 
           <div className="form-actions">
-            <button className="primary-button" type="submit">Create case</button>
+            <button className="primary-button" type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Saving case…" : "Create case"}
+            </button>
           </div>
         </form>
 
+        {submitError && <div className="submit-error" role="alert">{submitError}</div>}
         {submittedCase && (
           <div className="success-message" role="status" tabIndex={-1}>
             <div className="success-icon" aria-hidden="true">✓</div>
             <div>
-              <h2>Case ready for review</h2>
-              <p>This case was constructed in the browser. It has not been saved to a database.</p>
-              <p className="timestamp">Created {new Date(submittedCase.createdAt).toLocaleString()}</p>
+              <h2>Case created and saved</h2>
+              <p>Your case was saved to the shared case database.</p>
+              <p className="timestamp">Case #{submittedCase.id.slice(0, 8)} · Created {new Date(submittedCase.created_at).toLocaleString()}</p>
             </div>
           </div>
         )}
@@ -168,9 +177,9 @@ function Field({ label, name, type = "text", value, error, onChange }: { label: 
   return <div className="field"><label htmlFor={name}>{label}</label><input id={name} name={name} type={type} value={value} aria-invalid={Boolean(error)} aria-describedby={error ? errorId : undefined} onChange={(event) => onChange(event.target.value)} />{error && <p className="error-message" id={errorId} role="alert">{error}</p>}</div>;
 }
 
-function SelectField({ label, name, options, value, error, onChange }: { label: string; name: keyof CaseFormValues; options: readonly string[]; value: string; error?: string; onChange: (value: string) => void }) {
+function SelectField({ label, name, options, value, error, onChange }: { label: string; name: keyof CaseFormValues; options: ReadonlyArray<string> | ReadonlyArray<{ value: CaseStatus; label: string }>; value: string; error?: string; onChange: (value: string) => void }) {
   const errorId = `${name}-error`;
-  return <div className="field"><label htmlFor={name}>{label}</label><select id={name} name={name} value={value} aria-invalid={Boolean(error)} aria-describedby={error ? errorId : undefined} onChange={(event) => onChange(event.target.value)}><option value="">Select {label.toLowerCase()}</option>{options.map((option) => <option key={option} value={option}>{option}</option>)}</select>{error && <p className="error-message" id={errorId} role="alert">{error}</p>}</div>;
+  return <div className="field"><label htmlFor={name}>{label}</label><select id={name} name={name} value={value} aria-invalid={Boolean(error)} aria-describedby={error ? errorId : undefined} onChange={(event) => onChange(event.target.value)}><option value="">Select {label.toLowerCase()}</option>{options.map((option) => typeof option === "string" ? <option key={option} value={option}>{option}</option> : <option key={option.value} value={option.value}>{option.label}</option>)}</select>{error && <p className="error-message" id={errorId} role="alert">{error}</p>}</div>;
 }
 
 export default App;
