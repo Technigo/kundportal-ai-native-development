@@ -1,6 +1,8 @@
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import text
 
+from app.database import get_session_factory
 from app.main import app
 from ticket_examples import VALID_TICKET
 
@@ -80,3 +82,21 @@ def test_invalid_status_and_extra_status_fields_do_not_change_ticket():
     assert invalid_status.status_code == 422
     assert extra_field.status_code == 422
     assert client.get(f"/api/tickets/{ticket['id']}").json() == ticket
+
+
+@pytest.mark.integration
+def test_tickets_with_identical_created_at_are_listed_highest_id_first():
+    insert = text(
+        "INSERT INTO tickets "
+        "(customer_id, customer_name, title, description, category, priority, status, created_at) "
+        "VALUES ('C-1', 'Exempelkund', :title, 'Text', 'billing', 'normal', 'new', "
+        "'2026-11-01 10:00:00.000000')"
+    )
+    with get_session_factory()() as session:
+        for title in ("Första", "Andra", "Tredje"):
+            session.execute(insert, {"title": title})
+        session.commit()
+
+    tickets = TestClient(app).get("/api/tickets").json()
+
+    assert [ticket["title"] for ticket in tickets] == ["Tredje", "Andra", "Första"]

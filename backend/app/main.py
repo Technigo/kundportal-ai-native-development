@@ -46,6 +46,19 @@ async def api_error_handler(request: Request, error: ApiError) -> JSONResponse:
     )
 
 
+@app.exception_handler(Exception)
+async def unexpected_error_handler(request: Request, error: Exception) -> JSONResponse:
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": {
+                "code": "internal_error",
+                "message": "Ett oväntat fel inträffade.",
+            }
+        },
+    )
+
+
 @app.exception_handler(RequestValidationError)
 async def request_validation_error_handler(
     request: Request,

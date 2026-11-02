@@ -101,6 +101,8 @@ Backendens felstruktur:
 
 Om commit kastar ett fel vars utfall inte kan fastställas svarar backend `500` med `code: "save_outcome_unknown"` och ett generiskt besked om att sparandet inte kunde bekräftas. Detta är inte en bekräftad rollback.
 
+Andra oväntade serverfel svarar backend med `500` och `code: "internal_error"` i samma felstruktur, utan tekniska detaljer.
+
 Om klienten inte kan avgöra om ändringen sparades ska den behålla inmatningen och visa att sparandet inte kunde bekräftas. Den får inte visa att ändringen säkert sparats eller misslyckats och får inte automatiskt skicka samma skrivning igen. Användaren ska kunna hämta ärendelistan igen för att kontrollera resultatet. Om inget svar når klienten finns ingen HTTP-statuskod eller feltext från servern att tolka.
 
 ## Det här behöver vi bestämma tillsammans
