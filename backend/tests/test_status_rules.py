@@ -154,7 +154,7 @@ def test_hist06_unknown_status_gives_422_and_nothing_changes(client, value, mess
     ids=["ticket_field", "unknown_field"],
 )
 def test_other_fields_in_patch_give_422_and_nothing_changes(client, extra):
-    """Other fields than status in PATCH give 422 "Ogiltig indata." and nothing changes."""
+    """HIST-06 (invalid input): other fields than status in PATCH give 422 "Ogiltig indata."."""
     # Catches: extra fields silently ignored, so the status changes and the client thinks the
     # title changed too, or a title sent here actually being saved.
     ticket = ticket_with_status(client, "in_progress")
