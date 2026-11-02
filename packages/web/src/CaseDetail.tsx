@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { isCreatedCase, type CreatedCase } from './caseTypes';
 import { CaseStatusForm } from './CaseStatusForm';
+import { CaseNoteForm } from './CaseNoteForm';
 
 type DetailState =
   | { status: 'loading' }
@@ -54,6 +55,17 @@ export function CaseDetail({ caseId, onUpdated }: CaseDetailProps) {
     };
   }, [caseId]);
 
+  function handleUpdated(updated: CreatedCase, field: 'status' | 'note') {
+    setState((current) =>
+      current.status === 'loaded' && current.caseItem.id === updated.id
+        ? { status: 'loaded', caseItem: { ...current.caseItem, [field]: updated[field] } }
+        : current
+    );
+    if (field === 'status') {
+      onUpdated?.(updated);
+    }
+  }
+
   return (
     <section
       className="case-detail"
@@ -84,16 +96,14 @@ export function CaseDetail({ caseId, onUpdated }: CaseDetailProps) {
             </dd>
           </dl>
           <CaseStatusForm
-            key={state.caseItem.id}
+            key={`status-${state.caseItem.id}`}
             caseItem={state.caseItem}
-            onUpdated={(updated) => {
-              setState((current) =>
-                current.status === 'loaded' && current.caseItem.id === updated.id
-                  ? { status: 'loaded', caseItem: updated }
-                  : current
-              );
-              onUpdated?.(updated);
-            }}
+            onUpdated={(updated) => handleUpdated(updated, 'status')}
+          />
+          <CaseNoteForm
+            key={`note-${state.caseItem.id}`}
+            caseItem={state.caseItem}
+            onUpdated={(updated) => handleUpdated(updated, 'note')}
           />
         </>
       )}

@@ -277,7 +277,8 @@ h1 {
   white-space: pre-wrap;
 }
 
-.case-status-form {
+.case-status-form,
+.case-note-form {
   display: grid;
   gap: 1rem;
   margin-top: 1.5rem;

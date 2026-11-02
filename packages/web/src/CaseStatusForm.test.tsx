@@ -11,6 +11,7 @@ const caseItem = {
   category: 'Konto',
   priority: 'Normal',
   status: 'Nytt',
+  note: null,
   createdAt: '2026-02-01T10:00:00.000Z'
 };
 

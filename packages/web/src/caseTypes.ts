@@ -9,6 +9,7 @@ export interface CaseSummary {
 
 export interface CreatedCase extends CaseSummary {
   description: string;
+  note: string | null;
 }
 
 export function isCaseSummary(value: unknown): value is CaseSummary {
@@ -33,5 +34,9 @@ export function isCaseSummary(value: unknown): value is CaseSummary {
 }
 
 export function isCreatedCase(value: unknown): value is CreatedCase {
-  return isCaseSummary(value) && 'description' in value && typeof value.description === 'string';
+  return (
+    isCaseSummary(value) &&
+    'description' in value && typeof value.description === 'string' &&
+    'note' in value && (value.note === null || typeof value.note === 'string')
+  );
 }
