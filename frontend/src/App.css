@@ -1,0 +1,13 @@
+.app-shell {
+  max-width: 48rem;
+  margin: 4rem auto;
+  padding: 0 1.5rem;
+}
+
+.app-shell h1 {
+  margin-bottom: 2rem;
+}
+
+.app-shell p {
+  margin-block: 0.75rem;
+}

@@ -1,6 +1,6 @@
 # Verifieringsplan – Kundserviceportalen
 
-Status: planerad verifiering, 2026-10-23. Inga tester eller manuella produktkontroller har genomförts. Repot innehåller vid dokumentets tillkomst ingen applikationskod eller testsvit.
+Status: uppdaterad 2026-11-01. Backendens ärende-API har automatiserade tester mot MySQL-testdatabasen `kundportal_test`. Frontendens ärendeflöde är inte implementerat eller verifierat.
 
 Krav och acceptanskriterier finns i [kravspecifikationen](kravspecifikation.md). Installation, körning och demonstrationsflöde finns i [README](../README.md).
 
@@ -13,73 +13,73 @@ Urvalet utgår från risken att felaktiga uppgifter sparas, att lagrad informati
 ## 2. Testnivåer och arbetssätt
 
 - **Enhetstester av applikationslogik:** validering, standardvärden och regler för status. Ger snabb och precis återkoppling på regler och gränsfall.
-- **Integrationstester med verklig testlagring:** registrering, hämtning, statusändring, sortering och filtrering samt återöppning av lagring. Verifierar samspelet mellan logik och den lagringsteknik som faktiskt används.
-- **Automatiserade tester med simulerat lagringsfel:** verifierar hur applikationslogiken rapporterar en misslyckad skrivning. Kompletterar integrationstesterna men bevisar inte hantering av alla verkliga disk- eller databasfel.
+- **Integrationstester med verklig MySQL-testdatabas:** registrering, hämtning, statusändring, sortering och filtrering samt återöppning av lagring. Verifierar samspelet mellan logik och den lagringsteknik som faktiskt används.
+- **Automatiserade tester med kontrollerade fel:** fel injiceras mot MySQL efter SQL-skrivning och före commit för att kontrollera rollback. Commitfel testas separat som oklart utfall. Testerna bevisar inte hantering av alla verkliga nätverks- eller databasfel.
 - **Manuella kontroller av gränssnittet:** verifierar synlig återkoppling, navigation, formulärbeteende och demonstration enligt README.
 
-Enhetstester ska inte vara den enda verifieringen av lagringen. Integrationstester använder en separat temporär databas eller motsvarande testlagring som återställs mellan tester. Tester ska inte ändra utvecklarnas sparade ärenden eller bero på körordning.
+Enhetstester ska inte vara den enda verifieringen av lagringen. Integrationstester använder den separata MySQL-testdatabasen `kundportal_test`. Testkonfigurationen verifierar databasen och användaren före migration eller rensning och får inte ändra utvecklingsdatabasens data. Tester ska inte bero på körordning.
 
-För beständighet stängs lagringsanslutningen och nya applikations-/lagringsinstanser öppnas mot samma testdata. Ett separat manuellt test stoppar och startar hela applikationen. Att endast läsa från samma minnesobjekt räcker inte.
+För beständighet stängs lagringsanslutningen och en ny öppnas mot samma testdata. Ett separat manuellt test stoppar och startar hela applikationen. Att endast läsa från samma minnesobjekt räcker inte.
 
-Teknik och testverktyg är ännu inte valda. Testnivåerna kan anpassas efter arkitekturen, men kontrollerna och motiveringen ska behållas eller uppdateras uttryckligen.
+Backendtester körs med Pytest och frontendtester med Vitest. Installation och testkommandon finns i [README:s körinstruktioner](../README.md#installation-och-körning).
 
 ## 3. Planerade automatiserade tester
 
-Alla rader nedan har status **Planerat**. Test-ID:n är dokumentationsreferenser; det finns ännu inga testfiler att länka till. När tester implementeras ska kolumnen Testlänk ersättas med en relativ länk till relevant testfil eller testgrupp.
+Backendtester finns för T01–T16 enligt länkarna nedan. T16 har begränsad backendtäckning; frontendens validering och ärendeflöde saknas. Raderna beskriver vad som ska verifieras, inte bevis för att hela produktflödet är färdigt.
 
 | ID | Typ | Krav | Beteende och förväntat resultat | Föreslagen nivå | Testlänk |
 | --- | --- | --- | --- | --- | --- |
-| <a name="t01"></a>T01 | Happy path | K1 | Giltig registrering sparar ett ärende med rätt trimmade fält, unikt ID, status Nytt och giltig skapandetid. Två registreringar får olika ID:n. | Integration | Saknas |
-| <a name="t02"></a>T02 | Error path | K2 | Saknad eller tom rubrik respektive beskrivning avvisas. Fel identifierar berört fält och antalet sparade ärenden är oförändrat. | Logik och integration | Saknas |
-| <a name="t03"></a>T03 | Gränsfall | K2 | Rubrik eller beskrivning med enbart blanksteg avvisas. Inget ärende sparas. | Logik och integration | Saknas |
-| <a name="t04"></a>T04 | Gränsfall | K1, K2 | Rubrik på 1 och 100 tecken godkänns; 101 avvisas. Beskrivning på 1 och 5 000 tecken godkänns; 5 001 avvisas. Längd räknas efter trimning. | Logik | Saknas |
-| <a name="t05"></a>T05 | Error path | K2 | Tom eller okänd kategori respektive prioritet avvisas i applikationslogiken även utan gränssnittets validering. Inget ärende sparas. | Logik och integration | Saknas |
-| <a name="t06"></a>T06 | Happy path | K3 | Ett registrerat ärende finns kvar med samma uppgifter när lagringen stängs och öppnas av nya instanser. | Integration | Saknas |
-| <a name="t07"></a>T07 | Happy path | K4, K5 | Flera ärenden listas med angivna listfält i fallande skapandetid. Hämtning med ett ID ger samtliga fält från rätt ärende. | Integration | Saknas |
-| <a name="t08"></a>T08 | Gränsfall | K4, K8 | Tom lagring ger en tom ärendelista utan fel. Ett giltigt filter utan träffar ger en tom resultatlista. | Integration | Saknas |
-| <a name="t09"></a>T09 | Error path | K5, K6 | Hämtning eller statusändring för ett okänt ID ger ett hanterat fel. Inget ärende skapas och befintliga uppgifter ändras inte. | Integration | Saknas |
-| <a name="t10"></a>T10 | Happy path | K3, K6 | Tillåtna statusändringar sparas och finns kvar efter återöppnad lagring. Övriga fält är oförändrade. Återöppning från Avslutat till Pågående ingår. | Logik och integration | Saknas |
-| <a name="t11"></a>T11 | Error path | K6 | Tom eller okänd status avvisas och tidigare lagrad status samt övriga ärendefält förblir oförändrade. | Logik och integration | Saknas |
-| <a name="t12"></a>T12 | Gränsfall | K6 | Att välja aktuell status igen lyckas utan att ändra några ärendeuppgifter. | Integration | Saknas |
-| <a name="t13"></a>T13 | Error path | K7 | Simulerat lagringsfel vid registrering ger ett hanterat misslyckat resultat och inget sparat ärende. | Logik med simulerat fel | Saknas |
-| <a name="t14"></a>T14 | Error path | K7 | Simulerat lagringsfel vid statusändring ger ett hanterat misslyckat resultat och lämnar tidigare lagrad status oförändrad. | Logik med simulerat fel | Saknas |
-| <a name="t15"></a>T15 | Kompletterande funktion / happy path | K8 | Bland ärenden med olika status returnerar varje statusfilter endast rätt ärenden i rätt sortering. Alla returnerar samtliga. Lagrade uppgifter ändras inte. | Integration | Saknas |
-| <a name="t16"></a>T16 | Gränsfall | K1, K2 | Inledande och avslutande blanksteg tas bort före lagring, medan inre blanksteg och radbrytningar i beskrivningen bevaras. | Logik och integration | Saknas |
+| T01 | Happy path | K1 | Giltig registrering sparar ett ärende med rätt fält, unikt ID, status Nytt och giltig skapandetid. Två registreringar får olika ID:n. | Integration | [test_tickets_api.py](../backend/tests/test_tickets_api.py) |
+| T02 | Error path | K2 | Saknad eller tom rubrik respektive beskrivning avvisas. Fel identifierar berört fält och antalet sparade ärenden är oförändrat. Notering: saknade fält testas inte explicit; text som enbart består av blanksteg täcks i T03. | Logik och integration | [test_ticket_validation.py](../backend/tests/test_ticket_validation.py) |
+| T03 | Gränsfall | K2 | Kund-ID, kundnamn, rubrik eller beskrivning med enbart blanksteg avvisas. Inget ärende sparas. | Logik och integration | [test_ticket_validation.py](../backend/tests/test_ticket_validation.py) |
+| T04 | Gränsfall | K1, K2 | Rubrik på 1 och 100 tecken godkänns; 101 avvisas. Beskrivning på 1 och 5 000 tecken godkänns; 5 001 avvisas. Längd räknas efter trimning. Notering: testerna kontrollerar maxlängd och maxlängd +1 för alla textfält, men inte minimilängderna. | Logik | [test_ticket_validation.py](../backend/tests/test_ticket_validation.py) |
+| T05 | Error path | K2 | Tom eller okänd kategori respektive prioritet avvisas i applikationslogiken även utan gränssnittets validering. Inget ärende sparas. Notering: okända värden testas; tom kategori och prioritet testas inte separat. | Logik och integration | [test_ticket_validation.py](../backend/tests/test_ticket_validation.py) |
+| T06 | Happy path | K3 | Ett registrerat ärende finns kvar med samma uppgifter när lagringen stängs och öppnas av nya instanser. | Integration | [test_tickets_api.py](../backend/tests/test_tickets_api.py) |
+| T07 | Happy path | K4, K5 | Flera ärenden listas med angivna listfält i fallande skapandetid. Hämtning med ett ID ger samtliga fält från rätt ärende. | Integration | [test_tickets_api.py](../backend/tests/test_tickets_api.py), [test_ticket_status_and_listing.py](../backend/tests/test_ticket_status_and_listing.py) |
+| T08 | Gränsfall | K4, K8 | Tom lagring ger en tom ärendelista utan fel. Ett giltigt filter utan träffar ger en tom resultatlista. | Integration | [test_ticket_not_found.py](../backend/tests/test_ticket_not_found.py), [test_ticket_status_and_listing.py](../backend/tests/test_ticket_status_and_listing.py) |
+| T09 | Error path | K5, K6 | Hämtning eller statusändring för ett okänt ID ger ett hanterat fel. Inget ärende skapas och befintliga uppgifter ändras inte. | Integration | [test_ticket_not_found.py](../backend/tests/test_ticket_not_found.py) |
+| T10 | Happy path | K3, K6 | Tillåtna statusändringar sparas och finns kvar efter återöppnad lagring. Övriga fält är oförändrade. Återöppning från Avslutat till Pågående ingår. Notering: testerna täcker en statussekvens, inte återöppning från Avslutat till Pågående eller beständighet efter återöppnad lagring; beständighet efter backendomstart kontrollerades manuellt. | Logik och integration | [test_ticket_status_and_listing.py](../backend/tests/test_ticket_status_and_listing.py) |
+| T11 | Error path | K6 | Tom eller okänd status avvisas och tidigare lagrad status samt övriga ärendefält förblir oförändrade. Notering: okänd status och extra PATCH-fält testas; tom eller saknad status testas inte separat. | Logik och integration | [test_ticket_status_and_listing.py](../backend/tests/test_ticket_status_and_listing.py) |
+| T12 | Gränsfall | K6 | Att välja aktuell status igen lyckas utan att ändra några ärendeuppgifter. | Integration | [test_ticket_status_and_listing.py](../backend/tests/test_ticket_status_and_listing.py) |
+| T13 | Error path | K7 | Ett kontrollerat fel efter SQL-skrivning men före commit ger rollback; ny hämtning visar att inget ärende sparats. | Integration med verklig MySQL | [test_ticket_storage_failures.py](../backend/tests/test_ticket_storage_failures.py) |
+| T14 | Error path | K7 | Ett kontrollerat fel vid statusändring före commit återställer tidigare status. Oklart commitutfall rapporteras separat. | Integration med verklig MySQL | [test_ticket_storage_failures.py](../backend/tests/test_ticket_storage_failures.py) |
+| T15 | Kompletterande funktion / happy path | K8 | Bland ärenden med olika status returnerar varje statusfilter endast rätt ärenden i rätt sortering. Alla returnerar samtliga. Lagrade uppgifter ändras inte. Notering: testerna kontrollerar filtret `in_progress`, ett giltigt filter utan träff och listan utan filter; övriga statusfilter saknar explicita testfall och det finns inget separat påstående som verifierar att filtrering lämnar lagrade uppgifter oförändrade. | Integration | [test_ticket_status_and_listing.py](../backend/tests/test_ticket_status_and_listing.py) |
+| T16 | Gränsfall | K1, K2 | Inledande och avslutande blanksteg trimmas från textfält. Backendtester täcker utvalda blanksteg och fältlängder; frontendens gemensamma trimnings- och längdtester återstår. | Logik och integration | [test_tickets_api.py](../backend/tests/test_tickets_api.py), [test_ticket_validation.py](../backend/tests/test_ticket_validation.py) |
 
 Närliggande fall får grupperas och parametriseras. Exakta feltexter behöver inte låsas i logiktester om feltypen och kopplingen till fältet kan verifieras. Begripligheten i den text som användaren faktiskt ser bedöms manuellt.
 
 ## 4. Planerade manuella kontroller
 
-Alla kontroller har status **Planerat**. Datum, utförare och utfall fylls i efter faktisk körning.
+Följande gränssnittskontroller har status **Planerat**. Datum, utförare och utfall fylls i efter faktisk körning.
 
 | ID | Krav | Genomförande och förväntat resultat |
 | --- | --- | --- |
-| <a name="m01"></a>M01 | K1, K4, K5 | Registrera ett giltigt ärende i gränssnittet. Kontrollera bekräftelse, listfält, detaljfält och navigation tillbaka till listan. |
-| <a name="m02"></a>M02 | K2 | Skicka ett ofullständigt formulär och överskrid en längdgräns. Kontrollera att felmeddelandet är begripligt, pekar på rätt fält och att inmatade uppgifter finns kvar. |
-| <a name="m03"></a>M03 | K3, K6 | Skapa ett ärende och ändra status. Stoppa hela applikationen, starta igen och kontrollera att rätt ärende och status visas i både lista och detaljvy. |
-| <a name="m04"></a>M04 | K4, K8 | Kontrollera tom lista, statusfilter med och utan träffar samt återställning med Alla. Kontrollera att respektive besked är begripligt. |
-| <a name="m05"></a>M05 | K7 | Framkalla ett kontrollerat skrivfel i en separat testmiljö. Kontrollera begripligt fel, ingen lyckad bekräftelse, bevarad formulärinmatning och att misslyckad statusändring inte visas som sparad. Dokumentera hur felet framkallades. |
-| <a name="m06"></a>M06 | Q1, Q4 | Följ README från en ren klon, installera, starta, kör testerna och genomför demonstrationsflödet. Dokumentera eventuella saknade steg. |
-| <a name="m07"></a>M07 | K5, K6 | Begär ett ärende som inte finns via den åtkomstväg implementationen erbjuder. Kontrollera ett begripligt besked och att användaren kan fortsätta använda applikationen. |
+| M01 | K1, K4, K5 | Registrera ett giltigt ärende i gränssnittet. Kontrollera bekräftelse, listfält, detaljfält och navigation tillbaka till listan. |
+| M02 | K2 | Skicka ett ofullständigt formulär och överskrid en längdgräns. Kontrollera att felmeddelandet är begripligt, pekar på rätt fält och att inmatade uppgifter finns kvar. |
+| M03 | K3, K6 | Skapa ett ärende och ändra status. Stoppa hela applikationen, starta igen och kontrollera att rätt ärende och status visas i både lista och detaljvy. |
+| M04 | K4, K8 | Kontrollera tom lista, statusfilter med och utan träffar samt återställning med Alla. Kontrollera att respektive besked är begripligt. |
+| M05 | K7 | Framkalla ett kontrollerat skrivfel i en separat testmiljö. Kontrollera begripligt fel, ingen lyckad bekräftelse, bevarad formulärinmatning och att misslyckad statusändring inte visas som sparad. Dokumentera hur felet framkallades. |
+| M06 | Q1, Q4 | Följ README från en ren klon, installera, starta, kör testerna och genomför demonstrationsflödet. Dokumentera eventuella saknade steg. |
+| M07 | K5, K6 | Begär ett ärende som inte finns via den åtkomstväg implementationen erbjuder. Kontrollera ett begripligt besked och att användaren kan fortsätta använda applikationen. |
 
 ## 5. Köra testerna
 
-Exakta kommandon saknas eftersom språk, ramverk och testverktyg inte är valda. Detta avsnitt är inte en körbar testinstruktion ännu.
-
-Före verifiering och inlämning ska följande fyllas i här eller länkas till i README:
-
-1. Nödvändiga verktyg och versioner.
-2. Kommando för installation av beroenden.
-3. Hur separat testlagring skapas, konfigureras och återställs.
-4. Exakta kommandon för att köra samtliga automatiserade tester från repots rot.
-5. Hur ett lyckat respektive misslyckat testresultat känns igen.
-6. Eventuella förberedelser och hur testdata städas bort.
-
-Se [README:s körinstruktioner](../README.md#installation-och-körning).
+Installation, start av MySQL och testkommandon finns i [README:s körinstruktioner](../README.md#installation-och-körning). Backendens integrationstester använder separat MySQL-testdatabas `kundportal_test`. Frontendtesterna körs med Vitest.
 
 ## 6. Faktiska resultat
 
-Inga automatiserade tester har körts och inga manuella produktkontroller har genomförts per 2026-10-23. Det finns därför inga godkända produktresultat att redovisa.
+Senaste rapporterade backendkörning av Danielle den 2026-11-01: `.\.venv\Scripts\python.exe -m pytest -q` från `backend` — **27 passed in 1.50s**. Kodversionen för körningen är inte dokumenterad; körningen gjordes inte om vid denna dokumentationsändring.
+
+Tidigare rapporterad frontendkontroll: `npm.cmd test` — 1 test passed med simulerade HTTP-svar; `npm.cmd run build` lyckades. Detta verifierar inte ärendeflödet.
+
+Manuella API-kontroller rapporterade av Danielle den 2026-11-01, separat från testerna. Kodversionen är inte dokumenterad:
+
+- `POST /api/tickets`: 201; ärende skapades med status `new`.
+- `GET /api/tickets` och `GET /api/tickets/1`: 200; ärendet och dess detaljer returnerades.
+- `PATCH /api/tickets/1/status`: 200; status ändrades till `in_progress`, vilket bekräftades med en separat GET.
+- Efter omstart av backend returnerade en ny GET samma ärende och status.
+
+Detta verifierar inte frontendens ärendeflöde eller fullständig omstart av applikationen. Omstart av MySQL verifierades inte.
 
 Efter varje relevant verifieringstillfälle registreras verkliga resultat enligt följande mall. Ersätt platshållarna först efter genomförd körning.
 
@@ -96,10 +96,10 @@ Planerade, överhoppade eller ännu inte implementerade kontroller får inte red
 
 ## 7. Begränsningar
 
-- Planen är inte bevis för att kraven är uppfyllda. Testlänkar och verkliga körresultat återstår.
+- Backendtester verifierar beteenden mot testdatabasen. De visar inte att frontendens ärendegränssnitt fungerar.
 - Logik- och integrationstester visar inte i sig att gränssnittets texter, formulär eller navigation fungerar. Manuella kontroller kompletterar dessa.
-- Återöppnad lagring verifierar beständighet på integrationsnivå. Fullständig omstart av applikationen kontrolleras separat.
-- Simulerade skrivfel verifierar den valda felvägen, inte alla verkliga lagringsfel. Vid implementation ska det dokumenteras var felet injiceras och vilken återställning testet faktiskt visar.
+- Återöppnad lagring verifierar beständighet på integrationsnivå. Fullständig omstart av applikationen är inte verifierad.
+- Kontrollerade SQL-fel verifierar den valda felvägen, inte alla verkliga lagringsfel.
 - Belastning, produktionsdrift, avancerad säkerhet, samtidiga uppdateringar från flera handläggare och externa integrationer ingår inte i denna verifieringsplan.
 - Ingen viss testtäckningsprocent utlovas. Slutsatser ska kopplas till verifierade beteenden och kvarvarande risker.
 
