@@ -1,6 +1,6 @@
 ---
 name: code-design
-description: Teamet Jirigas gemensamma code-design för Kundserviceportalen (React + TypeScript + Vite i frontend, FastAPI + SQLAlchemy + MySQL i backend, Vitest och pytest). Använd ALLTID innan du skriver, ändrar, granskar eller planerar kod, tester, API-endpoints, databasschema, migrationer, komponenter eller styling i det här repot – även för små ändringar – så att alla teammedlemmar och deras AI-agenter följer samma struktur, namngivning, felhantering och design.
+description: Teamet Jirigas gemensamma code-design för Kundserviceportalen (React + TypeScript + Vite i frontend, FastAPI + SQLAlchemy + MySQL i backend, Vitest och pytest). Använd ALLTID innan du skriver, ändrar, granskar eller planerar kod, tester, API-endpoints, databasschema, migrationer, komponenter, styling eller dokumentation (.md) i det här repot – även för små ändringar – så att alla teammedlemmar och deras AI-agenter följer samma struktur, namngivning, felhantering och design.
 ---
 
 # Code-design för Kundserviceportalen
@@ -71,6 +71,11 @@ När ett beslut fattas: uppdatera tabellen och berörd referensfil i samma PR.
 - Lägg inte till bibliotek utan att fråga teamet.
 - Bygg inte för framtida funktioner som inte finns i kravspecifikationen (inloggning, roller, radering, redigering av andra fält än status, kundregister, AI-funktioner ingår inte).
 
+**Skriv inte om befintlig text i `.md`-filer**
+- Lägg bara till eller ändra det som uppgiften kräver. Omformulera, korta eller "förbättra" aldrig meningar som fortfarande stämmer.
+- Måste befintlig text ändras, t.ex. för att den blivit fel: fråga först. Visa nuvarande text, föreslagen text och varför, och vänta på godkännande.
+- Exempel: när bara projektstatusen i README behövde uppdateras skrevs även "registrerar, läser och följer kundärenden" om till "ska kunna registrera, läsa och följa kundärenden". Det ska inte göras utan att fråga.
+
 **Bara påhittade uppgifter och inga hemligheter**
 - Testdata, seed-data och exempel använder påhittade namn som "Exempelkund" eller "Anna Exempel". Aldrig riktiga personuppgifter.
 - `.env` checkas aldrig in – bara `.env.example`. Inga lösenord eller anslutningssträngar i kod.
@@ -92,3 +97,4 @@ När ett beslut fattas: uppdatera tabellen och berörd referensfil i samma PR.
 - [ ] Ändrat schema har en Alembic-migration.
 - [ ] Inga beslut från tabellen "Öppna beslut" har fattats på egen hand.
 - [ ] UI följer färgtokens och tillgänglighetsreglerna.
+- [ ] Ingen befintlig text i `.md`-filer har omformulerats utan godkännande.

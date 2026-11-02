@@ -26,6 +26,7 @@ Teamet Jiriga bygger Kundserviceportalen: React + TypeScript + Vite i `frontend/
 - Fel får aldrig se ut som framgång: ingen optimistisk uppdatering, formulärvärden finns kvar efter fel. Vid `save_outcome_unknown` skickas skrivningen inte om automatiskt.
 - Följ befintlig struktur. Lägg inte till bibliotek, mappar eller funktioner utanför kravspecifikationen utan att fråga.
 - Schemaändringar kräver en Alembic-migration. Tester använder aldrig utvecklingsdatabasen.
+- Skriv inte om befintlig text i `.md`-filer. Lägg bara till eller ändra det uppgiften kräver. Måste en befintlig mening ändras: visa nuvarande och föreslagen text och fråga först.
 - Fatta inte beslut som står under "Öppna beslut" i SKILL.md – fråga.
 - Använd bara färger från `frontend/src/styles/tokens.css`.
 - Bara påhittade uppgifter. `.env`, lösenord och databasfiler checkas aldrig in.
