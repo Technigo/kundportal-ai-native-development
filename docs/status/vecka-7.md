@@ -75,6 +75,7 @@ Teamets plan för veckan (enligt Linear):
 | Tidslinjen och felmeddelandena i UI (KSP-37, KSP-38) | Inte påbörjade. Utan dem syns historiken inte i UI, vilket är förväntning 1 och demon | Amalia. Behöver komma igång i veckan |
 | Formuläret i UI, PR #64 (KSP-30): https://github.com/desiboli/kundportal-ai-native-development/pull/64 | Ändringar begärda av Azalea och Amalia. Typfelet är åtgärdat | Azalea och Amalia granskar igen |
 | Databasfel som ger 503 loggas inte | Orsaken sparas i felkedjan men skrivs aldrig ut (upptäckt i KSP-36) | Känd begränsning, till KSP-61 |
+| Varning från Base UI i frontendtesterna: länken "Systemstatus" i ärendelistan är en `Button` som renderas som `Link` (`render={<Link …/>}`), så knappens semantik försvinner | Finns på `main` sedan ärendelistan (KSP-29). Syntes när Azalea körde testerna för PR #64 (formuläret) 2026-11-02. Blockerar inte, men påverkar tillgängligheten | Mustafa (listan) eller Amalia (UI och tillgänglighet), frågat i Slack |
 | `create` gör `commit` utan `rollback` | Samma risk som `change_status` hade före KSP-36. Syns inte över HTTP | Eget ärende i Linear (Azalea beslutade 2026-11-02) |
 | KSP-61 (kända begränsningar) saknar ägare i Linear | Fördelades inte på förra mötet | Fördelas i veckan. Azalea tog KSP-54 (veckostatus V7) 2026-11-02 |
 
