@@ -127,3 +127,45 @@ def test_inner_whitespace_is_preserved_and_length_is_checked_after_trimming():
     assert ticket["customer_id"] == "x" * 100
     assert ticket["customer_name"] == "Ada  Lovelace"
     assert ticket["description"] == "Rad 1\r\nRad\t2"
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "server_field, value",
+    (
+        ("id", 999),
+        ("status", "closed"),
+        ("created_at", "2020-01-01T00:00:00.000000Z"),
+    ),
+)
+def test_client_cannot_set_server_controlled_fields_when_registering(
+    server_field, value
+):
+    client = TestClient(app)
+
+    response = client.post("/api/tickets", json={**VALID_TICKET, server_field: value})
+
+    assert response.status_code == 422
+    assert server_field in response.json()["error"]["fields"]
+    assert client.get("/api/tickets").json() == []
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "body",
+    (
+        {**VALID_TICKET, "title": 123},
+        {**VALID_TICKET, "title": None},
+        {**VALID_TICKET, "category": None},
+        [VALID_TICKET],
+        "text",
+    ),
+)
+def test_wrong_json_types_are_422_without_saving(body):
+    client = TestClient(app)
+
+    response = client.post("/api/tickets", json=body)
+
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "validation_error"
+    assert client.get("/api/tickets").json() == []

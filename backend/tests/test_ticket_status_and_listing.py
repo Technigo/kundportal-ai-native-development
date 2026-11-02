@@ -85,6 +85,21 @@ def test_invalid_status_and_extra_status_fields_do_not_change_ticket():
 
 
 @pytest.mark.integration
+def test_choosing_the_current_status_again_succeeds_and_changes_nothing():
+    client = TestClient(app)
+    created = client.post("/api/tickets", json=VALID_TICKET).json()
+
+    response = client.patch(
+        f"/api/tickets/{created['id']}/status",
+        json={"status": created["status"]},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == created
+    assert client.get(f"/api/tickets/{created['id']}").json() == created
+
+
+@pytest.mark.integration
 def test_tickets_with_identical_created_at_are_listed_highest_id_first():
     insert = text(
         "INSERT INTO tickets "
