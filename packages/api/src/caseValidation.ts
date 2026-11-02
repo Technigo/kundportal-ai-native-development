@@ -1,5 +1,6 @@
 export const categories = ['Konto', 'Fakturering', 'Tekniskt', 'Övrigt'] as const;
 export const priorities = ['Låg', 'Normal', 'Hög'] as const;
+export const statuses = ['Nytt', 'Pågående', 'Väntar på kund', 'Avslutat'] as const;
 
 export interface CreateCaseInput {
   title: string;
@@ -35,6 +36,20 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function isOneOf<T extends readonly string[]>(values: T, value: unknown): value is T[number] {
   return typeof value === 'string' && values.some((candidate) => candidate === value);
+}
+
+export function isValidCaseId(value: string): boolean {
+  return /^[1-9]\d*$/.test(value) && Number.isSafeInteger(Number(value));
+}
+
+export function validateCaseStatus(input: unknown):
+  | { success: true; value: (typeof statuses)[number] }
+  | { success: false; error: string } {
+  if (!isRecord(input) || !isOneOf(statuses, input.status)) {
+    return { success: false, error: 'Välj en giltig status.' };
+  }
+
+  return { success: true, value: input.status };
 }
 
 export function validateCreateCase(input: unknown): ValidationResult {

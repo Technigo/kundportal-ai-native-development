@@ -87,7 +87,15 @@ export function CaseList({ refreshKey = 0 }: CaseListProps) {
           ))}
         </ul>
       )}
-      {selectedCaseId !== null && <CaseDetail key={selectedCaseId} caseId={selectedCaseId} />}
+      {selectedCaseId !== null && (
+        <CaseDetail
+          key={selectedCaseId}
+          caseId={selectedCaseId}
+          onUpdated={(updated) => {
+            setCases((current) => current.map((item) => item.id === updated.id ? updated : item));
+          }}
+        />
+      )}
     </section>
   );
 }

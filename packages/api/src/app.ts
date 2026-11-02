@@ -1,6 +1,6 @@
 import express from 'express';
 import type Database from 'better-sqlite3';
-import { validateCreateCase } from './caseValidation.js';
+import { isValidCaseId, validateCaseStatus, validateCreateCase } from './caseValidation.js';
 
 interface CaseRow {
   id: number;
@@ -44,7 +44,7 @@ export function createApp(connection: Database.Database) {
 
   app.get('/api/cases/:id', (request, response) => {
     const id = Number(request.params.id);
-    if (!/^[1-9]\d*$/.test(request.params.id) || !Number.isSafeInteger(id)) {
+    if (!isValidCaseId(request.params.id)) {
       return response.status(400).json({ error: 'Ärende-ID måste vara ett positivt heltal.' });
     }
 
@@ -64,6 +64,35 @@ export function createApp(connection: Database.Database) {
     } catch (error) {
       console.error('Failed to load case details:', error);
       return response.status(500).json({ error: 'Ärendet kunde inte hämtas. Försök igen.' });
+    }
+  });
+
+  app.patch('/api/cases/:id/status', (request, response) => {
+    if (!isValidCaseId(request.params.id)) {
+      return response.status(400).json({ error: 'Ärende-ID måste vara ett positivt heltal.' });
+    }
+
+    const validation = validateCaseStatus(request.body);
+    if (!validation.success) {
+      return response.status(400).json({ error: validation.error });
+    }
+
+    try {
+      const updated = connection
+        .prepare(`
+          UPDATE cases SET status = ? WHERE id = ?
+          RETURNING id, title, description, category, priority, status, created_at AS createdAt
+        `)
+        .get(validation.value, Number(request.params.id)) as CaseRow | undefined;
+
+      if (!updated) {
+        return response.status(404).json({ error: 'Ärendet hittades inte.' });
+      }
+
+      return response.json(updated);
+    } catch (error) {
+      console.error('Failed to update case status:', error);
+      return response.status(500).json({ error: 'Status kunde inte sparas. Försök igen.' });
     }
   });
 
