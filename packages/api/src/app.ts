@@ -42,6 +42,31 @@ export function createApp(connection: Database.Database) {
     return response.json(cases);
   });
 
+  app.get('/api/cases/:id', (request, response) => {
+    const id = Number(request.params.id);
+    if (!/^[1-9]\d*$/.test(request.params.id) || !Number.isSafeInteger(id)) {
+      return response.status(400).json({ error: 'Ärende-ID måste vara ett positivt heltal.' });
+    }
+
+    try {
+      const caseItem = connection
+        .prepare(`
+          SELECT id, title, description, category, priority, status, created_at AS createdAt
+          FROM cases WHERE id = ?
+        `)
+        .get(id) as CaseRow | undefined;
+
+      if (!caseItem) {
+        return response.status(404).json({ error: 'Ärendet hittades inte.' });
+      }
+
+      return response.json(caseItem);
+    } catch (error) {
+      console.error('Failed to load case details:', error);
+      return response.status(500).json({ error: 'Ärendet kunde inte hämtas. Försök igen.' });
+    }
+  });
+
   app.post('/api/cases', (request, response) => {
     const validation = validateCreateCase(request.body);
     if (!validation.success) {
