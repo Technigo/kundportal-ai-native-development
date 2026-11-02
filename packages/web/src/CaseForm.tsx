@@ -1,4 +1,7 @@
 import { useState, type FormEvent } from 'react';
+import { isCreatedCase, type CreatedCase } from './caseTypes';
+
+export type { CreatedCase } from './caseTypes';
 
 interface CreateCasePayload {
   title: string;
@@ -7,37 +10,11 @@ interface CreateCasePayload {
   priority: string;
 }
 
-export interface CreatedCase extends CreateCasePayload {
-  id: number;
-  status: string;
-  createdAt: string;
-}
-
 interface CaseFormProps {
   onCreated: (createdCase: CreatedCase) => void;
 }
 
 class FormSubmissionError extends Error {}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function isCreatedCase(value: unknown): value is CreatedCase {
-  if (!isRecord(value)) {
-    return false;
-  }
-
-  return (
-    typeof value.id === 'number' &&
-    typeof value.title === 'string' &&
-    typeof value.description === 'string' &&
-    typeof value.category === 'string' &&
-    typeof value.priority === 'string' &&
-    typeof value.status === 'string' &&
-    typeof value.createdAt === 'string'
-  );
-}
 
 function apiErrorMessage(value: unknown): string | null {
   if (typeof value === 'object' && value !== null && 'error' in value) {

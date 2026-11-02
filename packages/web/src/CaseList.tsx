@@ -1,43 +1,16 @@
 import { useEffect, useState } from 'react';
-
-interface CaseSummary {
-  id: number;
-  title: string;
-  category: string;
-  priority: string;
-  status: string;
-  createdAt: string;
-}
+import { CaseDetail } from './CaseDetail';
+import { isCaseSummary, type CaseSummary } from './caseTypes';
 
 interface CaseListProps {
   refreshKey?: number;
-}
-
-function isCaseSummary(value: unknown): value is CaseSummary {
-  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
-    return false;
-  }
-
-  return (
-    'id' in value &&
-    typeof value.id === 'number' &&
-    'title' in value &&
-    typeof value.title === 'string' &&
-    'category' in value &&
-    typeof value.category === 'string' &&
-    'priority' in value &&
-    typeof value.priority === 'string' &&
-    'status' in value &&
-    typeof value.status === 'string' &&
-    'createdAt' in value &&
-    typeof value.createdAt === 'string'
-  );
 }
 
 export function CaseList({ refreshKey = 0 }: CaseListProps) {
   const [cases, setCases] = useState<CaseSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [selectedCaseId, setSelectedCaseId] = useState<number | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -93,7 +66,17 @@ export function CaseList({ refreshKey = 0 }: CaseListProps) {
           {cases.map((caseItem) => (
             <li className="case-item" key={caseItem.id}>
               <div className="case-item__heading">
-                <h3>{caseItem.title}</h3>
+                <h3>
+                  <button
+                    className="case-link"
+                    type="button"
+                    aria-pressed={selectedCaseId === caseItem.id}
+                    aria-controls="case-detail"
+                    onClick={() => setSelectedCaseId(caseItem.id)}
+                  >
+                    {caseItem.title}
+                  </button>
+                </h3>
                 <span className="case-status">{caseItem.status}</span>
               </div>
               <p className="case-item__details">
@@ -104,6 +87,7 @@ export function CaseList({ refreshKey = 0 }: CaseListProps) {
           ))}
         </ul>
       )}
+      {selectedCaseId !== null && <CaseDetail key={selectedCaseId} caseId={selectedCaseId} />}
     </section>
   );
 }

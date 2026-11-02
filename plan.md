@@ -23,7 +23,7 @@ Varje delsteg verifieras och granskas. Vi pausar för godkännande innan nästa 
 | 3 | Vertikala featuretickets med krav-ID, acceptanskriterier och testmappning | Klart — `25805521` |
 | 4 | Skapa ärende: UI, validering, API, SQLite och kravmärkta tester | Klart — `e0ec5616` |
 | 5 | Lista ärenden: nyast först, tomläge och felhantering | Klart |
-| 6 | Visa ärendedetalj; testa befintligt och saknat ärende | Återstår |
+| 6 | Visa ärendedetalj; testa befintligt och saknat ärende | Klart — verifierat och godkänt efter granskning |
 | 7 | Ändra status och verifiera beständig uppdatering | Återstår |
 | 8 | Lägga till/redigera/radera intern anteckning | Återstår |
 | 9 | Gemensamma UI-komponenter, konsekvent felbesked och visuell kontroll | Återstår |

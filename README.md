@@ -7,7 +7,7 @@ Här samlar ni teamets arbete med Kundserviceportalen i kursen AI Native Develop
 
 ## Om projektet
 
-Kundserviceportalen är ett lokalt internt verktyg för att samla och följa kundärenden. Handläggare kan registrera ärenden med rubrik, beskrivning, kategori och prioritet samt se sparade ärenden. Detaljvy, statusändring och interna anteckningar byggs stegvis.
+Kundserviceportalen är ett lokalt internt verktyg för att samla och följa kundärenden. Handläggare kan registrera ärenden med rubrik, beskrivning, kategori och prioritet samt se sparade ärenden. Välj ett ärendes rubrik i listan för att visa dess fullständiga uppgifter. Statusändring och interna anteckningar byggs stegvis.
 
 ## Kör lokalt
 

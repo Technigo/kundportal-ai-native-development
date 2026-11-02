@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup, render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { CaseList } from './CaseList';
 
@@ -30,6 +31,24 @@ afterEach(() => {
 });
 
 describe('CaseList', () => {
+  it('[CASE-DETAIL-001] opens details for the case chosen from the list', async () => {
+    const selectedCase = cases[1];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn()
+        .mockResolvedValueOnce(new Response(JSON.stringify(cases)))
+        .mockResolvedValueOnce(new Response(JSON.stringify(selectedCase)))
+    );
+    const user = userEvent.setup();
+    render(<CaseList />);
+
+    await user.click(await screen.findByRole('button', { name: selectedCase.title }));
+
+    expect(await screen.findByRole('region', { name: selectedCase.title })).toHaveTextContent(
+      selectedCase.description
+    );
+  });
+
   it('[CASE-LIST-001] displays the summary fields returned by the API', async () => {
     vi.stubGlobal(
       'fetch',
