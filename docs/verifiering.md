@@ -29,9 +29,9 @@ Förväntat resultat är en kort sammanfattning av kravet i [SPEC-karna.md](spec
 
 | Krav | Vad | Förväntat | Test | Nivå | För hand | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| CORE-01 | Skapa ärende, status `new` | 201 med ärendet, `status` `new`, `created_at` i UTC. Sparas med samma uppgifter. | [test_create_ticket.py](../backend/tests/test_create_ticket.py) (`test_core01_…`, 2 tester) | Integration | Ja | Grönt |
+| CORE-01 | Skapa ärende, status `new` | 201 med ärendet, `status` `new`, `created_at` i UTC. Sparas med samma uppgifter. | [test_create_ticket.py](../backend/tests/test_create_ticket.py) (`test_core01_…`, 2 tester). Formuläret postar rubrik, beskrivning, kategori och prioritet, utan `status`, och ärendet syns i listan: [create-ticket-form.test.tsx](../frontend/src/components/create-ticket-form.test.tsx) (`test_core01_valid_ticket_is_posted_and_shown`) | Integration och komponent | Ja | Grönt |
 | CORE-02 | Ärendet finns kvar efter omstart | Ny engine och session mot samma fil: ärendet finns med samma uppgifter. | [test_core_read.py](../backend/tests/test_core_read.py) (`test_core02_ticket_survives_restart`) | Integration, omstart | Ja | Grönt |
-| CORE-03 | Lista, nyaste först | Alla ärenden, `created_at` fallande, sedan `id` fallande. | [test_core_read.py](../backend/tests/test_core_read.py) (`test_core03_…`, 3 tester) | Integration | Ja | Grönt |
+| CORE-03 | Lista, nyaste först | Alla ärenden, `created_at` fallande, sedan `id` fallande. | [test_core_read.py](../backend/tests/test_core_read.py) (`test_core03_…`, 3 tester). Komponenten visar API:ts ordning och svenska etiketter: [TicketListPage.test.tsx](../frontend/src/pages/TicketListPage.test.tsx) (`test_core03_keeps_the_order_from_the_api`, `test_core03_shows_swedish_labels_not_codes`) | Integration och komponent | Ja | Grönt |
 | CORE-04 | Hämta ett ärende med id | 200 med exakt de uppgifter som sparades. | [test_core_read.py](../backend/tests/test_core_read.py) (`test_core04_…`, `test_core03_list_items_match_get`) | Integration | Ja | Grönt |
 | CORE-05 | Trimning före och efter (B10) | Blanktecken och nollbreddstecken i ändarna tas bort, tecken inne i texten behålls. | [test_create_ticket.py](../backend/tests/test_create_ticket.py) (`test_core05_…`, 3 tester) | Integration | Nej | Grönt |
 | CORE-06 | Rubrik saknas | 422 "Rubrik måste fyllas i.", inget sparas. | [test_error_format.py](../backend/tests/test_error_format.py) (felsvaret), [test_create_ticket.py](../backend/tests/test_create_ticket.py) (`test_ksp22_nothing_saved_on_422`) | Integration | Ja | Grönt |
@@ -43,7 +43,7 @@ Förväntat resultat är en kort sammanfattning av kravet i [SPEC-karna.md](spec
 | CORE-12 | Rubrik högst 100 tecken, efter trimning | 100 tecken godkänns, 101 ger 422 och inget sparas. Räknas efter trimning. | [test_create_ticket.py](../backend/tests/test_create_ticket.py) (`test_core12_…`, 2 tester). Räknaren visar kodpunkter på den råa texten: 100 kan skickas och 101 visas som `101 / 100`: [create-ticket-form.test.tsx](../frontend/src/components/create-ticket-form.test.tsx) (`test_core12_one_hundred_code_points_is_submitted`, `test_core12_one_hundred_one_shows_detail`) | Integration och komponent | Ja | Grönt |
 | CORE-13 | Beskrivning högst 2000 tecken | 2000 tecken godkänns, 2001 ger 422 och inget sparas. | [test_core_rules.py](../backend/tests/test_core_rules.py) (`test_core13_…`, 2 tester) | Integration | Nej | Grönt |
 | CORE-14 | Svenska tecken och emoji oförändrade | Texten sparas och visas oförändrad. Sammansatta emoji räknas som sina kodpunkter (B11). | [test_create_ticket.py](../backend/tests/test_create_ticket.py) (`test_core14_…`), räkningen i [test_core_rules.py](../backend/tests/test_core_rules.py) (`test_b11_…`, `test_length_is_counted_…`). Samma kodpunkter i räknaren: [code-points.test.ts](../frontend/src/lib/code-points.test.ts) (`test_core14_smiling_face_is_one_code_point`, `test_core14_flag_is_two_code_points`, `test_core14_compound_emoji_is_three_code_points`) och [create-ticket-form.test.tsx](../frontend/src/components/create-ticket-form.test.tsx) (`test_core14_compound_emoji_counts_as_code_points`, `test_b11_fields_have_no_maxlength`) | Integration och komponent | Ja | Grönt |
-| CORE-15 | Tom lista är inte ett fel | 200 med `[]`. | [test_core_read.py](../backend/tests/test_core_read.py) (`test_core15_empty_list_returns_200`) | Integration | Nej | Grönt |
+| CORE-15 | Tom lista är inte ett fel | 200 med `[]`. | [test_core_read.py](../backend/tests/test_core_read.py) (`test_core15_empty_list_returns_200`). Komponenten visar ett meddelande, inte ett fel: [TicketListPage.test.tsx](../frontend/src/pages/TicketListPage.test.tsx) (`test_core15_empty_list_shows_a_message_not_an_error`) | Integration och komponent | Nej | Grönt |
 | CORE-16 | Fel på svenska, `{"detail": ...}` | Svenska meddelanden, aldrig stacktrace, SQL eller engelska fältnamn. | [test_error_format.py](../backend/tests/test_error_format.py) | Integration | Ja | Grönt |
 | CORE-17 | Fel datatyp, trasig JSON, ogiltig UTF-8 | 422 med bara "Ogiltig indata.", inget sparas. | [test_error_format.py](../backend/tests/test_error_format.py) (`test_core17_…`), inget sparas i [test_core_rules.py](../backend/tests/test_core_rules.py) (`test_rejected_ticket_saves_nothing`) | Integration | Nej | Grönt |
 | CORE-18 | Flera fel samtidigt, i fältordningen | 422 med alla meddelanden i ordningen rubrik, beskrivning, kategori, prioritet, status. Inget sparas. | [test_error_format.py](../backend/tests/test_error_format.py) (`test_core18_…`), inget sparas i [test_core_rules.py](../backend/tests/test_core_rules.py) (`test_rejected_ticket_saves_nothing`) | Integration | Nej | Grönt |
@@ -52,9 +52,18 @@ Inget krav är *Verifierat* än: statusbytet (KSP-24) finns nu, så mutationspr�
 är nästa steg. Felsvaren kommer från KSP-21 (Azalea, PR #30),
 https://github.com/desiboli/kundportal-ai-native-development/pull/30, och skapa, lista och
 visa från KSP-22 och KSP-23. Nicklas tester för CORE (KSP-25 och KSP-26) finns i
-`test_core_read.py` och `test_core_rules.py`. Räknaren (KSP-69, teckenräkning med
-emoji stämmer med backend) använder Unicode-kodpunkter på den råa texten, samma
-räkning som backend för emoji (beslut B11). CORE-12 (rubrik högst 100 tecken) är
+`test_core_read.py` och `test_core_rules.py`. Listans komponenttester
+(KSP-67, komponenttest: listan visar ärenden och tom lista) ligger i
+`frontend/src/pages/TicketListPage.test.tsx` sedan ärendelistan (KSP-29) och pekas ut på
+CORE-03 och CORE-15 ovan. Formulärets komponenttester
+(KSP-68, formuläret skickar rätt data och visar `detail` vid 422) ligger i
+`frontend/src/components/create-ticket-form.test.tsx` sedan formuläret (KSP-30)
+och pekas ut på CORE-01 ovan. KSP-30 AC4 (vid 422 visas `detail` som det är) är
+`test_ac4_422_detail_is_shown_unchanged` i samma fil: texten visas oförändrad
+inuti dialogen. CORE-11 (bara blanktecken räknas som tomt) ligger kvar på
+backendraden. Räknaren (KSP-69, teckenräkning med emoji stämmer med backend)
+använder Unicode-kodpunkter på den råa texten, samma räkning som backend för emoji
+(beslut B11). CORE-12 (rubrik högst 100 tecken) är
 `test_core12_one_hundred_code_points_is_submitted` och
 `test_core12_one_hundred_one_shows_detail` i
 `frontend/src/components/create-ticket-form.test.tsx`. CORE-14 (svenska tecken och
@@ -64,7 +73,8 @@ och `test_core14_compound_emoji_is_three_code_points` i
 `frontend/src/lib/code-points.test.ts`, samt
 `test_core14_compound_emoji_counts_as_code_points` och
 `test_b11_fields_have_no_maxlength` i formulärfilen. CORE-13 (beskrivning högst
-2000 tecken) ligger kvar på backendraden.
+2000 tecken) ligger kvar på backendraden. Statusen är fortfarande Grönt: mutationsprövning och kontroll för
+hand återstår innan ett krav är Verifierat.
 
 ### Statuslogik och historik (HIST)
 
@@ -129,9 +139,11 @@ att klicka sig till exakt den version som kördes.
 | 2026-10-29 | https://github.com/desiboli/kundportal-ai-native-development/commit/115912b509d56346811927b9f67f10180e1032ed | automatiskt (pytest), efter PR #49 (ändra status) | 163 passed, varav 38 HIST-tester (`-k "hist or invariant"`) | Azalea |
 | 2026-10-29 | https://github.com/desiboli/kundportal-ai-native-development/commit/e24a30978d47bf71141dfb53a84877b336846cd4 | automatiskt (pytest) | 163 passed | Nicklas |
 | 2026-10-29 | https://github.com/desiboli/kundportal-ai-native-development/commit/e24a30978d47bf71141dfb53a84877b336846cd4 | för hand | Frontend finns inte än, så avsnitt 3 gjordes mot API:t i `/docs`. Skapa, lista, öppna, byta status och historiken gav förväntat svar. Tom rubrik, bara mellanslag och 101 tecken gav rätt meddelande, och inget sparades. Å, ä, ö och emoji oförändrade. Efter omstart fanns ärendet och historiken kvar. | Nicklas |
+| 2026-11-03 | https://github.com/desiboli/kundportal-ai-native-development/commit/2a923e940c2cdb428a494a12877164386c10c665 | automatiskt (vitest, `TicketListPage.test.tsx`) | 4 passed. CORE-03 (lista, nyaste först) ×2: ordningen från API:t behålls och koderna visas som svenska etiketter. CORE-15 (tom lista är inte ett fel): meddelandet "Inga ärenden", inget fel. Samma fil har också CORE-12 (rubrik på exakt 100 tecken), från ärendelistan (KSP-29). | Mustafa (agent) |
+| 2026-11-03 | https://github.com/desiboli/kundportal-ai-native-development/commit/2a923e940c2cdb428a494a12877164386c10c665 | automatiskt (vitest, `create-ticket-form.test.tsx`) | 2 passed, 18 skipped. CORE-01 (skapa ärende, status `new`): `test_core01_valid_ticket_is_posted_and_shown` postar rubrik, beskrivning, kategori och prioritet, utan `status`, och ärendet syns i listan. KSP-30 AC4 (vid 422 visas `detail` som det är): `test_ac4_422_detail_is_shown_unchanged`. Övriga tester i filen kördes inte. | Mustafa (agent) |
 | 2026-11-03 | https://github.com/desiboli/kundportal-ai-native-development/commit/2a923e940c2cdb428a494a12877164386c10c665 | automatiskt (vitest, `code-points.test.ts`, `create-ticket-form.test.tsx`) | 7 passed, 16 skipped. CORE-12 (rubrik högst 100 tecken): `test_core12_one_hundred_code_points_is_submitted` skickar 100 kodpunkter, `test_core12_one_hundred_one_shows_detail` visar `101 / 100`. CORE-14 och beslut B11 (emoji som kodpunkter): `test_core14_smiling_face_is_one_code_point` (😊 = 1), `test_core14_flag_is_two_code_points` (🇸🇪 = 2), `test_core14_compound_emoji_is_three_code_points` (👩‍💻 = 3), `test_core14_compound_emoji_counts_as_code_points` (`101 / 100`, inte `103 / 100`) och `test_b11_fields_have_no_maxlength` (inget `maxlength`). Övriga tester i formulärfilen kördes inte. CORE-13 (beskrivning högst 2000 tecken) kördes inte. | Mustafa (agent) |
 
-Kommando (macOS/Linux): `cd backend && .venv/bin/python -m pytest -q`. Teckenräkning med emoji (KSP-69): `cd frontend && pnpm exec vitest run src/lib/code-points.test.ts src/components/create-ticket-form.test.tsx -t "test_core14_smiling_face_is_one_code_point|test_core14_flag_is_two_code_points|test_core14_compound_emoji_is_three_code_points|test_core14_compound_emoji_counts_as_code_points|test_core12_one_hundred_code_points_is_submitted|test_core12_one_hundred_one_shows_detail|test_b11_fields_have_no_maxlength"`. Windows: se
+Kommando (macOS/Linux): `cd backend && .venv/bin/python -m pytest -q`. Listans komponenttester (KSP-67): `cd frontend && pnpm exec vitest run src/pages/TicketListPage.test.tsx`. Formulärets komponenttester (KSP-68): `cd frontend && pnpm exec vitest run src/components/create-ticket-form.test.tsx -t "test_core01_valid_ticket_is_posted_and_shown|test_ac4_422_detail_is_shown_unchanged"`. Teckenräkning med emoji (KSP-69): `cd frontend && pnpm exec vitest run src/lib/code-points.test.ts src/components/create-ticket-form.test.tsx -t "test_core14_smiling_face_is_one_code_point|test_core14_flag_is_two_code_points|test_core14_compound_emoji_is_three_code_points|test_core14_compound_emoji_counts_as_code_points|test_core12_one_hundred_code_points_is_submitted|test_core12_one_hundred_one_shows_detail|test_b11_fields_have_no_maxlength"`. Windows: se
 [Teststrategin](teststrategi.md) (avsnitt 5).
 
 ## 5. Mutationsprövning
