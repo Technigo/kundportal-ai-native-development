@@ -6,7 +6,9 @@ statusen." for all four statuses), HIST-06 (an unknown status gives 422 "Välj e
 status.", a wrong type or null gives "Ogiltig indata."), other fields than status in PATCH
 ("Ogiltig indata.", HIST spec v0.9) and HIST-13 (a closed ticket can be opened again and is
 logged as a normal status change). A rejected change leaves the status and the history as
-they were. Part of KSP-27 (tests for the status rules).
+they were. Every scenario also checks the ADR-001 invariant (HIST spec, section 6): the
+latest to_status in the history equals the ticket's status. Part of KSP-27 (tests for the
+status rules).
 
 Written before KSP-24 (PATCH with status rules), when the endpoint answered 501, and run
 against it in PR #49. A missing status and a missing body are already tested in
@@ -15,6 +17,8 @@ order (HIST-03, 11) and atomicity (HIST-09) are Azalea's tests.
 """
 
 import pytest
+
+from conftest import assert_invariant_via_api
 
 STATUSES = ["new", "in_progress", "waiting_on_customer", "closed"]
 # Every pair of two different statuses: 12 changes.
@@ -66,6 +70,7 @@ def assert_nothing_changed(client, ticket_id, status, history_before):
     assert response.status_code == 200
     assert response.json()["status"] == status
     assert history(client, ticket_id) == history_before
+    assert_invariant_via_api(client, ticket_id)
 
 
 # --- Every change between different statuses is allowed (API conventions, section 1) ---
@@ -84,6 +89,7 @@ def test_change_between_different_statuses_is_allowed(client, old, new):
     assert response.json() == {**ticket, "status": new}
     # Saved, not just in the answer.
     assert client.get(f"/tickets/{ticket['id']}").json()["status"] == new
+    assert_invariant_via_api(client, ticket["id"])
 
 
 # --- Same status as now (HIST-07) ---
@@ -144,7 +150,7 @@ def test_hist06_unknown_status_gives_422_and_nothing_changes(client, value, mess
     ids=["ticket_field", "unknown_field"],
 )
 def test_other_fields_in_patch_give_422_and_nothing_changes(client, extra):
-    """Other fields than status in PATCH give 422 "Ogiltig indata." and nothing changes."""
+    """HIST-06 (invalid input): other fields than status in PATCH give 422 "Ogiltig indata."."""
     # Catches: extra fields silently ignored, so the status changes and the client thinks the
     # title changed too, or a title sent here actually being saved.
     ticket = ticket_with_status(client, "in_progress")
@@ -176,3 +182,4 @@ def test_hist13_closed_ticket_can_be_opened_again(client):
     assert latest["to_status"] == "new"
     # The reopened ticket works like any other: it can be moved on again.
     assert change(client, ticket["id"], "in_progress").status_code == 200
+    assert_invariant_via_api(client, ticket["id"])

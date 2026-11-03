@@ -61,23 +61,24 @@ Förväntat resultat är en kort sammanfattning av kravet i
 
 | Krav | Vad | Förväntat | Test | Ägare | För hand | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| HIST-01 | `created`-post när ärendet skapas | Status `new` och exakt en post `created` (`null` → `new`). | – | Azalea | Nej | Ej påbörjad |
-| HIST-02 | Statusbyte ger `status_changed`-post | Ny status och en post `status_changed` med rätt från och till. | – | Azalea | Ja | Ej påbörjad |
-| HIST-03 | Historiken äldst först | Äldst först, `to_status` i en post är `from_status` i nästa. | – | Azalea | Ja | Ej påbörjad |
-| HIST-04 | Historiken finns kvar efter omstart | Status och historik oförändrade med ny engine och session, alla fält. | – | Azalea | Ja | Ej påbörjad |
+| HIST-01 | `created`-post när ärendet skapas | Status `new` och exakt en post `created` (`null` → `new`). | [test_history.py](../backend/tests/test_history.py) (`test_hist01_…`, 3 tester) | Azalea | Nej | Grönt |
+| HIST-02 | Statusbyte ger `status_changed`-post | Ny status och en post `status_changed` med rätt från och till. | [test_history.py](../backend/tests/test_history.py) (`test_hist02_…`, 3 tester), och invarianten efter varje steg (`test_invariant_latest_entry_matches_ticket_status`) | Azalea | Ja | Grönt |
+| HIST-03 | Historiken äldst först | Äldst först, `to_status` i en post är `from_status` i nästa. | [test_read_history.py](../backend/tests/test_read_history.py) (`test_hist03_history_is_oldest_first_and_chained`) | Azalea | Ja | Grönt |
+| HIST-04 | Historiken finns kvar efter omstart | Status och historik oförändrade med ny engine och session, alla fält. | Inget än. Skrivs i KSP-40 (status och historik efter omstart) | Azalea | Ja | Ej påbörjad |
 | HIST-05 | Tidslinjen i detaljvyn | Varje post med svenska etiketter och lokal tid, senaste stämmer med status. | – | Amalia | Ja | Ej påbörjad |
-| HIST-06 | Ogiltig status ger 422 | 422 "Välj en giltig status." (fel datatyp: "Ogiltig indata."), status och historik oförändrade. | [test_error_format.py](../backend/tests/test_error_format.py) (saknad status och fel datatyp), resten i [PR #43](https://github.com/desiboli/kundportal-ai-native-development/pull/43) | Nicklas | Nej | Delvis: PR #43 väntar på statusbytet (KSP-24) |
-| HIST-07 | Samma status ger 409 | 409 "Ärendet har redan den statusen.", ingen ny post. Alla fyra statusar. | Servicedelen: [test_history.py](../backend/tests/test_history.py) (Azalea). API:t: [PR #43](https://github.com/desiboli/kundportal-ai-native-development/pull/43) | Nicklas | Nej | Delvis: API-delen väntar på statusbytet (KSP-24) |
-| HIST-08 | Okänt ärende ger 404 | 404 "Ärendet finns inte.", inget skapas. Även id som inte är heltal. | – | Azalea | Nej | Ej påbörjad |
-| HIST-09 | Inget ändras om historikposten inte kan sparas | 503 "Statusen kunde inte ändras. Försök igen.", gammal status kvar, nästa byte lyckas. | – | Azalea | Nej | Ej påbörjad |
-| HIST-10 | Ingen historikpost när ärendet inte kan skapas | Ingen historikpost kvar efter en avvisad `POST`. | – | Azalea | Nej | Ej påbörjad |
-| HIST-11 | Samma tid, ordnas efter id | Samma `occurred_at` ordnas efter `id`, alltid lika. | – | Azalea | Nej | Ej påbörjad |
-| HIST-12 | Ärende utan statusbyten har bara `created` | En lista med exakt en post (`created`), inte tom. | – | Azalea | Nej | Ej påbörjad |
-| HIST-13 | Avslutat ärende kan öppnas igen | `closed` → `new` godkänns och loggas som vanligt statusbyte. | [PR #43](https://github.com/desiboli/kundportal-ai-native-development/pull/43) | Nicklas | Nej | Test skrivet: väntar på statusbytet (KSP-24) |
-| HIST-14 | Fel på svenska för status och historik | Svenska meddelanden, aldrig stacktrace eller databasdetaljer. | [test_error_format.py](../backend/tests/test_error_format.py) (backenddelen) | Azalea, Amalia (UI) | Ja | Delvis: UI-delen saknas |
+| HIST-06 | Ogiltig status ger 422 | 422 "Välj en giltig status." (fel datatyp: "Ogiltig indata."), status och historik oförändrade. | [test_status_rules.py](../backend/tests/test_status_rules.py) (`test_hist06_…`, 7 fall: okänd kod, svensk etikett, versaler, tom, mellanslag först, fel datatyp, `null`; `test_other_fields_in_patch_…`, 2 fall: andra fält ger "Ogiltig indata."), [test_error_format.py](../backend/tests/test_error_format.py) (saknad status och saknad kropp) | Nicklas | Nej | Grönt |
+| HIST-07 | Samma status ger 409 | 409 "Ärendet har redan den statusen.", ingen ny post. Alla fyra statusar. | Servicedelen: [test_history.py](../backend/tests/test_history.py) (Azalea). API:t: [test_status_rules.py](../backend/tests/test_status_rules.py) (`test_hist07_…`, alla fyra statusar) | Nicklas | Nej | Grönt |
+| HIST-08 | Okänt ärende ger 404 | 404 "Ärendet finns inte.", inget skapas. Även id som inte är heltal. | [test_read_history.py](../backend/tests/test_read_history.py) (`GET …/history` för `999` och `abc`), [test_history.py](../backend/tests/test_history.py) (`PATCH` för `999`), [test_error_format.py](../backend/tests/test_error_format.py) (`PATCH /tickets/abc/status`) | Azalea | Nej | Grönt |
+| HIST-09 | Inget ändras om historikposten inte kan sparas | 503 "Statusen kunde inte ändras. Försök igen.", gammal status kvar, nästa byte lyckas. | Inget än. Skrivs i KSP-41 (atomicitet med injicerat fel), koden i KSP-36 | Azalea | Nej | Ej påbörjad |
+| HIST-10 | Ingen historikpost när ärendet inte kan skapas | Ingen historikpost kvar efter en avvisad `POST`. | [test_history.py](../backend/tests/test_history.py) (`test_hist10_rejected_ticket_has_no_history`) | Azalea | Nej | Grönt |
+| HIST-11 | Samma tid, ordnas efter id | Samma `occurred_at` ordnas efter `id`, alltid lika. | [test_read_history.py](../backend/tests/test_read_history.py) (`test_hist11_same_time_is_ordered_by_id`, fast klocka) | Azalea | Nej | Grönt |
+| HIST-12 | Ärende utan statusbyten har bara `created` | En lista med exakt en post (`created`), inte tom. | [test_read_history.py](../backend/tests/test_read_history.py) (`test_hist12_new_ticket_history_has_only_created`) | Azalea | Nej | Grönt |
+| HIST-13 | Avslutat ärende kan öppnas igen | `closed` → `new` godkänns och loggas som vanligt statusbyte. | [test_status_rules.py](../backend/tests/test_status_rules.py) (`test_hist13_closed_ticket_can_be_opened_again`) | Nicklas | Nej | Grönt |
+| HIST-14 | Fel på svenska för status och historik | Svenska meddelanden, aldrig stacktrace eller databasdetaljer. | [test_error_format.py](../backend/tests/test_error_format.py) (backenddelen, `test_hist14_…`, 2 tester) | Azalea, Amalia (UI) | Ja | Delvis: UI-delen saknas |
 
 Ägare enligt [Teststrategin](teststrategi.md) (avsnitt 2). Azalea fyller i test och status
-för sina rader i KSP-48. Nicklas tester för HIST-06, 07 och 13 (KSP-27) finns i PR #43.
+för sina rader i KSP-48. Nicklas tester för HIST-06, 07 och 13 (KSP-27) finns i
+`test_status_rules.py`, som också kontrollerar invarianten efter varje scenario (PR #63).
 
 ## 3. Kontroll för hand
 
@@ -113,6 +114,7 @@ att klicka sig till exakt den version som kördes.
 | Datum | Commit | Typ | Resultat | Körd av |
 | --- | --- | --- | --- | --- |
 | 2026-10-28 | https://github.com/desiboli/kundportal-ai-native-development/commit/65c9f4dc98f9c496e8bf980db8b7f2fe6deb2da6 | automatiskt (pytest) | 107 passed | Nicklas |
+| 2026-10-29 | https://github.com/desiboli/kundportal-ai-native-development/commit/115912b509d56346811927b9f67f10180e1032ed | automatiskt (pytest), efter PR #49 (ändra status) | 163 passed, varav 38 HIST-tester (`-k "hist or invariant"`) | Azalea |
 | 2026-10-29 | https://github.com/desiboli/kundportal-ai-native-development/commit/e24a30978d47bf71141dfb53a84877b336846cd4 | automatiskt (pytest) | 163 passed | Nicklas |
 | 2026-10-29 | https://github.com/desiboli/kundportal-ai-native-development/commit/e24a30978d47bf71141dfb53a84877b336846cd4 | för hand | Frontend finns inte än, så avsnitt 3 gjordes mot API:t i `/docs`. Skapa, lista, öppna, byta status och historiken gav förväntat svar. Tom rubrik, bara mellanslag och 101 tecken gav rätt meddelande, och inget sparades. Å, ä, ö och emoji oförändrade. Efter omstart fanns ärendet och historiken kvar. | Nicklas |
 
@@ -126,6 +128,23 @@ resultatet: vilket test som föll, eller att inget föll och vad som ändrades i
 
 | Datum | Steg | Mutation | Krav | Test som föll | Gjord av |
 | --- | --- | --- | --- | --- | --- |
+| 2026-10-31 | 1 | M1b: historikposten `created` tas bort i `TicketService.create` | HIST-01, 02, 03 | 11 failed: HIST-01 ×3, HIST-02 ×2, HIST-03, HIST-11, HIST-12, invarianten och samma status (`test_history.py`, `test_read_history.py`). Alla på saknad `created`-post | Azalea |
+| 2026-10-31 | 1 | M1: historikposten `status_changed` tas bort i `TicketService.change_status` | HIST-02, 03 | 9 failed: HIST-02 ×3, HIST-03, HIST-11, invarianten, historiken per ärende, kontraktsfälten (tack vare invariantraden från PR #61) och HIST-13 i `test_status_rules.py`. Alla på saknad `status_changed`-post | Azalea |
+| 2026-11-01 | 1 | M2: `commit` flyttad före historikposten i `change_status` | HIST-09 | 9 failed, samma som M1: posten commitas aldrig och ser ut att saknas. **Delvis fångad:** inget test kontrollerar att statusen är oförändrad när historiken inte kan sparas. Testerna för HIST-09 med injicerat fel (KSP-41) behövs | Azalea |
+| 2026-11-01 | 1 | M3: `commit` tas bort i `create` (bara `flush`) | HIST-04, CORE-02 | 52 failed, bland annat `test_core02_ticket_survives_restart`: inget sparas, så nästa begäran får 404 eller tomma listor | Azalea |
+| 2026-11-01 | 1 | M3b: `commit` tas bort i `change_status` | HIST-04, HIST-02 | 32 failed: HIST-02 ×3, HIST-03, HIST-11 och 25 tester för statusreglerna (statusen sparas inte). Testet för kontraktsfälten klarade sig, eftersom status och post försvann tillsammans och invarianten höll | Azalea |
+| 2026-11-02 | 1 | N1: 409-kontrollen för samma status tas bort i `TicketService.change_status` | HIST-07 | 4 failed: `test_hist07_same_status_gives_409_and_nothing_changes` för alla fyra statusar (`test_status_rules.py`), på `status_code == 409` | Nicklas (agent) |
+| 2026-11-02 | 1 | N2: trimningen tas bort i `trim_ends` | CORE-11 | 6 failed: tom beskrivning ×3 och blandade tecken (201 i stället för 422), längd efter trimning ×2 (`test_core_rules.py`) | Nicklas (agent) |
+| 2026-11-02 | 1 | N3: nollbreddstecken trimmas inte, bara vanliga blanktecken | CORE-11 | 3 failed: de tre fallen med U+200B (`test_core_rules.py`). Bara U+200B prövas, inte de fyra andra tecknen i `ZERO_WIDTH_CHARS` | Nicklas (agent) |
+| 2026-11-02 | 1 | N4: `max_length` för rubriken blir 99 (`<= 100` blir `< 100`) | CORE-12 | 4 failed: rubrikerna på exakt 100 tecken i `test_length_is_counted_in_code_points_after_trimming` | Nicklas (agent) |
+| 2026-11-02 | 1 | N5: den svenska hanteraren för valideringsfel tas bort | CORE-16, CORE-17 | 18 failed: 9 i `test_core_rules.py` och 9 i `test_status_rules.py`, alla på jämförelsen med `{"detail": ...}`. Statuskoden var fortfarande 422 | Nicklas (agent) |
+| 2026-11-02 | 1 | N6: valideringen visar bara det första felet | CORE-18 | 1 failed: `test_rejected_ticket_saves_nothing[core18_two_errors]`, det andra meddelandet saknades | Nicklas (agent) |
+| 2026-11-02 | 1 | N7: sparningen kopplas bort, `commit` tas bort i `create` | CORE-02 | 33 failed, bland annat `test_core02_ticket_survives_restart` (404 efter omstart). Statustesterna föll redan när ärendet skulle förberedas. Längdtesterna klarade sig, eftersom de inte läser tillbaka ärendet. Kontrollerat för hand av Nicklas: samma resultat | Nicklas (agent) |
+| 2026-11-02 | 2 | Korsvis på Azaleas tester: poster med samma tid sorteras med högst id först (`id.desc()` i `HistoryRepository`) | HIST-11 | 1 failed, 165 passed i hela sviten: `test_hist11_same_time_is_ordered_by_id` (`[3, 2, 1]` i stället för `[1, 2, 3]`). Bara det testet har en fast klocka, så bara det kan se felet | Nicklas (för hand) |
+
+*Steg 1 kördes för hand på `335fe45` (main efter PR #61), en mutation i taget i en egen arbetskopia. Nollpunkt: 166 passed. Underlag: Azaleas loggbok och jämförelsetabell (lokalt).*
+
+*Nicklas steg 1 (N1–N7, KSP-44) kördes av en agent i en egen session, med [uppdraget](ai/agentuppdrag/KSP-44.md) som enda instruktion, på `d795736` (main efter PR #70), en mutation i taget. Nicklas gissade före varje körning. Steg 2 kördes för hand. Nollpunkt och slut: 166 passed.*
 
 ## 6. Testförslag från AI
 

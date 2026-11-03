@@ -13,6 +13,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import UTC, datetime
 
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.models.history import HistoryRow
@@ -34,6 +35,14 @@ class SameStatus(Exception):
 
     Rejected here so that an "x -> x" entry is never written: history entries are never
     changed or deleted, so a wrong one would stay forever. The router turns it into 409.
+    """
+
+
+class StatusNotSaved(Exception):
+    """The status change could not be saved because of a database error (HIST-09).
+
+    Raised after the rollback, so nothing of the change is left. The router turns it into
+    503, the same code /health uses when the database cannot be reached (ADR-001).
     """
 
 
@@ -95,18 +104,31 @@ class TicketService:
         if row.status == new_status:
             raise SameStatus(ticket_id)
         previous = row.status
-        row.status = new_status
-        self.history.add(
-            HistoryRow(
-                ticket_id=row.id,
-                event_type=EventType.STATUS_CHANGED,
-                from_status=previous,
-                to_status=new_status,
-                occurred_at=self._now(),
+        try:
+            row.status = new_status
+            self.history.add(
+                HistoryRow(
+                    ticket_id=row.id,
+                    event_type=EventType.STATUS_CHANGED,
+                    from_status=previous,
+                    to_status=new_status,
+                    occurred_at=self._now(),
+                )
             )
-        )
-        # The one commit for status and entry. Nothing is saved before it (ADR-001).
-        self.session.commit()
+            # The one commit for status and entry. Nothing is saved before it (ADR-001).
+            self.session.commit()
+        except SQLAlchemyError as exc:
+            # HIST-09 (a failed history entry rolls back the status change): roll back so the
+            # session can be used again (ADR-001). Only database errors become StatusNotSaved,
+            # which the router answers with 503. The cause is kept as __cause__ (from exc) but
+            # is not logged.
+            self.session.rollback()
+            raise StatusNotSaved(ticket_id) from exc
+        except Exception:
+            # HIST-09: any other error is rolled back too, so the session is never left broken,
+            # but propagates unchanged and gives 500, so a bug is not hidden behind "try again".
+            self.session.rollback()
+            raise
         # Load the saved values, so the row can still be read after the session is closed.
         self.session.refresh(row)
         return row
