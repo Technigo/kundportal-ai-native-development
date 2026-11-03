@@ -1,4 +1,8 @@
-export type CaseStatus = "new" | "in_progress" | "waiting_for_customer" | "closed";
+export type CaseStatus =
+  | "new"
+  | "in_progress"
+  | "waiting_for_customer"
+  | "closed";
 
 export const caseOptions = {
   categories: ["Account", "Billing", "Technical support", "Other"],
