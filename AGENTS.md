@@ -17,6 +17,7 @@ historiken. Grupparbete i kursen AI Native Development (Grupp 6).
 | Veckostatus | En fil per vecka | `docs/status/` |
 | Gemensamma regler | API-konventioner, arkitektur, teststrategi | `docs/api-konventioner.md`, `docs/arkitektur.md`, `docs/teststrategi.md` |
 | AI-instruktioner | Teamets instruktion för testförslag (v1) och var och ens namngivna förbättring | `docs/ai/` |
+| AI-arbetsflöde | Hur AI ingår från spec till granskning, det återanvändbara momentet och var en människa bestämmer | `docs/ai/arbetssatt.md` |
 | Skills | Testförslag, API-typer från OpenAPI, BOLDkit som designsystem. `grill-me` startas med `/grill-me` | `.claude/skills/` |
 
 ## Kommandon
