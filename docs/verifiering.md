@@ -29,7 +29,7 @@ Förväntat resultat är en kort sammanfattning av kravet i [SPEC-karna.md](spec
 
 | Krav | Vad | Förväntat | Test | Nivå | För hand | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| CORE-01 | Skapa ärende, status `new` | 201 med ärendet, `status` `new`, `created_at` i UTC. Sparas med samma uppgifter. | [test_create_ticket.py](../backend/tests/test_create_ticket.py) (`test_core01_…`, 2 tester) | Integration | Ja | Grönt |
+| CORE-01 | Skapa ärende, status `new` | 201 med ärendet, `status` `new`, `created_at` i UTC. Sparas med samma uppgifter. | [test_create_ticket.py](../backend/tests/test_create_ticket.py) (`test_core01_…`, 2 tester). Formuläret postar rubrik, beskrivning, kategori och prioritet, utan `status`, och ärendet syns i listan: [create-ticket-form.test.tsx](../frontend/src/components/create-ticket-form.test.tsx) (`test_core01_valid_ticket_is_posted_and_shown`) | Integration och komponent | Ja | Grönt |
 | CORE-02 | Ärendet finns kvar efter omstart | Ny engine och session mot samma fil: ärendet finns med samma uppgifter. | [test_core_read.py](../backend/tests/test_core_read.py) (`test_core02_ticket_survives_restart`) | Integration, omstart | Ja | Grönt |
 | CORE-03 | Lista, nyaste först | Alla ärenden, `created_at` fallande, sedan `id` fallande. | [test_core_read.py](../backend/tests/test_core_read.py) (`test_core03_…`, 3 tester). Komponenten visar API:ts ordning och svenska etiketter: [TicketListPage.test.tsx](../frontend/src/pages/TicketListPage.test.tsx) (`test_core03_keeps_the_order_from_the_api`, `test_core03_shows_swedish_labels_not_codes`) | Integration och komponent | Ja | Grönt |
 | CORE-04 | Hämta ett ärende med id | 200 med exakt de uppgifter som sparades. | [test_core_read.py](../backend/tests/test_core_read.py) (`test_core04_…`, `test_core03_list_items_match_get`) | Integration | Ja | Grönt |
@@ -55,7 +55,14 @@ visa från KSP-22 och KSP-23. Nicklas tester för CORE (KSP-25 och KSP-26) finns
 `test_core_read.py` och `test_core_rules.py`. Listans komponenttester
 (KSP-67, komponenttest: listan visar ärenden och tom lista) ligger i
 `frontend/src/pages/TicketListPage.test.tsx` sedan ärendelistan (KSP-29) och pekas ut på
-CORE-03 och CORE-15 ovan. Statusen är fortfarande Grönt: mutationsprövning och kontroll för
+CORE-03 och CORE-15 ovan. Formulärets komponenttester
+(KSP-68, formuläret skickar rätt data och visar `detail` vid 422) ligger i
+`frontend/src/components/create-ticket-form.test.tsx` sedan formuläret (KSP-30)
+och pekas ut på CORE-01 ovan. KSP-30 AC4 (vid 422 visas `detail` som det är) är
+`test_ac4_422_detail_is_shown_unchanged` i samma fil: texten visas oförändrad
+inuti dialogen. CORE-11 (bara blanktecken räknas som tomt) ligger kvar på
+backendraden. Räknare och emoji (CORE-12, CORE-13, CORE-14, beslut B11) hör till
+KSP-69 (teckenräkning med emoji). Statusen är fortfarande Grönt: mutationsprövning och kontroll för
 hand återstår innan ett krav är Verifierat.
 
 ### Statuslogik och historik (HIST)
@@ -122,8 +129,9 @@ att klicka sig till exakt den version som kördes.
 | 2026-10-29 | https://github.com/desiboli/kundportal-ai-native-development/commit/e24a30978d47bf71141dfb53a84877b336846cd4 | automatiskt (pytest) | 163 passed | Nicklas |
 | 2026-10-29 | https://github.com/desiboli/kundportal-ai-native-development/commit/e24a30978d47bf71141dfb53a84877b336846cd4 | för hand | Frontend finns inte än, så avsnitt 3 gjordes mot API:t i `/docs`. Skapa, lista, öppna, byta status och historiken gav förväntat svar. Tom rubrik, bara mellanslag och 101 tecken gav rätt meddelande, och inget sparades. Å, ä, ö och emoji oförändrade. Efter omstart fanns ärendet och historiken kvar. | Nicklas |
 | 2026-11-03 | https://github.com/desiboli/kundportal-ai-native-development/commit/2a923e940c2cdb428a494a12877164386c10c665 | automatiskt (vitest, `TicketListPage.test.tsx`) | 4 passed. CORE-03 (lista, nyaste först) ×2: ordningen från API:t behålls och koderna visas som svenska etiketter. CORE-15 (tom lista är inte ett fel): meddelandet "Inga ärenden", inget fel. Samma fil har också CORE-12 (rubrik på exakt 100 tecken), från ärendelistan (KSP-29). | Mustafa (agent) |
+| 2026-11-03 | https://github.com/desiboli/kundportal-ai-native-development/commit/2a923e940c2cdb428a494a12877164386c10c665 | automatiskt (vitest, `create-ticket-form.test.tsx`) | 2 passed, 18 skipped. CORE-01 (skapa ärende, status `new`): `test_core01_valid_ticket_is_posted_and_shown` postar rubrik, beskrivning, kategori och prioritet, utan `status`, och ärendet syns i listan. KSP-30 AC4 (vid 422 visas `detail` som det är): `test_ac4_422_detail_is_shown_unchanged`. Övriga tester i filen kördes inte. | Mustafa (agent) |
 
-Kommando (macOS/Linux): `cd backend && .venv/bin/python -m pytest -q`. Listans komponenttester (KSP-67): `cd frontend && pnpm exec vitest run src/pages/TicketListPage.test.tsx`. Windows: se
+Kommando (macOS/Linux): `cd backend && .venv/bin/python -m pytest -q`. Listans komponenttester (KSP-67): `cd frontend && pnpm exec vitest run src/pages/TicketListPage.test.tsx`. Formulärets komponenttester (KSP-68): `cd frontend && pnpm exec vitest run src/components/create-ticket-form.test.tsx -t "test_core01_valid_ticket_is_posted_and_shown|test_ac4_422_detail_is_shown_unchanged"`. Windows: se
 [Teststrategin](teststrategi.md) (avsnitt 5).
 
 ## 5. Mutationsprövning
