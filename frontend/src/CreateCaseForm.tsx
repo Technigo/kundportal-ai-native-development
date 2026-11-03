@@ -243,7 +243,7 @@ export default function CreateCaseForm({ onBack }: { onBack: () => void }) {
               Case #{submittedCase.id.slice(0, 8)} · Created{" "}
               {new Date(submittedCase.created_at).toLocaleString()}
             </p>
-            <button className="primary-button" type="button" onClick={onBack}>
+            <button className="secondary-button" type="button" onClick={onBack}>
               View Cases Overview
             </button>
           </div>
