@@ -3,6 +3,7 @@ CRUD operations for cases.
 """
 from typing import List, Optional
 
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.case import Case
@@ -17,9 +18,34 @@ def create_case(db: Session, case_data: dict) -> Case:
     return db_case
 
 
-def get_cases(db: Session, skip: int = 0, limit: int = 100) -> List[Case]:
-    """Get all cases."""
-    return db.query(Case).offset(skip).limit(limit).all()
+def get_cases(
+    db: Session,
+    skip: int = 0,
+    limit: int = 100,
+    search: Optional[str] = None,
+    status: Optional[str] = None,
+    category: Optional[str] = None,
+    priority: Optional[str] = None,
+) -> List[Case]:
+    """Get cases, optionally filtered by search text and exact (case-insensitive) field values."""
+    query = db.query(Case)
+
+    if search and search.strip():
+        term = f"%{search.strip().lower()}%"
+        query = query.filter(
+            func.lower(Case.title).like(term)
+            | func.lower(Case.description).like(term)
+            | func.lower(Case.customer_email).like(term)
+        )
+
+    if status and status.strip():
+        query = query.filter(func.lower(Case.status) == status.strip().lower())
+    if category and category.strip():
+        query = query.filter(func.lower(Case.category) == category.strip().lower())
+    if priority and priority.strip():
+        query = query.filter(func.lower(Case.priority) == priority.strip().lower())
+
+    return query.offset(skip).limit(limit).all()
 
 
 def get_case(db: Session, case_id: str) -> Optional[Case]:
