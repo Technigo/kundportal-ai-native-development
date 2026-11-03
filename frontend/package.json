@@ -3,13 +3,14 @@
   "private": true,
   "version": "0.0.1",
   "type": "module",
+  "packageManager": "pnpm@11.22.0",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "generate:api": "openapi-typescript http://localhost:8010/openapi.json -o src/api/schema.d.ts",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc -b",
     "preview": "vite preview",
     "test": "vitest",
     "test:run": "vitest run"
