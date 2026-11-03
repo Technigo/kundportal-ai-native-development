@@ -491,7 +491,7 @@
 
       /* ================================================================
        DELAT SKELETT – ändras bara via en liten, granskad PR.
-       Tre funktioner som alla delar använder: api(), showView(), showFieldErrors().
+       Funktioner som alla delar använder: api(), showView(), showFieldErrors(), formatCreatedAt().
        ================================================================ */
 
       // Samma värden som backend/src/constants.js. Risk: listorna kan glida isär –
@@ -584,6 +584,21 @@
           el.textContent = '';
         });
         form.querySelectorAll('[aria-invalid]').forEach((el) => el.removeAttribute('aria-invalid'));
+      }
+
+      /** Visar skapad (ISO 8601, UTC) i svensk lokal tid, t.ex. 2026-11-03 11:00. */
+      function formatCreatedAt(value) {
+        if (value == null || value === '') return '';
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return String(value);
+        return new Intl.DateTimeFormat('sv-SE', {
+          timeZone: 'Europe/Stockholm',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+        }).format(date);
       }
 
       /* ================================================================
@@ -777,19 +792,6 @@
         'deadline',
       ];
 
-      function formatCreatedAt(value) {
-        if (value == null || value === '') return '';
-        const date = new Date(value);
-        if (Number.isNaN(date.getTime())) return String(value);
-        return new Intl.DateTimeFormat('sv-SE', {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit',
-        }).format(date);
-      }
-
       function renderCaseDetail(container, arende) {
         const dl = document.createElement('dl');
         dl.className = 'detail-fields';
@@ -856,6 +858,7 @@
         clearGlobalMessage,
         showFieldErrors,
         clearFieldErrors,
+        formatCreatedAt,
       };
 
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
