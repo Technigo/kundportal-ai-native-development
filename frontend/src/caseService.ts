@@ -22,6 +22,7 @@ export type CaseRecord = {
 };
 
 export type CreatedCase = CaseRecord;
+export type UpdateCaseInput = Partial<Pick<CaseRecord, "description" | "status">>;
 
 export class CaseApiError extends Error {
   constructor(message: string) {
@@ -35,9 +36,7 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   try {
     response = await fetch(path, init);
   } catch {
-    throw new CaseApiError(
-      "Could not reach the server. Check that the backend is running and try again.",
-    );
+    throw new CaseApiError("Could not reach the server. Check that the backend is running and try again.");
   }
 
   const result: unknown = await response.json().catch(() => null);
@@ -50,11 +49,13 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
 export async function getCases(): Promise<CaseRecord[]> {
   const result = await requestJson<unknown>("/cases/?skip=0&limit=100");
   if (!Array.isArray(result)) {
-    throw new CaseApiError(
-      "The server returned an unexpected case list. Please try again.",
-    );
+    throw new CaseApiError("The server returned an unexpected case list. Please try again.");
   }
   return result as CaseRecord[];
+}
+
+export function getCaseById(caseId: string): Promise<CaseRecord> {
+  return requestJson<CaseRecord>(`/cases/${encodeURIComponent(caseId)}`);
 }
 
 export function createCase(input: CreateCaseInput): Promise<CreatedCase> {
@@ -65,18 +66,23 @@ export function createCase(input: CreateCaseInput): Promise<CreatedCase> {
   });
 }
 
+export function updateCase(caseId: string, input: UpdateCaseInput): Promise<CaseRecord> {
+  return requestJson<CaseRecord>(`/cases/${encodeURIComponent(caseId)}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+}
+
 function getApiErrorMessage(status: number, result: unknown): string {
+  if (status === 404) return "This case could not be found. It may no longer exist.";
   if (status === 422 && isRecord(result) && Array.isArray(result.detail)) {
     const messages = result.detail
-      .map((issue) =>
-        isRecord(issue) && typeof issue.msg === "string" ? issue.msg : null,
-      )
+      .map((issue) => isRecord(issue) && typeof issue.msg === "string" ? issue.msg : null)
       .filter((message): message is string => message !== null);
-    if (messages.length > 0)
-      return `Please review the case information: ${messages.join(" ")}`;
+    if (messages.length > 0) return `Please review the case information: ${messages.join(" ")}`;
   }
-  if (status >= 500)
-    return "The server could not complete this request. Please try again.";
+  if (status >= 500) return "The server could not complete this request. Please try again.";
   return "The request could not be completed. Please try again.";
 }
 

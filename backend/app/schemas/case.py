@@ -20,8 +20,8 @@ class CaseBase(BaseModel):
     """Base case schema."""
     title: str = Field(..., min_length=1, max_length=200)
     description: str = Field(..., min_length=1)
-    category: Optional[str] = Field(None, max_length=50)
-    priority: Optional[str] = Field(None, max_length=20)
+    category: str = Field(..., min_length=1, max_length=50)
+    priority: str = Field(..., min_length=1, max_length=20)
     status: CaseStatus = CaseStatus.NEW
     customer_email: EmailStr
 
@@ -46,8 +46,8 @@ class Case(BaseModel):
     id: str
     title: str
     description: str
-    category: Optional[str] = None
-    priority: Optional[str] = None
+    category: str
+    priority: str
     status: CaseStatus
     customer_email: str
     created_at: datetime

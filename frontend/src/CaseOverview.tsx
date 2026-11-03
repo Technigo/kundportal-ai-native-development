@@ -257,7 +257,7 @@ export default function CaseOverview({
                       <span className="case-id">#{item.id.slice(0, 8)}</span>
                     </td>
                     <td>
-                      <span className="case-title">{item.title}</span>
+                      <a className="case-detail-link" href={`#/cases/${encodeURIComponent(item.id)}`}>{item.title}</a>
                     </td>
                     <td>{item.customer_email}</td>
                     <td>

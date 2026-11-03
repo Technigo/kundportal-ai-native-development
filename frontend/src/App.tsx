@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import CaseDetail from "./CaseDetail";
 import CaseOverview from "./CaseOverview";
 import CreateCaseForm from "./CreateCaseForm";
 
@@ -20,6 +21,9 @@ export default function App() {
     window.location.hash = "#/cases";
   }
 
+  const detailMatch = route.match(/^#\/cases\/([^/]+)$/);
+  const caseId = detailMatch ? decodeURIComponent(detailMatch[1]) : null;
+
   return (
     <div className="app-shell">
       <header className="topbar">
@@ -35,6 +39,8 @@ export default function App() {
 
       {route === "#/new" ? (
         <CreateCaseForm onBack={navigateToOverview} />
+      ) : caseId ? (
+        <CaseDetail caseId={caseId} onBack={navigateToOverview} />
       ) : (
         <CaseOverview onCreateCase={() => { window.location.hash = "#/new"; }} />
       )}
