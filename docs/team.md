@@ -58,6 +58,5 @@ Each member owns at least one traceable technical requirement and reviews at lea
 | Show a list of tickets and the details of a selected ticket | Marie Flem Honningdalnes | Alexandra Petersson |
 | Change the status of a ticket | Jessica Swahn | Ariadna Villar |
 | Add Internal Notes | Jessica Swahn | Alexandra Petersson |
-
 | Verify central behaviour with automated tests covering happy paths and relevant error paths | Jessica Swahn | Ariadna Villar |
 | Can be run and demonstrated by someone else using our instructions | Ariadna Villar | Marie Flem Honningdalnes |
