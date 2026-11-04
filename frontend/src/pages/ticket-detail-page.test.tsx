@@ -3,7 +3,7 @@ import { createMemoryRouter, RouterProvider } from "react-router"
 import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest"
 
 import type { Ticket } from "@/api/types"
-import { BACKEND_UNREACHABLE } from "@/pages/HealthPage"
+import { BACKEND_UNREACHABLE } from "@/api/errors"
 import { TicketDetailPage } from "./ticket-detail-page"
 
 // Made-up tickets, never real customer data.
