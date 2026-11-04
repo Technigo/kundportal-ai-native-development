@@ -4,7 +4,7 @@ import { createMemoryRouter, RouterProvider } from "react-router"
 import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest"
 
 import type { Ticket, TicketStatus } from "@/api/types"
-import { BACKEND_UNREACHABLE } from "@/pages/HealthPage"
+import { BACKEND_UNREACHABLE } from "@/api/errors"
 import { TicketDetailPage } from "./ticket-detail-page"
 
 // Status change in the detail view (KSP-32). HIST-02, 06, 07 and 13 are the rules in the API;

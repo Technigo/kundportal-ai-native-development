@@ -4,6 +4,7 @@ import type { ColumnDef } from "@tanstack/react-table"
 import { ChevronDown, Filter, Search } from "lucide-react"
 
 import type { components, operations } from "@/api/schema"
+import { BACKEND_UNREACHABLE } from "@/api/errors"
 import { CreateTicketForm } from "@/components/create-ticket-form"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
@@ -29,7 +30,6 @@ import {
   statusLabel,
   statusLabels,
 } from "@/labels"
-import { BACKEND_UNREACHABLE } from "@/pages/HealthPage"
 
 // KSP-29: ticket list. CORE-03 keeps the API order. CORE-15 empty list is a message.
 // KSP-77: search filters the table immediately. Status, priority and category
@@ -190,12 +190,7 @@ export function TicketListPage() {
     <div className="flex min-h-svh flex-col gap-6 p-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold">Ärenden</h1>
-        <div className="flex flex-wrap items-center gap-3">
-          <CreateTicketForm onCreated={reload} />
-          <Button variant="link" render={<Link to="/health" />}>
-            Systemstatus
-          </Button>
-        </div>
+        <CreateTicketForm onCreated={reload} />
       </header>
       {list.state === "loading" && (
         <div role="status" aria-live="polite" aria-busy="true">

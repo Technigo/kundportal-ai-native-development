@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 import type { TicketDraft } from "@/api/tickets"
 import type { Ticket, TicketCreate } from "@/api/types"
-import { BACKEND_UNREACHABLE } from "@/pages/HealthPage"
+import { BACKEND_UNREACHABLE } from "@/api/errors"
 import { TicketListPage } from "@/pages/TicketListPage"
 
 // KSP-30: create-ticket dialog. The API owns validation; the form shows detail unchanged.

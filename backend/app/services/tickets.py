@@ -80,19 +80,26 @@ class TicketService:
             status=Status.NEW,
             created_at=now,
         )
-        # add() flushes, so the ticket has an id that the entry can point to.
-        self.tickets.add(row)
-        self.history.add(
-            HistoryRow(
-                ticket_id=row.id,
-                event_type=EventType.CREATED,
-                from_status=None,
-                to_status=Status.NEW,
-                occurred_at=now,
+        try:
+            # add() flushes, so the ticket has an id that the entry can point to.
+            self.tickets.add(row)
+            self.history.add(
+                HistoryRow(
+                    ticket_id=row.id,
+                    event_type=EventType.CREATED,
+                    from_status=None,
+                    to_status=Status.NEW,
+                    occurred_at=now,
+                )
             )
-        )
-        # One commit for ticket and entry together: both are saved, or neither (ADR-001).
-        self.session.commit()
+            # One commit for ticket and entry together: both are saved, or neither (ADR-001).
+            self.session.commit()
+        except Exception:
+            # HIST-10 (KSP-66): roll back on any error, so the flushed ticket is not committed
+            # later without its "created" entry (HIST-01) and the session can be used again.
+            # The error propagates unchanged and gives 500, as before (Azalea, 2026-11-04).
+            self.session.rollback()
+            raise
         return row
 
     def change_status(self, ticket_id: int, new_status: Status) -> TicketRow:

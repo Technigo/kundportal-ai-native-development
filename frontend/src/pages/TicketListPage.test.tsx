@@ -114,10 +114,6 @@ describe("Ticket list", () => {
     renderPage()
 
     expect(await screen.findByText(/Inga ärenden än/)).toBeInTheDocument()
-    expect(screen.getByRole("link", { name: "Systemstatus" })).toHaveAttribute(
-      "href",
-      "/health",
-    )
     expect(screen.queryByRole("alert")).not.toBeInTheDocument()
     expect(screen.queryByRole("link", { name: /ärende/ })).not.toBeInTheDocument()
     expect(screen.queryByRole("textbox", { name: "Sök ärenden" })).not.toBeInTheDocument()
