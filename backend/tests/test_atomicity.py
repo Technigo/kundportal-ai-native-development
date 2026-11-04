@@ -12,8 +12,8 @@ been created. Only database errors (SQLAlchemyError) give 503 (Azalea, 2026-11-0
   and then raises. Only a real rollback removes it.
 
 Test proposals: run 4 with docs/ai/testforslag-v2-azalea.md, reviewed by Azalea 2026-11-01
-(test 3 changed, test 7 struck). The service test at the end is Azalea's own addition
-(2026-11-02): over HTTP every request gets a new session, so only the service can show
+(test 3 changed, test 7 struck). The service test at the end was added in the review
+(2026-11-02), recommended by AI and chosen by Azalea, since no proposal run suggested it: over HTTP every request gets a new session, so only the service can show
 that the session is not left broken. The two tests for other errors than database errors
 (500) were added after the code in KSP-36, see the comment above them.
 
