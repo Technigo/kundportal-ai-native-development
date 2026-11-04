@@ -1,6 +1,6 @@
 # Spec: Statuslogik och ärendehistorik (kompletterande funktion)
 
-> Status: **v0.9, statusarna motiverade, null och andra fält i PATCH** · Ansvarig: Azalea (Azaalea) · Vecka 6
+> Status: **v0.10, rollback när ett ärende inte kan skapas** · Ansvarig: Azalea (Azaalea) · Vecka 6
 > Detta dokument är teamets underlag. Individuell redovisning ligger inte här.
 >
 > **Ändrat i v0.3 (2026-10-23), efter feedback från teamet:** kärnan får en
@@ -29,6 +29,11 @@
 > **Ändrat i v0.9 (2026-10-29), svar på Nicklas frågor i PR #43 (statusreglerna):**
 > `{"status": null}` är fel datatyp och ger "Ogiltig indata." (HIST-06, samma som B9 i CORE).
 > Andra fält än `status` i `PATCH` avvisas med "Ogiltig indata.", som okända fält i `POST`.
+>
+> **Ändrat i v0.10 (2026-11-04), KSP-66 (rollback i `TicketService.create`):** HIST-10 gäller
+> också när posten `created` inte kan sparas. Då rullas allt tillbaka, och API:t svarar som i
+> dag 500 "Något gick fel. Försök igen.". Kontraktet för `POST /tickets` ändras inte (Azaleas
+> beslut 2026-11-04: 500 i stället för 503).
 
 **Gemensamma dokument (huvudversioner) i repot.** Delar av specen gäller hela teamet och
 har därför fått egna dokument. Specen är fortfarande komplett, men vid skillnad gäller det
@@ -195,6 +200,7 @@ ovan (krävs för HIST-06 och HIST-14).
 | Andra fält än `status` (t.ex. `{"status": "closed", "title": "x"}`), inget ändras | 422 | Ogiltig indata. |
 | Samma status som nuvarande | 409 | Ärendet har redan den statusen. |
 | Historikposten kunde inte sparas (allt rullas tillbaka) | 503 | Statusen kunde inte ändras. Försök igen. |
+| Posten `created` kunde inte sparas när ärendet skapas (allt rullas tillbaka, HIST-10) | 500 | Något gick fel. Försök igen. |
 
 ## 6. Acceptanskriterier
 
@@ -244,6 +250,11 @@ HIST-06, 07 och 13 är statusregler, de övriga gäller historiken.
 - **HIST-10** Givet att ärendet inte kan skapas (t.ex. tom rubrik), när `POST` körs, då
   finns ingen historikpost kvar. (Att inget *ärende* sparas prövas i CORE-06–09, 11–13,
   17 och 18. HIST-10 prövar bara historiken, så samma fall testas inte två gånger.)
+  Det gäller också när ärendet är giltigt men posten `created` inte kan sparas: då rullas
+  allt tillbaka, så varken ärendet eller posten finns kvar, även när databasfilen läses med
+  en ny engine. API:t svarar 500 "Något gick fel. Försök igen." utan tekniska detaljer, som
+  för andra oväntade fel (kontraktet för `POST /tickets` ändras inte), och samma session kan
+  användas igen, så nästa `POST` lyckas (KSP-66).
 
 **Gränsfall**
 

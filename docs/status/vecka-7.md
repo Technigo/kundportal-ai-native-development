@@ -68,6 +68,12 @@ Teamets plan för veckan (enligt Linear):
   - PR #75 (gemensam kontroll av invarianten i `conftest.py`, KSP-27 och KSP-39): godkänd. Bygger
     på Azaleas förslag i granskningen av PR #63.
 
+- **KSP-40 (testerna för HIST-04, status och historik kvar efter omstart), 2026-11-04:** tre
+  tester i `backend/tests/test_restart.py` från körning 2 med v2-azalea, skrivna efter koden
+  eftersom sparningen redan finns. `186 passed` (`2b6ba41`). Mutationerna, körda av Azalea:
+  M3 (`commit` bort i `create`) 3 av 3 föll, M3b (`commit` bort i `change_status`) 1 av 3.
+  PR #93 (HIST-04 status och historik efter omstart): https://github.com/desiboli/kundportal-ai-native-development/pull/93, väntar på granskning av Nicklas.
+
 ## Osäkert eller ofärdigt
 
 | Vad | Varför | Plan |
@@ -87,6 +93,7 @@ Teamets plan för veckan (enligt Linear):
 | Granska PR #74 (fler fall för osynliga tecken och rubrikens gräns), PR #71 (ADR-002 och felmeddelanden i CORE-specen) och PR #64 (formuläret) | Azalea |
 | Godkänna och merga statusbytet i UI, PR #65 | Mustafa |
 | Tidslinjen och felmeddelandena i UI | Amalia (KSP-37, KSP-38) |
-| Mutationerna igen med HIST-09-testerna, och omstartstestet för HIST-04 | Azalea (KSP-43, KSP-40) |
+| Mutationerna igen med HIST-09-testerna. Omstartstestet för HIST-04 är klart, PR #93 (HIST-04 status och historik efter omstart): https://github.com/desiboli/kundportal-ai-native-development/pull/93 | Azalea (KSP-43, KSP-40) |
+| Granska PR #93 (HIST-04 status och historik efter omstart): https://github.com/desiboli/kundportal-ai-native-development/pull/93 | Nicklas |
 | Beskriva det återanvändbara momentet, `docs/ai/arbetssatt.md` | Azalea (KSP-60) |
 | Fördela KSP-61 (kända begränsningar) | Alla |
