@@ -18,7 +18,7 @@ människa alltid bestämmer**.
 | 4. Tester före koden | De valda testerna skrivs och körs. De ska **falla av rätt anledning** | Skriver testerna efter människans val | Läser testerna, kör dem och kontrollerar felraden | En egen commit "test: … före koden" |
 | 5. Koden | Koden skrivs tills testerna är gröna. Större moment körs som **agentuppdrag** | Skriver koden, i agentuppdrag i en egen session | Godkänner varje kontrollpunkt och läser hela diffen | `docs/ai/agentuppdrag/` |
 | 6. Kontroll av testerna | Fel läggs in med flit (mutationer) för att se att testerna fångar rätt risk, egna och korsvis | Föreslår mutationer, kan köra dem i ett agentuppdrag | Gissar före körningen och tolkar resultatet | `docs/verifiering.md` avsnitt 5 |
-| 7. PR med granskning | Egen branch, PR med krav-id och "Hur AI användes", någon annan granskar | Utkast till PR-text och granskning | Granskaren läser hela diffen, kör testerna och skriver vad hen själv kontrollerat | GitHub, CI kör backendtesterna |
+| 7. PR med granskning | Egen branch, PR med krav-id och "Hur AI användes", någon annan granskar | Utkast till PR-text och granskning | Granskaren läser hela diffen, kör testerna och skriver vad hen själv kontrollerat | GitHub, CI kör backendtesterna och frontendens lint, build och vitest |
 | 8. Veckostatus | Läget jämförs med veckans förväntningar | Utkast utifrån PR:er och Linear | Ansvarig kontrollerar mot kursmaterialet | `docs/status/vecka-N.md` |
 | 9. Misstagslogg | När AI gör fel föreslår den misstaget och en regel | Föreslår regeln | Godkänner regeln innan den skrivs in | `docs/ai/misstag-<namn>.md` |
 
@@ -114,6 +114,5 @@ agentuppdrag och varje PR innan merge.
 
 ## 5. Kända begränsningar i arbetssättet
 
-- CI kör bara backendtesterna. Frontendens bygge och tester körs för hand tills KSP-18 är klar.
 - Samma instruktion kan ge olika många förslag vid två körningar (HIST-09 med v2: 7 och 4).
 - Jämförelserna av instruktionerna är gjorda med en modell och på ett fåtal krav.
