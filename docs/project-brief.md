@@ -70,6 +70,8 @@ Detailed specification: [docs/specs/ticket-list-and-details.md](specs/ticket-lis
 - AC5.2: Each status change is stored with a timestamp and shown on the ticket.
 - AC5.3: Only the allowed status values are accepted.
 
+Detailed specification: [docs/specs/status-change.md](specs/status-change.md)
+
 ## Milestones
 
 1. Boilerplate: UI, server logic and storage connected (done).
