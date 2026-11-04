@@ -51,6 +51,7 @@
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 
   /* BoldKit Motion System — L1 Tokens (framework-agnostic, --bk-* namespace).
      The snap duration/easing back the .bk-interactive transition used by the
@@ -99,35 +100,35 @@
 /* BoldKit - Neubrutalism Design System */
 :root {
   /* Base Colors */
-  --background: 60 9% 98%;
-  --foreground: 240 10% 10%;
+  --background: 271 14% 97%;
+  --foreground: 271 12% 11%;
 
   /* Card */
   --card: 0 0% 100%;
-  --card-foreground: 240 10% 10%;
+  --card-foreground: 271 12% 11%;
 
   /* Popover */
   --popover: 0 0% 100%;
-  --popover-foreground: 240 10% 10%;
+  --popover-foreground: 271 12% 11%;
 
-  /* Primary - Coral Red */
-  --primary: 0 84% 71%;
-  --primary-foreground: 240 10% 10%;
+  /* Primary */
+  --primary: 271 76% 53%;
+  --primary-foreground: 0 0% 100%;
 
-  /* Secondary - Teal */
-  --secondary: 174 62% 56%;
+  /* Secondary */
+  --secondary: 326 78% 60%;
   --secondary-foreground: 240 10% 10%;
 
-  /* Accent - Yellow */
-  --accent: 49 100% 71%;
+  /* Accent */
+  --accent: 199 89% 48%;
   --accent-foreground: 240 10% 10%;
 
   /* Muted */
-  --muted: 60 5% 90%;
-  --muted-foreground: 240 5% 38%;
+  --muted: 271 11% 91%;
+  --muted-foreground: 271 7% 38%;
 
   /* Destructive */
-  --destructive: 0 84% 47%;
+  --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
 
   /* Success */
@@ -143,15 +144,15 @@
   --info-foreground: 240 10% 10%;
 
   /* Border & Input */
-  --border: 240 10% 10%;
-  --input: 240 10% 10%;
-  --ring: 240 10% 10%;
+  --border: 271 12% 11%;
+  --input: 271 12% 11%;
+  --ring: 271 12% 11%;
 
   /* Radius - Minimal for neubrutalism */
   --radius: 0rem;
 
   /* BoldKit specific */
-  --shadow-color: 240 10% 10%;
+  --shadow-color: 271 12% 11%;
   --shadow-offset: 4px;
   --border-width: 3px;
 
@@ -177,28 +178,35 @@
 }
 
 .dark {
-  --background: 240 10% 10%;
-  --foreground: 60 9% 98%;
+  /* Base Colors */
+  --background: 271 14% 10%;
+  --foreground: 271 14% 97%;
 
+  /* Card & Popover */
   --card: 240 10% 14%;
-  --card-foreground: 60 9% 98%;
+  --card-foreground: 271 14% 97%;
 
   --popover: 240 10% 14%;
-  --popover-foreground: 60 9% 98%;
+  --popover-foreground: 271 14% 97%;
 
-  --primary: 0 84% 71%;
-  --primary-foreground: 240 10% 10%;
+  /* Primary */
+  --primary: 271 76% 53%;
+  --primary-foreground: 0 0% 100%;
 
-  --secondary: 174 62% 56%;
+  /* Secondary */
+  --secondary: 326 78% 60%;
   --secondary-foreground: 240 10% 10%;
 
-  --accent: 49 100% 71%;
+  /* Accent */
+  --accent: 199 89% 48%;
   --accent-foreground: 240 10% 10%;
 
-  --muted: 240 10% 20%;
-  --muted-foreground: 60 5% 65%;
+  /* Muted */
+  --muted: 271 14% 20%;
+  --muted-foreground: 271 7% 65%;
 
-  --destructive: 0 84% 47%;
+  /* Destructive */
+  --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
 
   --success: 152 69% 69%;
@@ -210,10 +218,12 @@
   --info: 212 100% 73%;
   --info-foreground: 240 10% 10%;
 
-  --border: 60 9% 98%;
-  --input: 60 9% 98%;
-  --ring: 60 9% 98%;
+  /* Border & Input */
+  --border: 271 14% 97%;
+  --input: 271 14% 97%;
+  --ring: 271 14% 97%;
 
+  /* Shadow */
   --shadow-color: 0 0% 0%;
 
   /* Neon Colors - Slightly adjusted for dark mode */

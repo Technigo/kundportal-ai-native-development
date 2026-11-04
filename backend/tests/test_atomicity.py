@@ -16,6 +16,14 @@ Test proposals: run 4 with docs/ai/testforslag-v2-azalea.md, reviewed by Azalea 
 (2026-11-02): over HTTP every request gets a new session, so only the service can show
 that the session is not left broken. The two tests for other errors than database errors
 (500) were added after the code in KSP-36, see the comment above them.
+
+The tests at the end are for HIST-10 (a ticket that cannot be created leaves no history) when
+the "created" entry fails, part of KSP-66 (rollback in TicketService.create). Proposals with
+docs/ai/testforslag-v2-azalea.md, reviewed by Azalea 2026-11-04. Over HTTP the session is
+closed after every request, which rolls back anyway, so tests 1-4 pass before the code and
+are shown to fail with the mutation "commit before history.add". Only the service tests
+fail before the code: without rollback the next create commits the failed ticket too,
+without its "created" entry (found by Azalea with a script, 2026-11-04).
 """
 
 import sqlite3
@@ -26,7 +34,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app.main import create_app
 from app.repositories.history import HistoryRepository
-from app.schemas.tickets import Status
+from app.schemas.tickets import Status, TicketCreate
 from app.services.tickets import TicketService
 
 STATUS_NOT_CHANGED = "Statusen kunde inte ändras. Försök igen."
@@ -264,3 +272,115 @@ def test_hist09_same_service_works_after_bug(api, database_url, monkeypatch):
     assert saved_status(database_url, ticket_id) == "in_progress"
     assert len(saved_history(database_url, ticket_id)) == 2
     assert_invariant(database_url, ticket_id)
+
+
+# --- Creating a ticket (HIST-10, KSP-66): the "created" entry cannot be saved ---
+# AC3 (Azalea, 2026-11-04): 500 "Något gick fel. Försök igen." as today, not 503, so the
+# contract for POST /tickets does not change.
+
+
+def count(database_url, table):
+    """Number of rows in a table, read from the file."""
+    with connect(database_url) as connection:
+        return connection.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+
+
+def assert_one_created_entry_per_ticket(database_url):
+    """HIST-01: every saved ticket has exactly one "created" entry."""
+    with connect(database_url) as connection:
+        rows = connection.execute(
+            "SELECT t.id, COUNT(h.id) FROM tickets t LEFT JOIN ticket_history h "
+            "ON h.ticket_id = t.id AND h.event_type = 'created' GROUP BY t.id"
+        ).fetchall()
+    assert all(entries == 1 for _, entries in rows), rows
+
+
+def test_hist10_failed_created_entry_gives_500(api, monkeypatch):
+    """HIST-10: a failed "created" entry gives 500 with the general message and nothing else."""
+    # Catches: technical text in the answer, or the error swallowed (201 without an entry).
+    monkeypatch.setattr(HistoryRepository, "add", fail_after_flush)
+
+    response = api.post("/tickets", json=VALID_TICKET)
+
+    assert response.status_code == 500
+    assert response.json() == {"detail": UNEXPECTED_ERROR}
+
+
+def test_hist10_no_ticket_or_entry_after_failed_create(api, database_url, monkeypatch):
+    """HIST-10: after a failed "created" entry neither the ticket nor an entry is in the file."""
+    # Catches: commit before history.add in create (the ticket is saved without its entry).
+    monkeypatch.setattr(HistoryRepository, "add", fail_after_flush)
+
+    api.post("/tickets", json=VALID_TICKET)
+
+    assert count(database_url, "tickets") == 0
+    assert count(database_url, "ticket_history") == 0
+
+
+def test_hist10_failed_create_not_visible_after_restart(database_url, monkeypatch):
+    """HIST-10: a new app on the same file (new engine) sees no ticket after the failure.
+
+    The spec (v0.10) says "även när databasfilen läses med en ny engine", which the
+    sqlite3 test above does not read through (Azalea, 2026-11-04).
+    """
+    # Catches: commit before history.add in create.
+    with TestClient(create_app(database_url), raise_server_exceptions=False) as first:
+        monkeypatch.setattr(HistoryRepository, "add", fail_after_flush)
+        first.post("/tickets", json=VALID_TICKET)
+    monkeypatch.undo()
+
+    # The first app is closed (lifespan disposes its engine), so this reads the file anew.
+    with TestClient(create_app(database_url)) as fresh:
+        assert fresh.get("/tickets").json() == []
+
+
+def test_hist10_next_create_succeeds_after_failure(api, database_url, monkeypatch):
+    """HIST-10: once the failure is gone, the same ticket can be created, with one entry."""
+    # Catches: commit before history.add (two tickets, one without an entry). Does not catch
+    # a missing rollback: every request gets a new session here. The service tests do.
+    monkeypatch.setattr(HistoryRepository, "add", fail_after_flush)
+    api.post("/tickets", json=VALID_TICKET)
+    monkeypatch.undo()
+
+    second = api.post("/tickets", json=VALID_TICKET)
+
+    assert second.status_code == 201
+    assert count(database_url, "tickets") == 1
+    assert_one_created_entry_per_ticket(database_url)
+    assert_invariant(database_url, second.json()["id"])
+
+
+def test_hist10_same_service_works_after_failed_create(api, database_url, monkeypatch):
+    """HIST-10, ADR-001: the same TicketService can create a ticket after a failed entry.
+
+    Without rollback the flushed ticket stays in the open transaction, and the next create
+    commits it too, without its "created" entry (HIST-01).
+    """
+    # Catches: rollback missing in create.
+    with api.app.state.session_factory() as session:
+        service = TicketService(session)
+        monkeypatch.setattr(HistoryRepository, "add", fail_after_flush)
+        with pytest.raises(SQLAlchemyError):
+            service.create(TicketCreate(**VALID_TICKET))
+        monkeypatch.undo()
+
+        service.create(TicketCreate(**VALID_TICKET))
+
+    assert count(database_url, "tickets") == 1
+    assert_one_created_entry_per_ticket(database_url)
+
+
+def test_hist10_same_service_works_after_bug_in_create(api, database_url, monkeypatch):
+    """HIST-10, ADR-001: after an error that is not a database error, the same service works."""
+    # Catches: rollback only for SQLAlchemyError (except Exception narrowed down).
+    with api.app.state.session_factory() as session:
+        service = TicketService(session)
+        monkeypatch.setattr(HistoryRepository, "add", bug_after_flush)
+        with pytest.raises(RuntimeError):
+            service.create(TicketCreate(**VALID_TICKET))
+        monkeypatch.undo()
+
+        service.create(TicketCreate(**VALID_TICKET))
+
+    assert count(database_url, "tickets") == 1
+    assert_one_created_entry_per_ticket(database_url)
