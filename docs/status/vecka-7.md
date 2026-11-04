@@ -73,7 +73,7 @@ Teamets plan för veckan (enligt Linear):
 ## Verifierat
 
 - **KSP-41 (testerna för HIST-09), testerna först:** sju tester i `backend/tests/test_atomicity.py`
-  från körning 4 med v2-azalea plus ett eget test på tjänstenivå. Felet injiceras som
+  från körning 4 med v2-azalea plus ett test på tjänstenivå, som AI rekommenderade och Azalea valde. Felet injiceras som
   `SQLAlchemyError` före och efter `flush`. Före koden (`fa54194`): `3 failed, 170 passed`, två
   500 i stället för 503 och en `SameStatus` utan rollback.
 - **KSP-36 (koden för HIST-09) som agentuppdrag:** agenten stannade vid varje kontrollpunkt.
