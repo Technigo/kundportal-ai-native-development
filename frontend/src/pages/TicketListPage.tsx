@@ -3,7 +3,7 @@ import { Link } from "react-router"
 
 import type { components, operations } from "@/api/schema"
 import { BACKEND_UNREACHABLE } from "@/api/errors"
-import { CreateTicketForm } from "@/components/create-ticket-form"
+import { useTicketListRefresh } from "@/components/ticket-list-refresh"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -50,6 +50,7 @@ async function fetchTickets(): Promise<ListState> {
 export function TicketListPage() {
   const [list, setList] = useState<ListState>({ state: "loading" })
   const requestId = useRef(0)
+  const refresh = useTicketListRefresh()
 
   const reload = useCallback(() => {
     const id = ++requestId.current
@@ -62,12 +63,16 @@ export function TicketListPage() {
     reload()
   }, [reload])
 
+  // KSP-75: the create button lives in the app header. Reload while this page is mounted.
+  useEffect(() => {
+    if (refresh === null) return
+    refresh.register(reload)
+    return () => refresh.register(null)
+  }, [refresh, reload])
+
   return (
     <div className="flex min-h-svh flex-col gap-6 p-6">
-      <header className="flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold">Ärenden</h1>
-        <CreateTicketForm onCreated={reload} />
-      </header>
+      <h1 className="text-2xl font-bold">Ärenden</h1>
       {list.state === "loading" && (
         <div role="status" aria-live="polite" aria-busy="true">
           <p className="sr-only">Hämtar ärenden …</p>

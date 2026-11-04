@@ -111,7 +111,7 @@ export function CreateTicketForm({ onCreated }: CreateTicketFormProps) {
   return (
     <>
       <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogTrigger render={<Button />}>Nytt ärende</DialogTrigger>
+        <DialogTrigger render={<Button size="sm" />}>Nytt ärende</DialogTrigger>
         <DialogContent>
           <DialogTitle>Nytt ärende</DialogTitle>
           <DialogDescription className="sr-only">
