@@ -72,8 +72,9 @@ Skelettverktyget erbjöd ett monorepo. **Valt: separata mappar** (`backend/`, `f
 
 - **Att köra lösningen kräver Python 3.11, Node och pnpm.** README behöver beskriva alla tre, även för Windows.
 - **SQLite kontrollerar inte främmande nycklar som standard.** Backenden måste slå på det med `PRAGMA foreign_keys=ON` för varje anslutning, annars kan en historikpost peka på ett ärende som inte finns.
-- **Två språk:** typerna i frontend kan glida isär från backend. Därför genereras TypeScript-typerna från API:ts OpenAPI-schema med `openapi-typescript` (KSP-28), bekräftas på teammötet 2026-10-27. Tills dess är API-konventionerna och specarna det som håller ihop dem.
-- **Frontendtester:** Vitest och Testing Library är planerade (Teststrategin) men ännu inte installerade i `frontend/`.
+- **Två språk:** typerna i frontend kan glida isär från backend. Därför genereras TypeScript-typerna från API:ts OpenAPI-schema med `openapi-typescript` (KSP-28), beslutat på teammötet 2026-10-27 och på plats sedan PR #58 (generera TypeScript-typer från OpenAPI): https://github.com/desiboli/kundportal-ai-native-development/pull/58. Typerna skapas med `pnpm generate:api` när backenden körs.
+- **Frontendtester:** Vitest, jsdom, Testing Library och jest-axe finns i `frontend/` sedan PR #53 (förslag på testverktyg, KSP-64): https://github.com/desiboli/kundportal-ai-native-development/pull/53.
+- **Sidor i frontend:** `react-router` ger egna adresser till listan (`/`) och detaljvyn (`/tickets/:id`). Det kom in med PR #59 (ärendelista, KSP-29): https://github.com/desiboli/kundportal-ai-native-development/pull/59 och valdes i Slack 2026-10-30 framför adresser med `#`, som hade klarat sig utan ett nytt beroende.
 - **Designsystemet:** nya beroenden `clsx` och `tailwind-merge`, och typsnittet Outfit, som ersätter Inter (PR #38 (BOLDkit-tema med badge och card): https://github.com/desiboli/kundportal-ai-native-development/pull/38). När PR #47 (skills för testförslag, API-typer och BOLDkit): https://github.com/desiboli/kundportal-ai-native-development/pull/47 är mergad följer agenterna skillen `boldkit`, så att utseendet inte ändras vid varje ny komponent.
 - **Kontrasten i BOLDkit-temat** är inte kontrollerad. Den behöver prövas innan demon, se Öppna frågor.
 
@@ -82,7 +83,7 @@ Skelettverktyget erbjöd ett monorepo. **Valt: separata mappar** (`backend/`, `f
 | Fråga | Ägare | När |
 | --- | --- | --- |
 | Vilken Node-version gäller (anges i README)? | Musse | Med frontendens körinstruktioner |
-| Klarar BOLDkit-temat kontrastkraven (text mot bakgrund, statusbrickor)? | Bestäms av teamet | Före demon |
+| Klarar BOLDkit-temat kontrastkraven (text mot bakgrund, statusbrickor)? | Amalia (svar i PR #50 2026-10-30) | Före demon |
 
 ## Ändringar
 
@@ -90,3 +91,4 @@ Skelettverktyget erbjöd ett monorepo. **Valt: separata mappar** (`backend/`, `f
 | --- | --- |
 | 2026-10-25 | Första versionen, efter teammötet |
 | 2026-10-29 | Avsnitt 3: BOLDkit valt (teammötet 2026-10-27, PR #38 (BOLDkit-tema med badge och card): https://github.com/desiboli/kundportal-ai-native-development/pull/38). Licens och underhåll kontrollerade. Status satt till beslutat |
+| 2026-11-02 | Konsekvenser: typerna från OpenAPI och testverktygen i frontend är på plats (PR #58, PR #53), `react-router` tillagt (PR #59). Amalia äger frågan om kontrasten |

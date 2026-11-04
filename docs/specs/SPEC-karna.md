@@ -1,6 +1,6 @@
 # Spec: Kärnan – skapa, lista, visa och validera ärenden (CORE)
 
-> Status: **utkast v0.5** · v0.2 granskad och godkänd av Azalea (PR #5), v0.3 (PR #10) och v0.4 (PR #22) likaså · Ansvarig: Nicklas (yrrving) · Granskare: Azalea (Azaalea) · Vecka 5
+> Status: **utkast v0.6** · v0.2 granskad och godkänd av Azalea (PR #5), v0.3 (PR #10) och v0.4 (PR #22) likaså · Ansvarig: Nicklas (yrrving) · Granskare: Azalea (Azaalea) · Vecka 5
 > Detta dokument är teamets underlag. Individuell redovisning ligger inte här.
 >
 > Bygger på [API-konventioner](../api-konventioner.md)
@@ -93,6 +93,11 @@ En handläggare ska kunna **registrera ett nytt kundärende**, se **en lista öv
 | Status skickas in | Status sätts automatiskt och kan inte anges när ett ärende skapas. |
 | Fel datatyp (t.ex. `"title": 5`), saknad kropp, trasig JSON eller ogiltiga tecken (ogiltig UTF-8) | Ogiltig indata. |
 | Okänt ärende eller id som inte är ett heltal | Ärendet finns inte. |
+| Adressen finns inte (404, t.ex. `GET /tiketts`) | Sidan finns inte. |
+| Metoden stöds inte på adressen (405, t.ex. `DELETE /tickets/1`) | Metoden stöds inte. |
+| Oväntat fel i servern (500), utan tekniska detaljer | Något gick fel. Försök igen. |
+
+De tre sista gäller alla vägar i API:t, inte bara ärenden. De byggdes i KSP-21 (svenskt felformat i backenden) och prövas av testerna för CORE-16 i `backend/tests/test_error_format.py`.
 
 Om flera fält är fel samtidigt visas **alla** meddelanden, sammanfogade med mellanslag, i fältordningen rubrik, beskrivning, kategori, prioritet, status (beslut B7, CORE-18).
 
@@ -209,3 +214,4 @@ Besluten är fattade av Nicklas (2026-10-24). B5, B7 och B8 är förtydligade el
 | v0.3 | 2026-10-25 | B9: fel datatyp tillsammans med saknat fält ger bara "Ogiltig indata." (CORE-17, avsnitt 4). Efter Azaleas provkörning (kommentar i PR #5): ogiltig UTF-8 i CORE-17, B10 vad som räknas som tomt (CORE-11), B11 sammansatta emoji (CORE-14), två nya mutationer |
 | v0.4 | 2026-10-25 | Länkar till `docs/api-konventioner.md` och `docs/teststrategi.md` i repot i stället för Linear. Efter körningarna av testinstruktionen: B12 vad som sparas (trimning bara i ändarna, ingen normalisering), CORE-05 gäller båda fälten, CORE-18 flera fel samtidigt (B7 fick ett krav-id), en ny mutation |
 | v0.5 | 2026-10-28 | CORE-01: ärendet sparas med samma uppgifter som i svaret (Azaleas fråga i PR #34) |
+| v0.6 | 2026-11-02 | Avsnitt 4: meddelandena för adress som inte finns (404), metod som inte stöds (405) och oväntat fel (500), som redan fanns i koden och testerna (KSP-21). Lovat i granskningen av PR #62 (agentuppdraget för svenskt felformat) |

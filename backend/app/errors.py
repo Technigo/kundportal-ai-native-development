@@ -29,6 +29,8 @@ STATUS_NOT_ALLOWED = "Status sätts automatiskt och kan inte anges när ett äre
 INVALID_STATUS = "Välj en giltig status."
 # HIST-07: the ticket already has the status that was sent (raised by the router, KSP-24).
 SAME_STATUS = "Ärendet har redan den statusen."
+# HIST-09: the history entry could not be saved, so the change was rolled back (503, KSP-36).
+STATUS_NOT_CHANGED = "Statusen kunde inte ändras. Försök igen."
 INVALID_INPUT = "Ogiltig indata."
 TICKET_NOT_FOUND = "Ärendet finns inte."
 PAGE_NOT_FOUND = "Sidan finns inte."

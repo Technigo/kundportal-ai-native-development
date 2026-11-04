@@ -1,15 +1,23 @@
-import type { ReactNode } from "react"
+import { useId, type ReactNode } from "react"
 
 import type { Ticket } from "@/api/types"
-import { StatusBadge } from "@/components/status-badge"
+import { TicketStatusForm } from "@/components/ticket-status-form"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { categoryLabel, priorityLabel } from "@/labels"
 import { formatLocalDateTime } from "@/lib/format"
 
 // All fields of a ticket (CORE-04), laid out as decided in KSP-31 AC8: id and title in a
 // header with the primary colour, then category and created on the left, status and
-// priority on the right, and the description last.
-export function TicketDetails({ ticket }: { ticket: Ticket }) {
+// priority on the right, and the description last. The status is changed in place (KSP-32).
+export function TicketDetails({
+  ticket,
+  onStatusSaved,
+}: {
+  ticket: Ticket
+  onStatusSaved: (ticket: Ticket) => void
+}) {
+  const statusLabelId = useId()
+
   return (
     <Card>
       <CardHeader className="bg-primary text-primary-foreground">
@@ -28,8 +36,8 @@ export function TicketDetails({ ticket }: { ticket: Ticket }) {
             </Field>
           </div>
           <div className="flex flex-col gap-4">
-            <Field label="Status">
-              <StatusBadge status={ticket.status} />
+            <Field label="Status" labelId={statusLabelId}>
+              <TicketStatusForm ticket={ticket} labelId={statusLabelId} onChanged={onStatusSaved} />
             </Field>
             <Field label="Prioritet">{priorityLabel(ticket.priority)}</Field>
           </div>
@@ -44,10 +52,12 @@ export function TicketDetails({ ticket }: { ticket: Ticket }) {
   )
 }
 
-function Field({ label, children }: { label: string; children: ReactNode }) {
+function Field({ label, labelId, children }: { label: string; labelId?: string; children: ReactNode }) {
   return (
     <div>
-      <dt className="text-xs font-bold tracking-wide text-muted-foreground uppercase">{label}</dt>
+      <dt id={labelId} className="text-xs font-bold tracking-wide text-muted-foreground uppercase">
+        {label}
+      </dt>
       <dd className="font-medium">{children}</dd>
     </div>
   )

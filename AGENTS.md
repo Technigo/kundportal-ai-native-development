@@ -17,6 +17,7 @@ historiken. Grupparbete i kursen AI Native Development (Grupp 6).
 | Veckostatus | En fil per vecka | `docs/status/` |
 | Gemensamma regler | API-konventioner, arkitektur, teststrategi | `docs/api-konventioner.md`, `docs/arkitektur.md`, `docs/teststrategi.md` |
 | AI-instruktioner | Teamets instruktion för testförslag (v1) och var och ens namngivna förbättring | `docs/ai/` |
+| AI-arbetsflöde | Hur AI ingår från spec till granskning, det återanvändbara momentet och var en människa bestämmer | `docs/ai/arbetssatt.md` |
 | Skills | Testförslag, API-typer från OpenAPI, BOLDkit som designsystem. `grill-me` startas med `/grill-me` | `.claude/skills/` |
 
 ## Kommandon
@@ -38,6 +39,7 @@ Frontend: se `frontend/README.md` (pnpm). Backend körs på **port 8010**, inte 
 ## Alltid
 
 - **Läs rätt spec först.** Varje ändring utgår från ett krav-id (`CORE-xx` eller `HIST-xx`).
+- **Följ befintlig struktur.** Återanvänd projektets etablerade mönster och läs relevanta arkitektur- och API-regler före ändringen.
 - **Testförslag från AI** tas fram enligt instruktionen i `docs/ai/` (t.ex. *"Föreslå tester för CORE-07 enligt docs/ai/testforslag-v1.md"*) och granskas innan testkoden skrivs.
 - **Krav-id i allt:** i testets namn eller docstring, i commit-meddelandet och i PR:en.
 - **Förklara varje id kort**, aldrig ett naket `KSP-xx` (ärende i Linear), `CORE-xx`, `HIST-xx`
@@ -46,6 +48,7 @@ Frontend: se `frontend/README.md` (pnpm). Backend körs på **port 8010**, inte 
   på engelska: `# CORE-10: unknown ticket or non-integer id gives 404`.
 - **Testerna först:** skriv eller ändra testet, se det falla av rätt anledning, bygg sedan.
 - **Kör testerna före varje commit.** CI kör dem igen på varje PR.
+- **Redovisa resultatet.** Sammanfatta ändrade filer, kopplat krav-id och faktiskt körda tester med resultat när arbetet lämnas över.
 - **Misstagslogg:** gör agenten ett misstag (t.ex. ett felaktigt antagande, ett test som inte
   körts eller en ändring i fel fil) föreslår den misstaget och en regel som förhindrar att det
   händer igen. Raden skrivs in i `docs/ai/misstag-<namn>.md` först när en människa har
