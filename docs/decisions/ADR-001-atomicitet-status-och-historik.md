@@ -109,7 +109,7 @@ Ingen `status`-kolumn. Aktuell status är senaste historikposten.
 | Invariant håller | Test efter varje scenario | **Belagt, med en gräns.** Kontrolleras efter varje HIST-scenario ([PR #61](https://github.com/desiboli/kundportal-ai-native-development/pull/61)) och via API:t i `conftest.py` ([PR #75](https://github.com/desiboli/kundportal-ai-native-development/pull/75)). Föll vid M1 och M1b. Vid M3b höll den, eftersom status och post försvann tillsammans |
 | Testen fångar utebliven historik | Mutation: ta bort insättningen (HIST-01/02/03 ska falla) | **Fångad.** M1b: 11 failed. M1: 9 failed. HIST-01, 02 och 03 föll i båda |
 | Testen fångar commit utanför transaktionen | Mutation: `commit` före historiken (HIST-09 ska falla) | **Fångad, av rätt skäl först efter KSP-41.** Före: 9 failed, bara för att posten aldrig commitades. Efter (`59bb5fc`): 37 failed, varav 7 av 9 i `test_atomicity.py` på statusen |
-| Testen fångar utebliven sparning | Mutation: ta bort `commit` (HIST-04 ska falla) | **Delvis.** M3 (`create`): 52 failed, bland annat `test_core02_ticket_survives_restart`. M3b (`change_status`): 32 failed. Testet för HIST-04 (omstart) saknas, så historiken efter omstart kontrolleras inte (KSP-40) |
+| Testen fångar utebliven sparning | Mutation: ta bort `commit` (HIST-04 ska falla) | **Fångad.** `test_restart.py` (KSP-40, [PR #93](https://github.com/desiboli/kundportal-ai-native-development/pull/93)): M3 (`create`) 3 av 3, varav två på 404 efter omstarten. M3b (`change_status`) 1 av 3, testet med flera byten på `'new' == 'waiting_on_customer'` efter omstarten, som bara kontrollen mot förväntade värden fångar. I hela sviten 72 och 37 failed. Gräns: M3b fångas av ett enda omstartstest |
 
 Mutationerna och körresultaten står i [verifieringsplanen](../verifiering.md), avsnitt 5.
 
@@ -119,4 +119,4 @@ att statusen var oförändrad. Först testerna för HIST-09 (KSP-41) skilde en f
 från en trasig. Före koden föll 3, och vid M2 efter KSP-36 föll 7 av 9 på statusen. Kriteriet är
 därför skärpt (se Konsekvenser). Prövningen preciserade också beslutet: databasfel ger 503 och
 andra fel 500, båda med rollback, och invarianten behöver en kontroll av att data sparas (M3b).
-Raden om utebliven sparning är delvis belagd tills HIST-04 är testat (KSP-40).
+Raden om utebliven sparning är belagd sedan 2026-11-04, när testerna för HIST-04 kom (KSP-40).
