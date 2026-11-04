@@ -42,6 +42,7 @@ pnpm install
 pnpm dev                 # http://localhost:5173
 pnpm lint
 pnpm build
+pnpm test:run             # vitest, en gång (pnpm test är watch-läge)
 ```
 
 **Hela stacken:** starta backenden först (port 8010), sedan frontenden i en annan terminal.

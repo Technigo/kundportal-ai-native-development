@@ -100,9 +100,10 @@ cd backend
 cd frontend
 pnpm lint
 pnpm build
+pnpm test:run
 ```
 
-CI kör backendens tester på varje PR (`.github/workflows/tests.yml`).
+CI kör backendens tester och frontendens lint, build och vitest på varje PR (`.github/workflows/tests.yml`).
 
 ## 6. Koppling till Linear
 
