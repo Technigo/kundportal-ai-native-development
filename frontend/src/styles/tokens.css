@@ -1,0 +1,49 @@
+/* Färger kontrollerade mot WCAG 2.1 AA. Ändra inte utan att kontrollera kontrasten igen. */
+:root {
+  /* Bas */
+  --color-bg: #fdfaf2;
+  --color-surface: #ffffff;
+  --color-surface-muted: #faf6ea;
+  --color-border: #ece6d6;
+  --color-border-control: #8c8676;
+
+  /* Text */
+  --color-text: #2e3038;
+  --color-text-body: #3c3c3b;
+  --color-text-muted: #5f6157;
+
+  /* Varumärke */
+  --color-primary: #006649;
+  --color-primary-hover: #004a35;
+  --color-primary-soft: #dcf2ec;
+  --color-accent: #b8336a;
+  --color-accent-soft: #fdeef3;
+  --color-accent-line: #e06891;
+  --color-on-primary: #ffffff;
+
+  /* Prioritet */
+  --color-priority-high: #c41f30;
+
+  /* Status: text och kant / bakgrund */
+  --color-status-new: #004390;
+  --color-status-new-bg: #e2ecf7;
+  --color-status-in-progress: #8a4a00;
+  --color-status-in-progress-bg: #fdeccf;
+  --color-status-waiting: #764f98;
+  --color-status-waiting-bg: #eee5f6;
+  --color-status-closed: #006649;
+  --color-status-closed-bg: #dcf2ec;
+  --color-status-selected-bg: #f39200;
+
+  /* Form */
+  --radius-pill: 999px;
+  --radius-card: 16px;
+  --radius-control: 10px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --font-family: 'Segoe UI', system-ui, sans-serif;
+}
