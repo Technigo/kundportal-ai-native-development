@@ -50,13 +50,13 @@ Bygger på avsnitt 1 i [project-brief.md](../project-brief.md) (AC1.1–AC1.6).
 
 ## Acceptanskriterier
 
-- **AC-R1 (happy path):** Givet ett giltigt namn, ämne och beskrivning, när handläggaren klickar på Register ticket, så sparas ärendet med status `open` och prioritet `normal`, och handläggaren skickas till ärendelistan med ärendet överst.
-- **AC-R2 (happy path, valfri e-post):** Ett ärende kan sparas utan e-post. Anges en e-postadress sparas den trimmad.
-- **AC-R3 (error path, obligatoriskt fält saknas):** Givet ett tomt namn, ämne eller beskrivning, eller ett som bara innehåller mellanslag, när handläggaren skickar formuläret, så sparas ingenting, fältets meddelande från tabellen visas och de inmatade värdena finns kvar.
-- **AC-R4 (error path, ogiltig e-post):** Givet e-postadressen `not-an-email`, när handläggaren skickar formuläret, så sparas ingenting och "Please enter a valid email address." visas.
-- **AC-R5 (kantfall, gränser):** Värden precis på gränserna (ämne 3 och 120, namn 120, beskrivning 5000, e-post 254) godkänns. Ett tecken över avvisas med fältets meddelande.
+- **AC-R1 (happy path):** Givet ett giltigt namn, ämne och beskrivning, när handläggaren klickar på Register ticket, så sparas ärendet med status `open` och prioritet `normal`, och handläggaren skickas till ärendelistan med ärendet överst (AC1.1, AC1.2).
+- **AC-R2 (happy path, valfri e-post):** Ett ärende kan sparas utan e-post. Anges en e-postadress sparas den trimmad (AC1.3).
+- **AC-R3 (error path, obligatoriskt fält saknas):** Givet ett tomt namn, ämne eller beskrivning, eller ett som bara innehåller mellanslag, när handläggaren skickar formuläret, så sparas ingenting, fältets meddelande från tabellen visas och de inmatade värdena finns kvar (AC1.4, AC1.5).
+- **AC-R4 (error path, ogiltig e-post):** Givet e-postadressen `not-an-email`, när handläggaren skickar formuläret, så sparas ingenting och "Please enter a valid email address." visas (AC1.3, AC1.4).
+- **AC-R5 (kantfall, gränser):** Värden precis på gränserna (ämne 3 och 120, namn 120, beskrivning 5000, e-post 254) godkänns. I gränssnittet hindrar `maxLength` handläggaren från att skriva fler tecken än gränsen. Om servern ändå tar emot ett värde som är ett tecken över i en direkt förfrågan avvisas det med fältets meddelande (AC1.5).
 - **AC-R6 (error path, okänd prioritet via direkt förfrågan):** I gränssnittet kan bara `low`, `normal` och `high` väljas. Om servern ändå tar emot prioriteten `urgent` i en direkt förfrågan sparas ingenting (AC1.2, AC1.5).
-- **AC-R7 (status ignoreras):** När servern tar emot `status=closed` tillsammans med ett i övrigt giltigt ärende sparas ärendet som `open`.
+- **AC-R7 (status ignoreras via direkt förfrågan):** Formuläret har inget fält för status. Om servern ändå tar emot `status=closed` i en direkt förfrågan tillsammans med ett i övrigt giltigt ärende sparas ärendet som `open` (AC1.6).
 
 ## Uppdelning i små steg (test-först enligt `ticket-change`)
 
@@ -72,7 +72,7 @@ Bygger på avsnitt 1 i [project-brief.md](../project-brief.md) (AC1.1–AC1.6).
 | Är detta en ny funktion? | Nej. Specen dokumenterar och kontrollerar det som redan är byggt | AC1 är markerat Done, men inget utanför koden beskriver meddelandena, kantfallen eller gränserna |
 | Var valideras inmatningen? | På servern, med zod | Webbläsarens kontroller kan kringgås. Formuläret använder `noValidate`, så det är serverns meddelanden som handläggaren ser |
 | Behövs ett eget meddelande för okänd prioritet? | Nej, zods standardmeddelande behålls | `normal` är förvalt i listan, så en okänd prioritet kan inte väljas i gränssnittet. Den kan bara komma via en direkt förfrågan, och då avvisar servern den |
-| Vilket språk har gränssnitt och felmeddelanden? | Engelska | Beslutat av teamet |
+| Vilket språk har gränssnitt och felmeddelanden? | Engelska | Beslutat av teamet i ett gruppsamtal på Slack den 21 oktober 2026, där alla i teamet var med |
 | Ska handläggaren se ett meddelande om sparandet i databasen misslyckas? | Ja. Det beskrivs i specifikationen för kravet "Handle at least one invalid use case with a clear message to the user" (inte skriven än) | Den specifikationen samlar felmeddelanden för fler fall än registreringen |
 
 ## Öppna frågor
