@@ -43,7 +43,9 @@ underlag. Här samlas det som tidigare stod utspritt i specarna, ADR:erna och ve
 | Invarianten (senaste posten är ärendets status) fångar otakt, men inte att både status och post försvann | Den behöver omstartstesterna bredvid sig | [ADR-001](decisions/ADR-001-atomicitet-status-och-historik.md) |
 | Ordningen vid samma tidpunkt (HIST-11) skyddas av ett enda test, det enda med fast klocka | Nicklas korsvisa mutation fångades bara av det | Verifieringsplanen avsnitt 5, steg 2 |
 | Mutationerna är gjorda för hand och är få | Fler små fel i jämförelser och gränser är inte prövade | [Teststrategin](teststrategi.md) avsnitt 3 |
-| *(CORE-testerna fylls i av Nicklas)* | | |
+| CORE-testerna är mutationsprövade bara för CORE-02, 11, 12, 16, 17 och 18 (N1–N7). CORE-01, 03–10 och 13–15 är inte prövade med någon mutation | För de kraven vet vi att testerna är gröna, men inte att de faller om koden blir fel | [Verifieringsplanen](verifiering.md) avsnitt 5, [agentuppdraget KSP-44](ai/agentuppdrag/KSP-44.md) |
+| Att ärendet finns kvar efter omstart (CORE-02) prövas av ett enda CORE-test, `test_core02_ticket_survives_restart`. N7 (sparningen bortkopplad) fångades av 33 tester, men de flesta föll för att nästa begäran inte hittade ärendet, inte på omstarten | Ett fel som bara syns vid omstart, till exempel att databasfilen inte läses från konfigurationen, ser bara det testet och omstartstesterna för HIST-04 | Verifieringsplanen avsnitt 5, N7 |
+| Vid N7 föll statustesterna redan när ärendet skulle förberedas, inte på sina egna krav (HIST-06, HIST-07) | Ett rött test prövar inte alltid det det ska pröva. Felraderna måste läsas, inte bara antalet röda | [Agentuppdraget KSP-44](ai/agentuppdrag/KSP-44.md), Min granskning |
 
 ## 2. Risker
 
