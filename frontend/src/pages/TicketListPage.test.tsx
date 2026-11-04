@@ -1,13 +1,16 @@
 import { render, screen } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
 import { MemoryRouter } from "react-router"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import type { components } from "@/api/schema"
 import { formatLocalDateTime } from "@/lib/format"
+import { categoryLabels, priorityLabels, statusLabels } from "@/labels"
 
 import { TicketListPage } from "./TicketListPage"
 
 // KSP-29: ticket list. CORE-03 keeps API order, CORE-15 empty list is a message.
+// KSP-77: status, priority and category filters combine with search on id and title.
 type Ticket = components["schemas"]["Ticket"]
 
 function ticket(overrides: Partial<Ticket> & Pick<Ticket, "id" | "title">): Ticket {
@@ -32,6 +35,14 @@ function mockTickets(tickets: Ticket[]) {
   )
 }
 
+function renderPage() {
+  render(
+    <MemoryRouter>
+      <TicketListPage />
+    </MemoryRouter>,
+  )
+}
+
 describe("Ticket list", () => {
   afterEach(() => {
     vi.unstubAllGlobals()
@@ -52,18 +63,15 @@ describe("Ticket list", () => {
     // Newest first, even though its id is lower. A sort by id would flip them.
     mockTickets([newer, older])
 
-    render(
-      <MemoryRouter>
-        <TicketListPage />
-      </MemoryRouter>,
-    )
+    renderPage()
 
-    const first = await screen.findByRole("heading", { name: "Nyare ärende" })
-    const second = screen.getByRole("heading", { name: "Äldre ärende" })
+    const rows = await screen.findAllByRole("row")
+    expect(rows[1]).toHaveTextContent("Nyare ärende")
+    expect(rows[2]).toHaveTextContent("Äldre ärende")
     expect(
-      first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING,
+      rows[1].compareDocumentPosition(rows[2]) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy()
-    expect(screen.getByRole("link", { name: /Nyare ärende/ })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Nyare ärende" })).toHaveAttribute(
       "href",
       "/tickets/1",
     )
@@ -79,15 +87,13 @@ describe("Ticket list", () => {
       }),
     ])
 
-    render(
-      <MemoryRouter>
-        <TicketListPage />
-      </MemoryRouter>,
-    )
+    renderPage()
 
-    expect(await screen.findByText("Faktura och betalning")).toBeInTheDocument()
-    expect(screen.getByText("Hög")).toBeInTheDocument()
-    expect(screen.getByText("Nytt")).toBeInTheDocument()
+    expect(
+      await screen.findByRole("cell", { name: "Faktura och betalning" }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole("cell", { name: "Hög" })).toBeInTheDocument()
+    expect(screen.getByRole("cell", { name: "Nytt" })).toBeInTheDocument()
     expect(screen.queryByText("billing")).not.toBeInTheDocument()
     expect(screen.queryByText("high")).not.toBeInTheDocument()
     expect(screen.queryByText("new")).not.toBeInTheDocument()
@@ -95,7 +101,9 @@ describe("Ticket list", () => {
       screen.queryByText("Kunden har fått dubbel debitering för oktober."),
     ).not.toBeInTheDocument()
     expect(
-      screen.getByText(formatLocalDateTime("2026-10-25T09:00:00.701559Z")),
+      screen.getByRole("cell", {
+        name: formatLocalDateTime("2026-10-25T09:00:00.701559Z"),
+      }),
     ).toBeInTheDocument()
   })
 
@@ -103,19 +111,16 @@ describe("Ticket list", () => {
   it("test_core15_empty_list_shows_a_message_not_an_error", async () => {
     mockTickets([])
 
-    render(
-      <MemoryRouter>
-        <TicketListPage />
-      </MemoryRouter>,
-    )
+    renderPage()
 
-    expect(await screen.findByText(/Inga ärenden/)).toBeInTheDocument()
+    expect(await screen.findByText(/Inga ärenden än/)).toBeInTheDocument()
     expect(screen.getByRole("link", { name: "Systemstatus" })).toHaveAttribute(
       "href",
       "/health",
     )
     expect(screen.queryByRole("alert")).not.toBeInTheDocument()
     expect(screen.queryByRole("link", { name: /ärende/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole("textbox", { name: "Sök ärenden" })).not.toBeInTheDocument()
   })
 
   // CORE-12: a title of exactly 100 characters is shown in full.
@@ -123,12 +128,148 @@ describe("Ticket list", () => {
     const title = "Å".repeat(100)
     mockTickets([ticket({ id: 1, title })])
 
-    render(
-      <MemoryRouter>
-        <TicketListPage />
-      </MemoryRouter>,
+    renderPage()
+
+    expect(await screen.findByRole("link", { name: title })).toBeInTheDocument()
+  })
+})
+
+describe("Ticket list filters", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  const tickets = [
+    ticket({
+      id: 12,
+      title: "Fakturan stämmer inte",
+      category: "billing",
+      priority: "high",
+      status: "new",
+    }),
+    ticket({
+      id: 2,
+      title: "Sen leverans",
+      category: "delivery",
+      priority: "high",
+      status: "in_progress",
+    }),
+    ticket({
+      id: 8,
+      title: "Fakturan är dubbel",
+      description: "unikhemlighet som inte ska gå att söka",
+      category: "billing",
+      priority: "low",
+      status: "new",
+    }),
+  ]
+
+  async function openAdvancedFilters(user: ReturnType<typeof userEvent.setup>) {
+    await user.click(screen.getByRole("button", { name: "Filtrera" }))
+  }
+
+  // KSP-77: search is the main filter. Status, priority and category stay behind Filtrera.
+  it("test_ksp77_filter_options_use_swedish_labels", async () => {
+    const user = userEvent.setup()
+    mockTickets(tickets)
+    renderPage()
+
+    expect(await screen.findByRole("table")).toBeInTheDocument()
+    expect(screen.getByRole("textbox", { name: "Sök ärenden" })).toBeInTheDocument()
+    expect(screen.queryByLabelText("Status")).not.toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Filtrera" })).toHaveAttribute(
+      "aria-expanded",
+      "false",
     )
 
-    expect(await screen.findByText(title)).toBeInTheDocument()
+    await openAdvancedFilters(user)
+
+    expect(screen.getByRole("button", { name: "Filtrera" })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    )
+    expect(screen.getByRole("group", { name: "Avancerade filter" })).toBeInTheDocument()
+    expect(screen.getAllByRole("option", { name: "Alla" })).toHaveLength(3)
+    for (const label of Object.values(statusLabels)) {
+      expect(screen.getByRole("option", { name: label })).toBeInTheDocument()
+    }
+    for (const label of Object.values(priorityLabels)) {
+      expect(screen.getByRole("option", { name: label })).toBeInTheDocument()
+    }
+    for (const label of Object.values(categoryLabels)) {
+      expect(screen.getByRole("option", { name: label })).toBeInTheDocument()
+    }
+    expect(screen.getByRole("button", { name: "Återställ filter" })).toBeDisabled()
+    expect(screen.getByText("Visar 3 ärenden")).toBeInTheDocument()
+  })
+
+  // KSP-77: status, priority and category combine, and reset clears only those.
+  it("test_ksp77_filters_combine_and_reset", async () => {
+    const user = userEvent.setup()
+    mockTickets(tickets)
+    renderPage()
+
+    await screen.findByRole("table")
+    await openAdvancedFilters(user)
+    await user.selectOptions(screen.getByLabelText("Status"), "new")
+    await user.selectOptions(screen.getByLabelText("Kategori"), "billing")
+
+    expect(screen.getByRole("link", { name: "Fakturan stämmer inte" })).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: "Fakturan är dubbel" })).toBeInTheDocument()
+    expect(screen.queryByRole("link", { name: "Sen leverans" })).not.toBeInTheDocument()
+    expect(screen.getByText("Visar 2 ärenden")).toBeInTheDocument()
+    expect(vi.mocked(fetch)).toHaveBeenCalledTimes(1)
+
+    await user.selectOptions(screen.getByLabelText("Prioritet"), "high")
+
+    expect(screen.getByRole("link", { name: "Fakturan stämmer inte" })).toBeInTheDocument()
+    expect(screen.queryByRole("link", { name: "Fakturan är dubbel" })).not.toBeInTheDocument()
+    expect(screen.getByText("Visar 1 ärende")).toBeInTheDocument()
+
+    await user.click(screen.getByRole("button", { name: "Återställ filter" }))
+
+    expect(screen.getByLabelText("Status")).toHaveValue("")
+    expect(screen.getByLabelText("Prioritet")).toHaveValue("")
+    expect(screen.getByLabelText("Kategori")).toHaveValue("")
+    expect(screen.getByText("Visar 3 ärenden")).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: "Sen leverans" })).toBeInTheDocument()
+  })
+
+  // KSP-77: search is case-insensitive on id and title, and combines with filters.
+  it("test_ksp77_search_combines_with_filters", async () => {
+    const user = userEvent.setup()
+    mockTickets(tickets)
+    renderPage()
+
+    const search = await screen.findByRole("textbox", { name: "Sök ärenden" })
+    expect(search).toHaveAttribute("placeholder", "Sök ärenden...")
+
+    await user.type(search, "FAKTURAN")
+    expect(screen.queryByLabelText("Prioritet")).not.toBeInTheDocument()
+    expect(screen.queryByRole("link", { name: "Sen leverans" })).not.toBeInTheDocument()
+    expect(screen.getByText("Visar 2 ärenden")).toBeInTheDocument()
+
+    await openAdvancedFilters(user)
+    await user.selectOptions(screen.getByLabelText("Prioritet"), "low")
+    expect(screen.getByRole("link", { name: "Fakturan är dubbel" })).toBeInTheDocument()
+    expect(
+      screen.queryByRole("link", { name: "Fakturan stämmer inte" }),
+    ).not.toBeInTheDocument()
+    expect(screen.getByText("Visar 1 ärende")).toBeInTheDocument()
+
+    await user.click(screen.getByRole("button", { name: "Återställ filter" }))
+    expect(search).toHaveValue("FAKTURAN")
+    expect(screen.getByText("Visar 2 ärenden")).toBeInTheDocument()
+
+    await user.clear(search)
+    await user.type(search, "12")
+    expect(screen.getByRole("link", { name: "Fakturan stämmer inte" })).toBeInTheDocument()
+    expect(screen.queryByRole("link", { name: "Sen leverans" })).not.toBeInTheDocument()
+
+    await user.clear(search)
+    await user.type(search, "unikhemlighet")
+    expect(screen.getByText("Inga ärenden matchar")).toBeInTheDocument()
+    expect(screen.getByText("Visar 0 ärenden")).toBeInTheDocument()
+    expect(screen.queryByRole("link", { name: /Fakturan|Sen leverans/ })).not.toBeInTheDocument()
   })
 })
