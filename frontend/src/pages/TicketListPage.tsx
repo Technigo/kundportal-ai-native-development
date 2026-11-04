@@ -124,7 +124,8 @@ function FilterSelect<T extends string>({
   options: Record<T, string>
   onChange: (value: T | "") => void
 }) {
-  const optionLabels = ["Alla", ...Object.values(options)]
+  // Object.values widens a generic Record to unknown[].
+  const optionLabels = ["Alla", ...(Object.values(options) as string[])]
 
   return (
     <Field className="w-full min-w-0 sm:w-max sm:shrink-0">
