@@ -4,6 +4,7 @@ import { Link } from "react-router"
 import type { components, operations } from "@/api/schema"
 import { BACKEND_UNREACHABLE } from "@/api/errors"
 import { CreateTicketForm } from "@/components/create-ticket-form"
+import { TicketPageLayout } from "@/components/ticket-page-layout"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -63,7 +64,7 @@ export function TicketListPage() {
   }, [reload])
 
   return (
-    <div className="flex min-h-svh flex-col gap-6 p-6">
+    <TicketPageLayout>
       <header className="flex items-center justify-between gap-4">
         <h1 className="text-2xl font-bold">Ärenden</h1>
         <CreateTicketForm onCreated={reload} />
@@ -114,6 +115,6 @@ export function TicketListPage() {
           ))}
         </ul>
       )}
-    </div>
+    </TicketPageLayout>
   )
 }
