@@ -2,9 +2,10 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { Link } from "react-router"
 
 import type { components, operations } from "@/api/schema"
+import { BACKEND_UNREACHABLE } from "@/api/errors"
+import { CreateTicketForm } from "@/components/create-ticket-form"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   EmptyState,
@@ -19,8 +20,6 @@ import {
   statusBadgeVariant,
   statusLabel,
 } from "@/labels"
-import { CreateTicketForm } from "@/components/create-ticket-form"
-import { BACKEND_UNREACHABLE } from "@/pages/HealthPage"
 
 // KSP-29: ticket list. CORE-03 keeps the API order. CORE-15 empty list is a message.
 
@@ -67,12 +66,7 @@ export function TicketListPage() {
     <div className="flex min-h-svh flex-col gap-6 p-6">
       <header className="flex items-center justify-between gap-4">
         <h1 className="text-2xl font-bold">Ärenden</h1>
-        <div className="flex items-center gap-3">
-          <CreateTicketForm onCreated={reload} />
-          <Button variant="link" render={<Link to="/health" />}>
-            Systemstatus
-          </Button>
-        </div>
+        <CreateTicketForm onCreated={reload} />
       </header>
       {list.state === "loading" && (
         <div role="status" aria-live="polite" aria-busy="true">

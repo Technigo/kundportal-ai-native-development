@@ -6,7 +6,7 @@ import type {
   TicketPriority,
   TicketStatus,
 } from "@/api/types"
-import { BACKEND_UNREACHABLE } from "@/pages/HealthPage"
+import { BACKEND_UNREACHABLE } from "@/api/errors"
 
 // httpStatus is missing when the backend could not be reached.
 export type TicketResult =
