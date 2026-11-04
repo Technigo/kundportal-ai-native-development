@@ -13,6 +13,7 @@ it('shows API availability separately from MySQL availability', async () => {
   const fetchMock = vi.fn((input: RequestInfo | URL) =>
     Promise.resolve({
       ok: !String(input).endsWith('/health/db'),
+      json: () => Promise.resolve([]),
     } as Response),
   )
   vi.stubGlobal('fetch', fetchMock)
