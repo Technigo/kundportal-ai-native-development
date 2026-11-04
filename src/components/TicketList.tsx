@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Ticket } from "@/db/schema";
 import type { TicketPriority, TicketStatus } from "@/tickets/ticketSchema";
 
@@ -45,7 +46,14 @@ export function TicketList({ tickets }: { tickets: Ticket[] }) {
         <tbody className="divide-y divide-slate-200">
           {tickets.map((ticket) => (
             <tr key={ticket.id}>
-              <td className="px-4 py-3 font-medium text-slate-900">{ticket.subject}</td>
+              <td className="px-4 py-3 font-medium text-slate-900">
+                <Link
+                  href={`/tickets/${ticket.id}`}
+                  className="underline hover:text-slate-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                >
+                  {ticket.subject}
+                </Link>
+              </td>
               <td className="px-4 py-3 text-slate-700">{ticket.requesterName}</td>
               <td className="px-4 py-3">
                 <span className={`rounded-full px-2 py-1 text-xs font-medium ${statusStyles[ticket.status]}`}>

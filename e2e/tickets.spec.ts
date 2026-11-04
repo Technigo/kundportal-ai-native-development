@@ -10,6 +10,37 @@ test("lists all tickets with their requester, newest first", async ({ page }) =>
   await expect(rows.nth(3)).toContainText("Add a second user to our account");
 });
 
+test("opens a ticket from the list, shows its details and goes back", async ({ page }) => {
+  await page.goto("/tickets");
+  await page.getByRole("link", { name: "Invoice shows the wrong VAT rate" }).click();
+
+  await expect(page).toHaveURL(/\/tickets\/\d+$/);
+  const details = page.getByRole("article");
+  await expect(details.getByRole("heading", { level: 1, name: "Invoice shows the wrong VAT rate" })).toBeVisible();
+  await expect(details.getByText("Anna Berg")).toBeVisible();
+  await expect(details.getByText("anna.berg@example.com")).toBeVisible();
+  await expect(details.getByText("Invoice 2026-0912 uses 25% instead of 12%.")).toBeVisible();
+
+  await page.getByRole("link", { name: "Back to tickets" }).click();
+  await expect(page).toHaveURL("/tickets");
+});
+
+for (const id of ["99999", "abc"]) {
+  test(`redirects from /tickets/${id} to the list with a message`, async ({ page }) => {
+    await page.goto(`/tickets/${id}`);
+
+    await expect(page).toHaveURL("/tickets?notice=ticket-not-found");
+    await expect(page.getByRole("status")).toHaveText("This ticket does not exist.");
+    await expect(page.getByRole("table")).toBeVisible();
+  });
+}
+
+test("shows no message for an unknown notice code", async ({ page }) => {
+  await page.goto("/tickets?notice=something-else");
+
+  await expect(page.getByRole("status")).toHaveCount(0);
+});
+
 test("shows a validation error and keeps the input when the subject is too short", async ({ page }) => {
   await page.goto("/tickets/new");
   await page.getByLabel("Requester name").fill("Ada Lovelace");
