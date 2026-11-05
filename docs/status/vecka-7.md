@@ -27,7 +27,7 @@ Teamets plan för veckan (enligt Linear):
 | Mutationsprövning, egna och korsvis | KSP-43, KSP-44 | Azalea, Nicklas |
 | Teamets AI-arbetsflöde och det återanvändbara momentet (instruktionen för testförslag) | KSP-60 | Azalea |
 | Utvärdering av arbetssättet och misstagsloggarna | KSP-62 | Nicklas |
-| Kända begränsningar, risker och vidareutveckling | KSP-61 | *ingen ägare än* |
+| Kända begränsningar, risker och vidareutveckling | KSP-61 | Azalea samordnar, alla fyller i sin del |
 | Veckostatus V7 | KSP-54 | Azalea |
 
 ## Läget måndag
@@ -46,7 +46,7 @@ Teamets plan för veckan (enligt Linear):
 | 1. Historiken integrerad och kontrollerad med resten | **Pågår.** Backenden är klar: HIST-04 (kvar efter omstart), HIST-09 (inget ändras om historikposten inte kan sparas) och HIST-10 (ett ärende som inte kan skapas lämnar ingen historik) är gröna, 192 passed. Formuläret och statusbytet i UI är mergade (#64, #65). I UI saknas fortfarande tidslinjen (HIST-05, KSP-37) och felmeddelandena (UI-delen av HIST-14, KSP-38) |
 | 2. Längre agentarbete med kontrollpunkter och hinder | **Klart.** PR #77 (HIST-09 rollback och 503): https://github.com/desiboli/kundportal-ai-native-development/pull/77, godkänd av Nicklas och mergad 2026-11-03 |
 | 3. Återkommande AI-stött moment, återanvändbart | **Klart.** `docs/ai/arbetssatt.md` beskriver flödet och momentet (PR #79 (teamets AI-arbetsflöde): https://github.com/desiboli/kundportal-ai-native-development/pull/79). Instruktionen v2-azalea användes i KSP-40 och KSP-66 |
-| 4. Specar, verifiering och kända begränsningar uppdaterade | **Delvis.** HIST-specen v0.10, verifieringsplanen och ADR-001 är uppdaterade (#81, #82, #95, #96). Dokumentet om kända begränsningar (KSP-61) saknas och har ingen ägare |
+| 4. Specar, verifiering och kända begränsningar uppdaterade | **Delvis.** HIST-specen v0.10, verifieringsplanen och ADR-001 är uppdaterade (#81, #82, #95, #96). Ett utkast till dokumentet om kända begränsningar (KSP-61) ligger i PR #98 (kända begränsningar, risker och vidareutveckling): https://github.com/desiboli/kundportal-ai-native-development/pull/98. Azalea samordnar, och var och en fyller i sin del |
 
 ## Genomfört
 
@@ -56,7 +56,6 @@ Teamets plan för veckan (enligt Linear):
 | Testinstruktion v2-azalea: sparning och atomicitet (KSP-50) | Azalea | PR #68 (testinstruktion v2-azalea): https://github.com/desiboli/kundportal-ai-native-development/pull/68 · godkänd av Nicklas, mergad 2026-11-02 |
 | Veckostatus V6, slutversionen (KSP-53) | Azalea | PR #69 (veckostatus V6, slutversionen): https://github.com/desiboli/kundportal-ai-native-development/pull/69 · godkänd av Nicklas, mergad 2026-11-02 |
 | Misstagslogg för Azaleas AI-agent, `docs/ai/misstag-azalea.md` (KSP-62) | Azalea | PR #70 (misstagslogg för Azaleas AI-agent): https://github.com/desiboli/kundportal-ai-native-development/pull/70 · mergad 2026-11-02 |
-
 | Formulär för att skapa ärende (KSP-30) | Mustafa | PR #64 (formulär för att skapa ärende): https://github.com/desiboli/kundportal-ai-native-development/pull/64 · mergad 2026-11-03 |
 | Statusbyte i detaljvyn (KSP-32) | Amalia | PR #65 (statusbyte i detaljvyn): https://github.com/desiboli/kundportal-ai-native-development/pull/65 · mergad 2026-11-03 |
 | Statusraderna gröna, ADR-002 och felmeddelanden i CORE-specen (KSP-27) | Nicklas | PR #71 (statusraderna gröna och ADR-002): https://github.com/desiboli/kundportal-ai-native-development/pull/71 · mergad 2026-11-02 |
@@ -70,6 +69,12 @@ Teamets plan för veckan (enligt Linear):
 | HIST-09 grön i verifieringsplanen och ADR-001 prövad (KSP-41, KSP-48, KSP-8) | Azalea | PR #81 (HIST-09 grön i verifieringsplanen): https://github.com/desiboli/kundportal-ai-native-development/pull/81 · PR #82 (ADR-001 prövad): https://github.com/desiboli/kundportal-ai-native-development/pull/82 · PR #95 (rad 5 fångad): https://github.com/desiboli/kundportal-ai-native-development/pull/95 · mergade 2026-11-04 |
 | Omstartstesterna för HIST-04 (KSP-40) | Azalea | PR #93 (HIST-04 status och historik efter omstart): https://github.com/desiboli/kundportal-ai-native-development/pull/93 · godkänd av Nicklas, mergad 2026-11-04 |
 | Rollback i `TicketService.create`, HIST-10, och kontroll för hand av HIST-14 (KSP-66, KSP-48) | Azalea | PR #96 (rollback i TicketService.create): https://github.com/desiboli/kundportal-ai-native-development/pull/96 · godkänd av Nicklas, mergad 2026-11-04 |
+| Tydligare struktur och överlämning i `AGENTS.md` (KSP-71) | Mustafa | PR #85 (tydliggör AGENTS.md): https://github.com/desiboli/kundportal-ai-native-development/pull/85 · mergad 2026-11-03 |
+| BOLDkit byter från Coral-preset till Purple-preset (KSP-72) | Mustafa | PR #91 (Purple-preset): https://github.com/desiboli/kundportal-ai-native-development/pull/91 · mergad 2026-11-03 |
+| Körresultat för komponenttesterna: teckenräkning med emoji, statusbytet och hela vitestsviten (KSP-69, KSP-70, KSP-68) | Mustafa | PR #88 (teckenräkning med emoji): https://github.com/desiboli/kundportal-ai-native-development/pull/88 · PR #89 (statusbytets komponenttester): https://github.com/desiboli/kundportal-ai-native-development/pull/89 · PR #90 (hela vitestsviten): https://github.com/desiboli/kundportal-ai-native-development/pull/90 · mergade 2026-11-04 |
+| Systemstatus-knappen och sidan `/health` borttagna ur UI (KSP-73) | Mustafa | PR #92 (ta bort Systemstatus-knappen och /health): https://github.com/desiboli/kundportal-ai-native-development/pull/92 · mergad 2026-11-04 |
+| Statusformuläret utan egen centrering (KSP-32) | Amalia | PR #100 (statusformulärets centrering): https://github.com/desiboli/kundportal-ai-native-development/pull/100 · mergad 2026-11-04 |
+
 ## Verifierat
 
 - **KSP-41 (testerna för HIST-09), testerna först:** sju tester i `backend/tests/test_atomicity.py`
@@ -107,9 +112,9 @@ Teamets plan för veckan (enligt Linear):
 | Tidslinjen och felmeddelandena i UI (KSP-37, KSP-38) | Inte påbörjade. Utan dem syns historiken inte i UI, vilket är förväntning 1 och demon | Amalia. Behöver komma igång i veckan |
 | ~~Formuläret i UI, PR #64 (KSP-30)~~ | Mergad 2026-11-03 | Klart |
 | Databasfel som ger 503 loggas inte | Orsaken sparas i felkedjan men skrivs aldrig ut (upptäckt i KSP-36) | Känd begränsning, till KSP-61 |
-| Varning från Base UI i frontendtesterna: länken "Systemstatus" i ärendelistan är en `Button` som renderas som `Link` (`render={<Link …/>}`), så knappens semantik försvinner | Finns på `main` sedan ärendelistan (KSP-29). Syntes när Azalea körde testerna för PR #64 (formuläret) 2026-11-02. Blockerar inte, men påverkar tillgängligheten | Mustafa (listan) eller Amalia (UI och tillgänglighet), frågat i Slack |
+| ~~Varning från Base UI i frontendtesterna: länken "Systemstatus" i ärendelistan är en `Button` som renderas som `Link` (`render={<Link …/>}`), så knappens semantik försvinner~~ | Länken togs bort med Systemstatus-sidan i PR #92 (KSP-73): https://github.com/desiboli/kundportal-ai-native-development/pull/92 | Klart |
 | ~~`create` gör `commit` utan `rollback`~~ | Löst i KSP-66, PR #96 (rollback i TicketService.create): https://github.com/desiboli/kundportal-ai-native-development/pull/96 | Klart |
-| KSP-61 (kända begränsningar) saknar fortfarande ägare | Krävs i gruppens underlag till slutleveransen 2026-11-13 | Fördelas på nästa möte |
+| KSP-61 (kända begränsningar) är ett utkast | Krävs i gruppens underlag till slutleveransen 2026-11-13. Utkastet i PR #98 har backend och testerna, och de andras delar saknas | Azalea samordnar, var och en fyller i sin del i #98 |
 
 ## Nästa steg
 
@@ -118,5 +123,5 @@ Teamets plan för veckan (enligt Linear):
 | Tidslinjen och felmeddelandena i UI (HIST-05, KSP-37, KSP-38) | Amalia |
 | Länkar i Technigo#2 till vecka 7 och `docs/ai/arbetssatt.md` (KSP-54, KSP-60), och krav på grön CI i rulesetet (KSP-17) | Mustafa |
 | Följa README på egen dator (KSP-19) | Nicklas eller Mustafa |
-| Kända begränsningar, risker och vidareutveckling (KSP-61) | Fördelas |
+| Kända begränsningar, risker och vidareutveckling (KSP-61): var och en fyller i sin del i PR #98 | Azalea samordnar, alla |
 | Sammanfattningen av utvärderingen, PR #57 (KSP-62) | Nicklas, när alla har svarat |
