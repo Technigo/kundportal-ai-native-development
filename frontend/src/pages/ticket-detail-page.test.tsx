@@ -1,4 +1,5 @@
-import { act, render, screen } from "@testing-library/react"
+import { act, render, screen, within } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
 import { createMemoryRouter, RouterProvider } from "react-router"
 import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest"
 
@@ -46,11 +47,19 @@ function fakeBackend(): Mock {
   })
 }
 
+const LINK_BACK = "Tillbaka till ärendelistan"
+const LIST_STAND_IN = "Ärendelistan (ersättare i testet)"
+
 // Renders the page on its route, as in App.tsx (KSP-31 AC5: /tickets/{id} with react-router).
+// The list is a stand-in, so a test can see that a link leads there.
 function renderAt(path: string) {
-  const router = createMemoryRouter([{ path: "/tickets/:id", element: <TicketDetailPage /> }], {
-    initialEntries: [path],
-  })
+  const router = createMemoryRouter(
+    [
+      { path: "/", element: <p>{LIST_STAND_IN}</p> },
+      { path: "/tickets/:id", element: <TicketDetailPage /> },
+    ],
+    { initialEntries: [path] },
+  )
   render(<RouterProvider router={router} />)
   return router
 }
@@ -177,5 +186,41 @@ describe("TicketDetailPage", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Något gick fel. Försök igen.")
     expect(screen.queryByText("Kategori")).not.toBeInTheDocument()
+  })
+
+  // KSP-38 AC4: a ticket that does not exist (CORE-10, 404) shows a link back to the list
+  // inside the error message. The header link (KSP-75) does not count, so the link is
+  // looked for within the alert. Only for 404: after a 500 the advice is to try again.
+  it("KSP-38: unknown ticket shows a link back to the list in the alert", async () => {
+    renderAt("/tickets/999")
+
+    const alert = await screen.findByRole("alert")
+    expect(alert).toHaveTextContent("Ärendet finns inte.")
+    expect(within(alert).getByRole("link", { name: LINK_BACK })).toHaveAttribute("href", "/")
+  })
+
+  it("KSP-38: non-integer id shows the same link back", async () => {
+    // B8: the API answers 404 for "abc" too, so the page must not decide by the id.
+    renderAt("/tickets/abc")
+
+    const alert = await screen.findByRole("alert")
+    expect(within(alert).getByRole("link", { name: LINK_BACK })).toHaveAttribute("href", "/")
+  })
+
+  it("KSP-38: the link back opens the ticket list", async () => {
+    const router = renderAt("/tickets/999")
+
+    await userEvent.click(await screen.findByRole("link", { name: LINK_BACK }))
+
+    expect(await screen.findByText(LIST_STAND_IN)).toBeInTheDocument()
+    expect(router.state.location.pathname).toBe("/")
+  })
+
+  it("KSP-38: server error shows no link back", async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ detail: "Något gick fel. Försök igen." }, 500))
+    renderAt("/tickets/5")
+
+    await screen.findByRole("alert")
+    expect(screen.queryByRole("link", { name: LINK_BACK })).not.toBeInTheDocument()
   })
 })
