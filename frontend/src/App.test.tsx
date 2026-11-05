@@ -21,7 +21,11 @@ describe("Ticket list when the backend cannot be reached", () => {
       </MemoryRouter>,
     )
 
-    expect(await screen.findByText(/Kunde inte nå backenden/)).toBeInTheDocument()
+    // KSP-38 (F1): the text is for a case worker, without technical words (K1).
+    // Written out here on purpose: the other tests import the constant.
+    expect(
+      await screen.findByText("Kundserviceportalen svarar inte just nu. Försök igen om en stund."),
+    ).toBeInTheDocument()
     expect(await axe(container)).toHaveNoViolations()
   })
 })
