@@ -1,6 +1,6 @@
 # UI-design och tillgänglighet
 
-Gränssnittet följer det valda designförslaget: **Förslag 1, lista + detaljpanel, i Gröna Lund-tema** ([docs/design/forslag-1-gronalund.png](../../../../docs/design/forslag-1-gronalund.png)). Alla färgpar nedan är kontrollerade mot WCAG 2.1 AA (4,5:1 för text, 3:1 för kanter på kontroller). Ändra inte en färg utan att kontrollera kontrasten igen.
+Gränssnittet följer det valda designförslaget: **Förslag 1, lista + detaljpanel, i Jiriga-tema** ([docs/design/forslag-1-jiriga.png](../../../../docs/design/forslag-1-jiriga.png)). Alla färgpar nedan är kontrollerade mot WCAG 2.1 AA (4,5:1 för text, 3:1 för kanter på kontroller). Ändra inte en färg utan att kontrollera kontrasten igen.
 
 ## Layout
 
@@ -28,7 +28,7 @@ Gränssnittet följer det valda designförslaget: **Förslag 1, lista + detaljpa
   --color-text-muted: #5f6157;    /* ID, datum, tabellrubriker, Låg */
 
   /* Varumärke */
-  --color-primary: #006649;       /* Gröna Lund-grön: primärknapp, aktivt filter, rubriker */
+  --color-primary: #006649;       /* Jiriga-grön: primärknapp, aktivt filter, rubriker */
   --color-primary-hover: #004a35;
   --color-primary-soft: #dcf2ec;  /* aktivt menyval */
   --color-accent: #b8336a;        /* rosa: logotyp */
