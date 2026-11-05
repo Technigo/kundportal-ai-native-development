@@ -25,6 +25,13 @@ test("opens a ticket from the list, shows its details and goes back", async ({ p
   await expect(page).toHaveURL("/tickets");
 });
 
+test("sets the page title from the ticket subject", async ({ page }) => {
+  await page.goto("/tickets");
+  await page.getByRole("link", { name: "Invoice shows the wrong VAT rate" }).click();
+
+  await expect(page).toHaveTitle("Invoice shows the wrong VAT rate · Kundserviceportalen");
+});
+
 for (const id of ["99999", "abc"]) {
   test(`redirects from /tickets/${id} to the list with a message`, async ({ page }) => {
     await page.goto(`/tickets/${id}`);
