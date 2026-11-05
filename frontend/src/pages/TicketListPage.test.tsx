@@ -53,6 +53,30 @@ describe("Ticket list", () => {
     expectNoTechnicalWords(document.body)
   })
 
+  // TC7 in KSP-45 (KSP-38 AC2, added by Amalia): a 500 shows the message from the API,
+  // not the empty list.
+  it("TC7: list server error shows the message from the API", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+        json: async () => ({ detail: "Något gick fel. Försök igen." }),
+      }),
+    )
+    render(
+      <MemoryRouter>
+        <TicketListPage />
+      </MemoryRouter>,
+    )
+
+    const alert = await screen.findByRole("alert")
+    expect(alert).toHaveTextContent("Något gick fel. Försök igen.")
+    expectNoTechnicalWords(alert)
+    expect(screen.queryByText("Inga ärenden än")).not.toBeInTheDocument()
+    expect(screen.queryByRole("listitem")).not.toBeInTheDocument()
+  })
+
   // CORE-03: the list shows tickets in the order the API returns.
   it("test_core03_keeps_the_order_from_the_api", async () => {
     const newer = ticket({

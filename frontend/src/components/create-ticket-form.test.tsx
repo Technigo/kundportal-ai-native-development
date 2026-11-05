@@ -1,5 +1,6 @@
 import { render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
+import { axe } from "jest-axe"
 import { MemoryRouter } from "react-router"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
@@ -172,6 +173,41 @@ describe("Create ticket form", () => {
     const alert = await within(dialog).findByRole("alert")
     expect(alert).toHaveTextContent(BACKEND_UNREACHABLE)
     expectNoTechnicalWords(alert)
+  })
+
+  // TC7 in KSP-45 (KSP-38 AC2, added by Amalia): a 500 shows the message from the API in the
+  // dialog, and the dialog stays open as when nothing was created.
+  it("TC7: form server error shows the message from the API", async () => {
+    const user = userEvent.setup()
+    mockApi(() => json(500, { detail: "Något gick fel. Försök igen." }))
+    await openForm(user)
+    await user.type(screen.getByLabelText("Rubrik"), TITLE)
+    await user.type(screen.getByLabelText("Beskrivning"), DESCRIPTION)
+    await chooseCodes(user)
+
+    await user.click(screen.getByRole("button", { name: "Registrera ärende" }))
+
+    const dialog = screen.getByRole("dialog", { name: "Nytt ärende" })
+    const alert = await within(dialog).findByRole("alert")
+    expect(alert).toHaveTextContent("Något gick fel. Försök igen.")
+    expectNoTechnicalWords(alert)
+    expect(dialog).toBeInTheDocument()
+  })
+
+  // TC5 in KSP-45 (KSP-38 AC3, R4, added by Amalia): the dialog with an error message has no
+  // accessibility errors. jsdom cannot compute colours, so contrast is checked by hand.
+  it("TC5: form error has no accessibility errors", async () => {
+    const user = userEvent.setup()
+    mockApi(() => errorResponse("Rubrik måste fyllas i."))
+    await openForm(user)
+    await user.type(screen.getByLabelText("Beskrivning"), DESCRIPTION)
+    await chooseCodes(user)
+
+    await user.click(screen.getByRole("button", { name: "Registrera ärende" }))
+
+    const dialog = screen.getByRole("dialog", { name: "Nytt ärende" })
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent("Rubrik måste fyllas i.")
+    expect(await axe(dialog)).toHaveNoViolations()
   })
 
   // CORE-06: an empty title is sent, and the API message is shown unchanged inside the dialog.

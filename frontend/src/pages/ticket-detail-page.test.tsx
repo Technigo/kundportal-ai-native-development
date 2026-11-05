@@ -1,5 +1,6 @@
 import { act, render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
+import { axe } from "jest-axe"
 import { createMemoryRouter, RouterProvider } from "react-router"
 import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest"
 
@@ -242,6 +243,15 @@ describe("TicketDetailPage", () => {
 
     expect(await screen.findByText(LIST_STAND_IN)).toBeInTheDocument()
     expect(router.state.location.pathname).toBe("/")
+  })
+
+  // TC5 in KSP-45 (KSP-38 AC3, R4): the 404 message with the link has no accessibility errors.
+  // jsdom cannot compute colours, so contrast is checked by hand (docs/verifiering.md).
+  it("TC5: unknown ticket with link back has no accessibility errors", async () => {
+    renderAt("/tickets/999")
+
+    await screen.findByRole("link", { name: LINK_BACK })
+    expect(await axe(document.body)).toHaveNoViolations()
   })
 
   it("KSP-38: server error shows no link back", async () => {

@@ -126,6 +126,7 @@ avsnitt 4 med "för hand" i kolumnen Typ.
 - [ ] En rubrik på 101 tecken ger "Rubriken får vara högst 100 tecken." (CORE-12).
 - [ ] En rubrik med å, ä, ö och emoji sparas och visas oförändrad (CORE-14).
 - [ ] Meddelandena går att förstå utan att veta hur systemet fungerar (CORE-16, HIST-14).
+- [ ] Texten i felmeddelandet (röd `Alert`, variant `destructive`) har kontrast minst 4.5:1 mot bakgrunden, i ljust och mörkt läge. Kontrolleras med webbläsarens verktyg, eftersom jest-axe i jsdom inte kan räkna ut färger (TC5 i KSP-45, felmeddelanden i UI). Detsamma gäller länken "Tillbaka till ärendelistan" (KSP-38).
 
 **Omstart**
 

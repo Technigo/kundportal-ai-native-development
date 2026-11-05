@@ -28,20 +28,22 @@ export function TicketDetails({
       </CardHeader>
 
       <CardContent className="flex flex-col gap-6">
-        <dl className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-          <div className="flex flex-col gap-4">
+        {/* One <dl> per column: a <dl> may only hold <dt>/<dd> groups wrapped in one <div>
+            (axe: definition-list, dlitem; found by TC5 in KSP-45). */}
+        <div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
+          <dl className="flex flex-col gap-4">
             <Field label="Kategori">{categoryLabel(ticket.category)}</Field>
             <Field label="Skapad">
               <time dateTime={ticket.created_at}>{formatLocalDateTime(ticket.created_at)}</time>
             </Field>
-          </div>
-          <div className="flex flex-col gap-4">
+          </dl>
+          <dl className="flex flex-col gap-4">
             <Field label="Status" labelId={statusLabelId}>
               <TicketStatusForm ticket={ticket} labelId={statusLabelId} onChanged={onStatusSaved} />
             </Field>
             <Field label="Prioritet">{priorityLabel(ticket.priority)}</Field>
-          </div>
-        </dl>
+          </dl>
+        </div>
 
         <div className="flex flex-col gap-1 text-sm">
           <h2 className="text-xs font-bold tracking-wide text-muted-foreground uppercase">Beskrivning</h2>
