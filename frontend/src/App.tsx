@@ -51,7 +51,7 @@ function App() {
       <aside className="sidebar">
         <div className="brand">
           <span className="logo" aria-hidden="true">
-            GL
+            J
           </span>
           <span>Kundservice</span>
         </div>
