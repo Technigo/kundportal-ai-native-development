@@ -7,6 +7,7 @@ import type { TicketDraft } from "@/api/tickets"
 import type { Ticket, TicketCreate } from "@/api/types"
 import { BACKEND_UNREACHABLE } from "@/api/errors"
 import { TicketListPage } from "@/pages/TicketListPage"
+import { expectNoTechnicalWords } from "@/test/technical-words"
 
 // KSP-30: create-ticket dialog. The API owns validation; the form shows detail unchanged.
 
@@ -151,6 +152,26 @@ describe("Create ticket form", () => {
     renderPage()
 
     expect(await screen.findByRole("heading", { name: TITLE })).toBeInTheDocument()
+  })
+
+  // K1 point 1 (KSP-38, added by Amalia): a network error when creating shows the Swedish
+  // text only, never the browser's own error.
+  it("K1: form network error shows no technical words", async () => {
+    const user = userEvent.setup()
+    mockApi(() => {
+      throw new TypeError("Failed to fetch")
+    })
+    await openForm(user)
+    await user.type(screen.getByLabelText("Rubrik"), TITLE)
+    await user.type(screen.getByLabelText("Beskrivning"), DESCRIPTION)
+    await chooseCodes(user)
+
+    await user.click(screen.getByRole("button", { name: "Registrera ärende" }))
+
+    const dialog = screen.getByRole("dialog", { name: "Nytt ärende" })
+    const alert = await within(dialog).findByRole("alert")
+    expect(alert).toHaveTextContent(BACKEND_UNREACHABLE)
+    expectNoTechnicalWords(alert)
   })
 
   // CORE-06: an empty title is sent, and the API message is shown unchanged inside the dialog.

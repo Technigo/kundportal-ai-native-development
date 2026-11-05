@@ -3,6 +3,7 @@ import { Link } from "react-router"
 
 import type { components, operations } from "@/api/schema"
 import { BACKEND_UNREACHABLE } from "@/api/errors"
+import { errorDetail } from "@/api/tickets"
 import { CreateTicketForm } from "@/components/create-ticket-form"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
@@ -26,7 +27,6 @@ import {
 type Ticket = components["schemas"]["Ticket"]
 type TicketListBody =
   operations["list_tickets_tickets_get"]["responses"][200]["content"]["application/json"]
-type ErrorBody = components["schemas"]["ErrorResponse"]
 
 type ListState =
   | { state: "loading" }
@@ -40,8 +40,8 @@ async function fetchTickets(): Promise<ListState> {
       const tickets = (await response.json()) as TicketListBody
       return { state: "ok", tickets }
     }
-    const data = (await response.json()) as ErrorBody
-    return { state: "error", message: data.detail }
+    // KSP-38 R3: without a readable detail the shared Swedish text is shown, never an empty alert.
+    return { state: "error", message: (await errorDetail(response)) ?? BACKEND_UNREACHABLE }
   } catch {
     return { state: "error", message: BACKEND_UNREACHABLE }
   }

@@ -32,18 +32,29 @@ function requestBody(draft: TicketDraft): { [K in keyof TicketCreate]: TicketDra
   }
 }
 
+// The detail of an error answer, or null when the answer has none: not JSON, or JSON
+// without a detail string (R3 in KSP-38). The ticket list uses it too.
+export async function errorDetail(response: Response): Promise<string | null> {
+  try {
+    const body = (await response.json()) as Partial<ErrorResponse> | null
+    return typeof body?.detail === "string" && body.detail !== "" ? body.detail : null
+  } catch {
+    return null
+  }
+}
+
 // Ticket endpoints answer with the ticket, or with {"detail": "<Swedish message>"} on
-// errors (KSP-31 AC7). The detail is shown as it is.
+// errors (KSP-31 AC7). The detail is shown as it is. Without a readable detail, or when the
+// backend cannot be reached, the shared Swedish text is shown instead (KSP-38 AC2).
 async function toTicketResult(request: Promise<Response>): Promise<TicketResult> {
   try {
     const response = await request
     if (response.ok) {
       return { state: "ok", ticket: (await response.json()) as Ticket }
     }
-    const error = (await response.json()) as ErrorResponse
-    return { state: "error", message: error.detail, httpStatus: response.status }
+    const detail = await errorDetail(response)
+    return { state: "error", message: detail ?? BACKEND_UNREACHABLE, httpStatus: response.status }
   } catch {
-    // Same text as the ticket list until the error messages in the UI are decided (KSP-38).
     return { state: "error", message: BACKEND_UNREACHABLE }
   }
 }

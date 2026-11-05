@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vite
 
 import type { Ticket } from "@/api/types"
 import { BACKEND_UNREACHABLE } from "@/api/errors"
+import { expectNoTechnicalWords } from "@/test/technical-words"
 import { TicketDetailPage } from "./ticket-detail-page"
 
 // Made-up tickets, never real customer data.
@@ -178,6 +179,33 @@ describe("TicketDetailPage", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent(BACKEND_UNREACHABLE)
     expect(document.body).not.toHaveTextContent(/Failed to fetch/)
+    expectNoTechnicalWords(document.body)
+  })
+
+  // K1 point 1 and R3 (KSP-38): an answer that is not JSON, for example an HTML page from
+  // the proxy when it cannot reach the backend, shows the shared Swedish text.
+  it("K1: non-JSON error answer shows the shared message", async () => {
+    fetchMock.mockResolvedValue(
+      new Response("<html><body>Bad Gateway</body></html>", {
+        status: 502,
+        headers: { "Content-Type": "text/html" },
+      }),
+    )
+    renderAt("/tickets/5")
+
+    const alert = await screen.findByRole("alert")
+    expect(alert).toHaveTextContent(BACKEND_UNREACHABLE)
+    expect(document.body).not.toHaveTextContent(/Bad Gateway/)
+    expectNoTechnicalWords(document.body)
+  })
+
+  // R3: JSON without a detail string is not a readable answer either. The alert must not
+  // be empty.
+  it("K1: error answer without detail shows the shared message", async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ error: "x" }, 500))
+    renderAt("/tickets/5")
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(BACKEND_UNREACHABLE)
   })
 
   it("HIST-14: server error shows the detail from the API in an alert", async () => {

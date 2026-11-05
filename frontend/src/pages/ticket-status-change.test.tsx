@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vite
 
 import type { Ticket, TicketStatus } from "@/api/types"
 import { BACKEND_UNREACHABLE } from "@/api/errors"
+import { expectNoTechnicalWords } from "@/test/technical-words"
 import { TicketDetailPage } from "./ticket-detail-page"
 
 // Status change in the detail view (KSP-32). HIST-02, 06, 07 and 13 are the rules in the API;
@@ -278,9 +279,27 @@ describe("Status change in the detail view", () => {
     await user.selectOptions(select, "Avslutat")
     await user.click(saveButton())
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(BACKEND_UNREACHABLE)
+    const alert = await screen.findByRole("alert")
+    expect(alert).toHaveTextContent(BACKEND_UNREACHABLE)
     expect(document.body).not.toHaveTextContent(/Failed to fetch/)
+    expectNoTechnicalWords(alert)
     expect(select).toBeInTheDocument()
     expect(select).toHaveDisplayValue("Pågående")
+  })
+
+  // K1 point 1 (KSP-38): the message from the API is shown without the status code.
+  it("K1: status error shows no status code", async () => {
+    const user = userEvent.setup()
+    patchAnswer.current = async () =>
+      jsonResponse({ detail: "Statusen kunde inte ändras. Försök igen." }, 503)
+    renderAt("/tickets/5")
+    const select = await openEditor(user)
+
+    await user.selectOptions(select, "Avslutat")
+    await user.click(saveButton())
+
+    const alert = await screen.findByRole("alert")
+    expect(alert).toHaveTextContent("Statusen kunde inte ändras. Försök igen.")
+    expectNoTechnicalWords(alert)
   })
 })

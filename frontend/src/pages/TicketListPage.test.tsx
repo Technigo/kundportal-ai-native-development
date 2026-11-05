@@ -3,7 +3,9 @@ import { MemoryRouter } from "react-router"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import type { components } from "@/api/schema"
+import { BACKEND_UNREACHABLE } from "@/api/errors"
 import { formatLocalDateTime } from "@/lib/format"
+import { expectNoTechnicalWords } from "@/test/technical-words"
 
 import { TicketListPage } from "./TicketListPage"
 
@@ -35,6 +37,20 @@ function mockTickets(tickets: Ticket[]) {
 describe("Ticket list", () => {
   afterEach(() => {
     vi.unstubAllGlobals()
+  })
+
+  // K1 point 1 (KSP-38, added by Amalia): a network error shows the Swedish text only,
+  // never the browser's own error.
+  it("K1: list network error shows no technical words", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("Failed to fetch")))
+    render(
+      <MemoryRouter>
+        <TicketListPage />
+      </MemoryRouter>,
+    )
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(BACKEND_UNREACHABLE)
+    expectNoTechnicalWords(document.body)
   })
 
   // CORE-03: the list shows tickets in the order the API returns.
