@@ -117,7 +117,39 @@
       }
 
       /* ===== DEL 3 – CSS för registreringsformuläret: lägg till här ===== */
-
+      #new-case-form {
+        max-width: 32rem;
+      }
+      .form-row {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 0.75rem;
+      }
+      .form-row label {
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+      }
+      .form-row input,
+      .form-row select,
+      .form-row textarea {
+        font: inherit;
+        padding: 0.4rem 0.6rem;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+      }
+      .submit-btn {
+        font: inherit;
+        padding: 0.5rem 1.2rem;
+        border: 0;
+        border-radius: 6px;
+        background: var(--accent);
+        color: #fff;
+        cursor: pointer;
+      }
+      .submit-btn:disabled {
+        opacity: 0.6;
+        cursor: wait;
+      }
       /* ===== DEL 4 – CSS för lista, detalj, status och redigering: lägg till här ===== */
       .case-table-wrap {
         overflow-x: auto;
@@ -159,9 +191,39 @@
       <!-- ===== DEL 3: Registrera ärende (AK1–AK8) ===== -->
       <section id="view-new" data-view="new" aria-labelledby="h-new" hidden>
         <h2 id="h-new">Registrera nytt ärende</h2>
-        <p class="placeholder">
-          Inte byggt ännu. Ägs av Del 3 (formulär för AK1–AK8).
-        </p>
+        <form id="new-case-form" novalidate>
+          <div class="form-row">
+            <label for="f-rubrik">Rubrik</label>
+            <input id="f-rubrik" name="rubrik" type="text" />
+            <span class="field-error" data-error-for="rubrik"></span>
+          </div>
+          <div class="form-row">
+            <label for="f-beskrivning">Beskrivning</label>
+            <textarea id="f-beskrivning" name="beskrivning" rows="5"></textarea>
+            <span class="field-error" data-error-for="beskrivning"></span>
+          </div>
+          <div class="form-row">
+            <label for="f-kategori">Kategori</label>
+            <select id="f-kategori" name="kategori"></select>
+            <span class="field-error" data-error-for="kategori"></span>
+          </div>
+          <div class="form-row">
+            <label for="f-prioritet">Prioritet</label>
+            <select id="f-prioritet" name="prioritet"></select>
+            <span class="field-error" data-error-for="prioritet"></span>
+          </div>
+          <div class="form-row">
+            <label for="f-status">Status</label>
+            <select id="f-status" name="status"></select>
+            <span class="field-error" data-error-for="status"></span>
+          </div>
+          <div class="form-row">
+            <label for="f-deadline">Deadline</label>
+            <input id="f-deadline" name="deadline" type="date" />
+            <span class="field-error" data-error-for="deadline"></span>
+          </div>
+          <button type="submit" class="submit-btn">Registrera</button>
+        </form>
         <!--
         Kontrakt för formuläret:
           - fältnamn (name=…): rubrik, beskrivning, kategori, prioritet, status, deadline
@@ -302,12 +364,75 @@
        Ägare: se docs/ARBETSFORDELNING.md. Rör bara det här blocket.
        ================================================================ */
 
-      function initNewCaseView() {
-        // TODO Del 3: bygg formuläret, koppla "Registrera" till api('POST', '/api/arenden', …),
-        //             visa showFieldErrors(form, res.data.faltfel) vid fel och bekräftelse vid lyckat svar.
+       function fillSelect(select, values) {
+        const empty = document.createElement("option");
+        empty.value = "";
+        empty.textContent = "Välj…";
+        select.append(empty);
+        for (const value of values) {
+          const option = document.createElement("option");
+          option.value = String(value);
+          option.textContent = String(value);
+          select.append(option);
+        }
       }
+
+      function initNewCaseView() {
+        const form = document.getElementById("new-case-form");
+        fillSelect(
+          form.querySelector('[name="kategori"]'),
+          PORTAL_CONFIG.KATEGORIER,
+        );
+        fillSelect(
+          form.querySelector('[name="prioritet"]'),
+          PORTAL_CONFIG.PRIORITETER,
+        );
+        fillSelect(
+          form.querySelector('[name="status"]'),
+          PORTAL_CONFIG.STATUSAR,
+        );
+        form.addEventListener("submit", onSubmitNewCase);
+      }
+
+      async function onSubmitNewCase(event) {
+        event.preventDefault();
+        const form = event.currentTarget;
+        const button = form.querySelector('button[type="submit"]');
+        const value = (name) => form.querySelector(`[name="${name}"]`).value;
+
+        // Allt skickas som användaren skrev det. Servern avgör vad som är giltigt.
+        // Prioritet skickas som tal (docs/API.md), men ett tomt val skickas tomt.
+        const data = {
+          rubrik: value("rubrik"),
+          beskrivning: value("beskrivning"),
+          kategori: value("kategori"),
+          prioritet: value("prioritet") === "" ? "" : Number(value("prioritet")),
+          status: value("status"),
+          deadline: value("deadline"),
+        };
+
+        clearGlobalMessage();
+        button.disabled = true;
+        const res = await api("POST", "/api/arenden", data);
+        button.disabled = false;
+
+        if (res.ok) {
+          form.reset();
+          clearFieldErrors(form);
+          showGlobalMessage(
+            `Ärende ${res.data.arendenummer} är registrerat.`,
+            "ok",
+          );
+          return;
+        }
+        showFieldErrors(form, res.data?.faltfel);
+        showGlobalMessage(res.data?.fel || "Något gick fel. Försök igen.");
+      }
+
       function onShowNewView() {
-        // TODO Del 3: nollställ formuläret när vyn visas.
+        const form = document.getElementById("new-case-form");
+        form.reset();
+        clearFieldErrors(form);
       }
 
       /* ================================================================
