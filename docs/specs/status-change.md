@@ -70,6 +70,8 @@ Steps 1–4 do not depend on the detail page and can be built first.
 | Where is the history shown? | On the ticket detail page | AC5.2 says the history is "shown on the ticket" |
 | Change to the same status? | Silently ignored, no history entry | Nothing has changed, so there is no error to show and nothing to store |
 | Who made the change? | Only the timestamp is stored | No one is signed in, so the system cannot know who made the change |
+| Status and ticket id both invalid? | "This ticket no longer exists." wins | There is no point in validating a status if the ticket does not even exist |
+| Trim or normalise the status value? | No, it must match exactly | The dropdown always sends fixed values, so other values only come from direct requests |
 
 Earlier versions of this spec allowed only `open → in_progress → closed → open` and placed the status change in the ticket list. See the git history of this file for those versions.
 
