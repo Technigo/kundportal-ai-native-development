@@ -8,7 +8,10 @@ const alertVariants = cva(
     variants: {
       variant: {
         default: 'bg-background text-foreground',
-        destructive: 'bg-destructive text-destructive-foreground [&>svg]:text-destructive-foreground',
+        // KSP-38 (TC5): black text, not destructive-foreground (white). White on the red gave
+        // contrast 3.78, black gives 5.55 (WCAG AA needs 4.5). Same red in light and dark mode.
+        // Changed after installing from @boldkit, so keep it if the component is added again.
+        destructive: 'bg-destructive text-black [&>svg]:text-black',
         success: 'bg-success text-success-foreground',
         warning: 'bg-warning text-warning-foreground',
         info: 'bg-info text-info-foreground',
