@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 
 afterEach(() => {
@@ -24,4 +24,54 @@ it('shows API availability separately from MySQL availability', async () => {
   expect(await screen.findByText('MySQL: Inte tillgänglig')).toBeInTheDocument()
   expect(fetchMock).toHaveBeenCalledWith('http://localhost:8000/health')
   expect(fetchMock).toHaveBeenCalledWith('http://localhost:8000/health/db')
+})
+
+it('keeps the status filter after opening a ticket and going back (K8)', async () => {
+  vi.stubEnv('VITE_API_BASE_URL', 'http://localhost:8000')
+  const { default: App } = await import('./App')
+  const ticket = {
+    id: 7,
+    customer_id: 'K-7',
+    customer_name: 'Exempelkund',
+    title: 'Påhittat pågående ärende',
+    description: 'Påhittad beskrivning.',
+    category: 'other',
+    priority: 'normal',
+    status: 'in_progress',
+    created_at: '2026-10-31T22:08:34.123456Z',
+  }
+  const fetchMock = vi.fn((input: RequestInfo | URL) => {
+    const url = String(input)
+    const body = url.endsWith('/api/tickets/7')
+      ? ticket
+      : url.includes('/api/tickets')
+        ? [ticket]
+        : {}
+    return Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve(body),
+    } as Response)
+  })
+  vi.stubGlobal('fetch', fetchMock)
+  render(<App />)
+
+  fireEvent.click(await screen.findByRole('button', { name: 'Pågående' }))
+  fireEvent.click(
+    await screen.findByRole('button', { name: 'Påhittat pågående ärende' }),
+  )
+  fireEvent.click(
+    await screen.findByRole('button', { name: 'Stäng' }),
+  )
+
+  expect(
+    screen.queryByRole('region', { name: 'Ärendedetaljer' }),
+  ).not.toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Pågående' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
+  expect(fetchMock).toHaveBeenCalledWith(
+    'http://localhost:8000/api/tickets?status=in_progress',
+    undefined,
+  )
 })

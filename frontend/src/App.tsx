@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { StatusFilter } from './domain/ticket'
+import { TicketDetail } from './features/tickets/TicketDetail'
 import { TicketList } from './features/tickets/TicketList'
 import './App.css'
 
@@ -30,6 +31,7 @@ function App() {
   const [databaseStatus, setDatabaseStatus] = useState<CheckState>('checking')
   // K8: filtret ligger här så att det finns kvar när vyer byts, men inte efter omladdning
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(null)
+  const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null)
 
   useEffect(() => {
     let active = true
@@ -53,7 +55,7 @@ function App() {
           <span className="logo" aria-hidden="true">
             J
           </span>
-          <span>Kundservice</span>
+          <span>Jiriga</span>
         </div>
         <nav aria-label="Huvudmeny">
           <a className="nav-link" href="/" aria-current="page">
@@ -71,10 +73,21 @@ function App() {
       </aside>
       <main className="content">
         <h1>Ärenden</h1>
-        <TicketList
-          statusFilter={statusFilter}
-          onStatusFilterChange={setStatusFilter}
-        />
+        <div className="ticket-layout">
+          <TicketList
+            statusFilter={statusFilter}
+            onStatusFilterChange={setStatusFilter}
+            selectedTicketId={selectedTicketId}
+            onSelectTicket={setSelectedTicketId}
+          />
+          {selectedTicketId !== null && (
+            <TicketDetail
+              key={selectedTicketId}
+              ticketId={selectedTicketId}
+              onClose={() => setSelectedTicketId(null)}
+            />
+          )}
+        </div>
       </main>
     </div>
   )
