@@ -121,7 +121,7 @@ Teamets plan för veckan (enligt Linear):
 | Vad | Ansvarig |
 | --- | --- |
 | Tidslinjen och felmeddelandena i UI (HIST-05, KSP-37, KSP-38) | Amalia |
-| Länkar i Technigo#2 till vecka 7 och `docs/ai/arbetssatt.md` (KSP-54, KSP-60), och krav på grön CI i rulesetet (KSP-17) | Mustafa |
+| ~~Länkar i Technigo#2 till vecka 7 och `docs/ai/arbetssatt.md` (KSP-54, KSP-60), och krav på grön CI i rulesetet (KSP-17)~~ Klart: länkarna finns i Technigo#2, och rulesetet kräver `backend` och `frontend` före merge (kontrollerat 2026-11-05) | Mustafa |
 | Följa README på egen dator (KSP-19) | Nicklas eller Mustafa |
 | Kända begränsningar, risker och vidareutveckling (KSP-61): var och en fyller i sin del i PR #98 | Azalea samordnar, alla |
 | Sammanfattningen av utvärderingen, PR #57 (KSP-62) | Nicklas, när alla har svarat |
