@@ -52,7 +52,7 @@ underlag. Här samlas det som tidigare stod utspritt i specarna, ADR:erna och ve
 | Risk | Sannolikhet | Konsekvens | Hantering |
 | --- | --- | --- | --- |
 | Status och historik hamnar i otakt | Låg | Hög: tidslinjen visar något annat än ärendet | En transaktion i `TicketService`, rollback vid alla fel, invarianten efter varje scenario och tester med framkallat fel (ADR-001, HIST-09, HIST-10) |
-| En PR mergas med röda tester | Medel | Medel | CI kör backend och frontend på varje PR, men rulesetet kräver inte att kontrollerna är gröna (KSP-17, Mustafa) |
+| En PR mergas med röda tester | Låg | Medel | CI kör backend och frontend på varje PR, och rulesetet för `main` kräver att båda kontrollerna är gröna före merge (KSP-17, CI för backend). Kvar: ett krav som saknar test fångas inte av CI |
 | AI:s påståenden tas för sanna utan kontroll | Medel | Medel till hög: fel test eller fel förklaring | Tester före koden, mutationer, och regler i misstagsloggarna efter en människas ja ([arbetssättet](ai/arbetssatt.md)) |
 | Ett godkännande gäller inte längre efter nya commits | Medel | Medel: kod mergas utan granskning | Granskaren godkänner igen efter nya commits (hände med PR #56 och #81) |
 | *(fylls i av övriga)* | | | |
