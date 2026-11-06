@@ -5,6 +5,7 @@ import { ChevronDown, Filter, Search } from "lucide-react"
 
 import type { components, operations } from "@/api/schema"
 import { BACKEND_UNREACHABLE } from "@/api/errors"
+import { TicketPageLayout } from "@/components/ticket-page-layout"
 import { useTicketListRefresh } from "@/components/ticket-list-refresh"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
@@ -196,7 +197,7 @@ export function TicketListPage() {
   const filtersActive = status !== "" || priority !== "" || category !== ""
 
   return (
-    <div className="flex min-h-svh flex-col gap-6 p-6">
+    <TicketPageLayout>
       <h1 className="text-2xl font-bold">Ärenden</h1>
       {list.state === "loading" && (
         <div role="status" aria-live="polite" aria-busy="true">
@@ -312,6 +313,6 @@ export function TicketListPage() {
           />
         </div>
       )}
-    </div>
+    </TicketPageLayout>
   )
 }
