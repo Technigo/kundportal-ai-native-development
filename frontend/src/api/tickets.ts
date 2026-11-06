@@ -5,7 +5,7 @@ import type {
   TicketPriority,
   TicketStatus,
 } from "@/api/types"
-import { BACKEND_UNREACHABLE, errorDetail } from "@/api/errors"
+import { BACKEND_UNREACHABLE, errorDetail, messageWithoutDetail } from "@/api/errors"
 
 // httpStatus is missing only when no answer came at all (fetch failed). An answer without a
 // readable detail, such as a 502 from the dev proxy when the backend is down, has httpStatus.
@@ -43,7 +43,11 @@ async function toTicketResult(request: Promise<Response>): Promise<TicketResult>
       return { state: "ok", ticket: (await response.json()) as Ticket }
     }
     const detail = await errorDetail(response)
-    return { state: "error", message: detail ?? BACKEND_UNREACHABLE, httpStatus: response.status }
+    return {
+      state: "error",
+      message: detail ?? messageWithoutDetail(response.status),
+      httpStatus: response.status,
+    }
   } catch {
     return { state: "error", message: BACKEND_UNREACHABLE }
   }

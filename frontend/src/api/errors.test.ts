@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { BACKEND_UNREACHABLE } from "@/api/errors"
+import { BACKEND_UNREACHABLE, UNEXPECTED_ERROR, messageWithoutDetail } from "@/api/errors"
 import { expectNoTechnicalWords, technicalWordsIn } from "@/test/technical-words"
 
 // Every message in the backend catalogue (backend/app/errors.py), so the check is tried on
@@ -42,6 +42,19 @@ describe("Shared error messages", () => {
     ]) {
       expect(technicalWordsIn(text), text).toEqual([])
     }
+  })
+
+  // KSP-38 AC2 (network errors and 500 give a Swedish message), after Mustafa's finding 3 in
+  // the review of PR #107: an answer without a detail says that the portal does not answer
+  // only for the gateway codes. Any other code means that the backend did answer.
+  it("an answer without detail says 'svarar inte' only for 502, 503 and 504", () => {
+    for (const status of [502, 503, 504]) {
+      expect(messageWithoutDetail(status), String(status)).toBe(BACKEND_UNREACHABLE)
+    }
+    for (const status of [400, 404, 405, 409, 422, 500]) {
+      expect(messageWithoutDetail(status), String(status)).toBe(UNEXPECTED_ERROR)
+    }
+    expect(UNEXPECTED_ERROR).toBe("Något gick fel. Försök igen.")
   })
 
   // ... and still catch technical text: the old network message, a field name as in JSON or

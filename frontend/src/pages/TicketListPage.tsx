@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { Link } from "react-router"
 
 import type { components, operations } from "@/api/schema"
-import { BACKEND_UNREACHABLE, errorDetail } from "@/api/errors"
+import { BACKEND_UNREACHABLE, errorDetail, messageWithoutDetail } from "@/api/errors"
 import { CreateTicketForm } from "@/components/create-ticket-form"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
@@ -39,8 +39,10 @@ async function fetchTickets(): Promise<ListState> {
       const tickets = (await response.json()) as TicketListBody
       return { state: "ok", tickets }
     }
-    // KSP-38 AC2 (no readable answer gives the shared Swedish text): never an empty alert.
-    return { state: "error", message: (await errorDetail(response)) ?? BACKEND_UNREACHABLE }
+    // KSP-38 AC2 (network errors and 500 give a Swedish message): never an empty alert.
+    // Without a readable detail, the status code decides the text (messageWithoutDetail).
+    const detail = await errorDetail(response)
+    return { state: "error", message: detail ?? messageWithoutDetail(response.status) }
   } catch {
     return { state: "error", message: BACKEND_UNREACHABLE }
   }

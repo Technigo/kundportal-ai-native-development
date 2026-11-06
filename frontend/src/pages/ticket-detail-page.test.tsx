@@ -204,11 +204,25 @@ describe("TicketDetailPage", () => {
   // KSP-38 AC2 (no readable answer gives the shared text): JSON without a detail string is
   // not a readable answer either. The alert must not
   // be empty.
-  it("HIST-14: error answer without detail shows the shared message", async () => {
+  // Mustafa's finding 3 in the review of PR #107: an answer without a detail came from the
+  // backend, so it must not say that the portal does not answer. Only 502, 503 and 504 mean
+  // that the backend could not be reached (the dev proxy answers 502 when it is down).
+  it("HIST-14: error answer without detail shows the general message", async () => {
     fetchMock.mockResolvedValue(jsonResponse({ error: "x" }, 500))
     renderAt("/tickets/5")
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(BACKEND_UNREACHABLE)
+    const alert = await screen.findByRole("alert")
+    expect(alert).toHaveTextContent("Något gick fel. Försök igen.")
+    expect(alert).not.toHaveTextContent(BACKEND_UNREACHABLE)
+  })
+
+  it("HIST-14: 404 without detail does not say that the portal does not answer", async () => {
+    fetchMock.mockResolvedValue(jsonResponse({}, 404))
+    renderAt("/tickets/5")
+
+    const alert = await screen.findByRole("alert")
+    expect(alert).toHaveTextContent("Något gick fel. Försök igen.")
+    expect(alert).not.toHaveTextContent(BACKEND_UNREACHABLE)
   })
 
   it("HIST-14: server error shows the detail from the API in an alert", async () => {
