@@ -1,12 +1,11 @@
 import type {
-  ErrorResponse,
   Ticket,
   TicketCategory,
   TicketCreate,
   TicketPriority,
   TicketStatus,
 } from "@/api/types"
-import { BACKEND_UNREACHABLE } from "@/api/errors"
+import { BACKEND_UNREACHABLE, errorDetail } from "@/api/errors"
 
 // httpStatus is missing when the backend could not be reached.
 export type TicketResult =
@@ -29,17 +28,6 @@ function requestBody(draft: TicketDraft): { [K in keyof TicketCreate]: TicketDra
     description: draft.description,
     category: draft.category,
     priority: draft.priority,
-  }
-}
-
-// The detail of an error answer, or null when the answer has none: not JSON, or JSON
-// without a detail string (R3 in KSP-38). The ticket list uses it too.
-export async function errorDetail(response: Response): Promise<string | null> {
-  try {
-    const body = (await response.json()) as Partial<ErrorResponse> | null
-    return typeof body?.detail === "string" && body.detail !== "" ? body.detail : null
-  } catch {
-    return null
   }
 }
 
