@@ -1,7 +1,7 @@
 import { useRef, useState, type FormEvent } from "react"
 
 import { createTicket, type TicketDraft } from "@/api/tickets"
-import type { TicketCategory, TicketPriority } from "@/api/types"
+import type { Ticket, TicketCategory, TicketPriority } from "@/api/types"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,7 +39,8 @@ const emptyDraft: TicketDraft = {
 }
 
 type CreateTicketFormProps = {
-  onCreated: () => void
+  // discarded is true when the dialog was closed while the request was in flight.
+  onCreated: (ticket: Ticket, options: { discarded: boolean }) => void
 }
 
 export function CreateTicketForm({ onCreated }: CreateTicketFormProps) {
@@ -95,7 +96,7 @@ export function CreateTicketForm({ onCreated }: CreateTicketFormProps) {
     // The ticket is already saved if this returns ok. Reload the list even when the
     // draft was discarded while the request was in flight. An error is not shown then.
     if (id !== requestId.current) {
-      if (result.state === "ok") onCreated()
+      if (result.state === "ok") onCreated(result.ticket, { discarded: true })
       return
     }
     setPending(false)
@@ -105,7 +106,7 @@ export function CreateTicketForm({ onCreated }: CreateTicketFormProps) {
     }
     reset()
     setOpen(false)
-    onCreated()
+    onCreated(result.ticket, { discarded: false })
   }
 
   return (

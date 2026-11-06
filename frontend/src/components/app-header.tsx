@@ -1,6 +1,7 @@
 import { Headset } from "lucide-react"
-import { Link, useLocation } from "react-router"
+import { Link, useLocation, useNavigate } from "react-router"
 
+import type { Ticket } from "@/api/types"
 import { CreateTicketForm } from "@/components/create-ticket-form"
 import { useTicketListRefresh } from "@/components/ticket-list-refresh"
 import { cn } from "@/lib/utils"
@@ -13,8 +14,20 @@ import { cn } from "@/lib/utils"
 
 export function AppHeader() {
   const { pathname } = useLocation()
+  const navigate = useNavigate()
   const refresh = useTicketListRefresh()
   const onList = pathname === "/"
+
+  // On the list the new ticket shows up when the list reloads. Elsewhere the new
+  // ticket is opened, so the handler sees that it was created. A dialog that was
+  // discarded during the request does not move the handler away.
+  function handleCreated(ticket: Ticket, { discarded }: { discarded: boolean }) {
+    if (onList) {
+      refresh?.onCreated()
+      return
+    }
+    if (!discarded) void navigate(`/tickets/${ticket.id}`)
+  }
 
   return (
     <header className="@container sticky top-0 z-50 border-b-3 bg-background">
@@ -31,7 +44,7 @@ export function AppHeader() {
           <span title="Kundserviceportalen" className="min-w-0 truncate @max-[28rem]:sr-only">
             Kundserviceportalen
           </span>
-          <nav className="flex h-14 shrink-0" aria-label="Huvud">
+          <nav className="flex h-14 shrink-0" aria-label="Huvudmeny">
             <Link
               to="/"
               aria-current={onList ? "page" : undefined}
@@ -48,7 +61,7 @@ export function AppHeader() {
           </nav>
         </div>
         <div className="shrink-0">
-          <CreateTicketForm onCreated={() => refresh?.onCreated()} />
+          <CreateTicketForm onCreated={handleCreated} />
         </div>
       </div>
     </header>
