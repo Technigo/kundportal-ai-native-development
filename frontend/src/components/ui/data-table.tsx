@@ -90,7 +90,7 @@ interface DataTableToolbarProps<TData> {
 
 function DataTableToolbar<TData>({
   table,
-  filterPlaceholder = "Filter...",
+  filterPlaceholder = "Filtrera…",
   filterColumn,
 }: DataTableToolbarProps<TData>) {
   const column = filterColumn ? table.getColumn(filterColumn) : null
@@ -124,7 +124,7 @@ function DataTablePagination<TData>({
     <div className="flex flex-col gap-4 py-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center gap-2">
         <label htmlFor="data-table-page-size" className="text-sm font-medium">
-          Rows per page
+          Rader per sida
         </label>
         <NativeSelect
           id="data-table-page-size"
@@ -140,7 +140,7 @@ function DataTablePagination<TData>({
         </NativeSelect>
       </div>
       <p className="text-sm font-medium">
-        Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+        Sida {table.getState().pagination.pageIndex + 1} av {table.getPageCount()}
       </p>
       <div className="flex items-center gap-2">
         <Button
@@ -149,7 +149,7 @@ function DataTablePagination<TData>({
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
         >
-          Previous
+          Föregående
         </Button>
         <Button
           variant="outline"
@@ -157,7 +157,7 @@ function DataTablePagination<TData>({
           onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}
         >
-          Next
+          Nästa
         </Button>
       </div>
     </div>
@@ -187,8 +187,8 @@ function DataTable<TData, TValue>({
   pageSize = 10,
   pageSizeOptions = [10, 20, 30, 50],
   filterColumn,
-  filterPlaceholder = "Filter...",
-  emptyMessage = "No results.",
+  filterPlaceholder = "Filtrera…",
+  emptyMessage = "Inga träffar.",
   isLoading = false,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
