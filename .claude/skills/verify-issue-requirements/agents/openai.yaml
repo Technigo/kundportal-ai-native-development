@@ -1,0 +1,4 @@
+interface:
+  display_name: "Verifiera issue mot krav"
+  short_description: "Stäm av krav, tester och teamets verifieringsstatus"
+  default_prompt: "Använd $verify-issue-requirements för att granska mitt färdiga issue, kontrollera testerna och gå igenom varje krav med mig innan dokumentationen uppdateras."
