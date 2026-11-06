@@ -31,8 +31,12 @@ underlag. Här samlas det som tidigare stod utspritt i specarna, ADR:erna och ve
 
 | Begränsning | Följd | Var det står |
 | --- | --- | --- |
-| Tidslinjen i detaljvyn (HIST-05) och felmeddelandena i UI (UI-delen av HIST-14) är inte klara | Historiken syns inte i gränssnittet | KSP-37, KSP-38, [veckostatus V7](status/vecka-7.md) |
-| *(fylls i av Mustafa och Amalia)* | | |
+| Tidslinjen i detaljvyn (HIST-05) är inte klar. Felmeddelandena i UI (UI-delen av HIST-14) är klara i PR #107 (felmeddelanden i UI) | Historiken syns inte i gränssnittet | KSP-37, KSP-38, [veckostatus V7](status/vecka-7.md) |
+| Kontrasten kontrolleras inte automatiskt, eftersom jest-axe i jsdom inte kan räkna ut färger (Amalia) | Kontrasten kontrolleras bara för hand. Vit text i felmeddelandena hade kontrasten 3.78 (kravet är 4.5), och det upptäcktes vid kontrollen för hand | [Verifieringsplanen](verifiering.md), kontroll för hand. PR #107 |
+| `Alert` (svart text i felmeddelanden) och `native-select` är ändrade lokalt efter installationen från BOLDkit (Amalia) | Läggs komponenterna in från BOLDkit igen försvinner ändringarna | Kommentaren i `frontend/src/components/ui/alert.tsx`. PR #107 och PR #102 (sök och filter) |
+| Engelska standardtexter i BOLDkits `data-table.tsx`, till exempel "Rows per page" och "Page … of …" (Amalia) | Syns inte i dag, eftersom sortering, filter och sidbyte är avstängda, men kommer med om någon slår på dem | Granskningarna av PR #102 |
+| Långa beskrivningar ger mycket långa rader på bred skärm i detaljvyn, med samma maxbredd som listan (Amalia) | Svårare att läsa en lång beskrivning. Bedömt som tillräckligt för projektets storlek | Granskningen av PR #104 (samma maxbredd) |
+| *(fylls i av Mustafa)* | | |
 
 ### Vad testerna inte visar (Azalea, Nicklas)
 
@@ -66,4 +70,5 @@ underlag. Här samlas det som tidigare stod utspritt i specarna, ADR:erna och ve
 | Loggning av databasfel vid 503 | Felsökning | Logga `__cause__` där vägen fångar `StatusNotSaved` (`backend/app/api/tickets.py`) |
 | Sökning och filtrering i listan | Fler ärenden blir svåra att överblicka | Parametrar på `GET /tickets` |
 | Automatisk mutationsprövning, till exempel `pytest-gremlins` | Fler mutationer än för hand | Som komplement, eftersom inget verktyg tar bort en ensam `commit()` |
+| Skicka handläggaren till det nya ärendet när det har skapats (Amalia) | I dag stängs dialogen utan bekräftelse när ärendet skapas från detaljvyn, så det är svårt att veta att det lyckades | Navigera till `/tickets/{id}` med id:t från svaret på `POST /tickets`. Förslag i granskningen av PR #103 (sidhuvud med navigation) |
 | *(fylls i av övriga)* | | |
