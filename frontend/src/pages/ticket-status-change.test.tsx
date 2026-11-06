@@ -288,8 +288,9 @@ describe("Status change in the detail view", () => {
     expect(select).toHaveDisplayValue("Pågående")
   })
 
-  // TC7 in KSP-45 (KSP-38 AC2): an unexpected 500 shows the message and keeps the saved status.
-  it("TC7: status server error shows the message and keeps the status", async () => {
+  // KSP-38 AC2 (network errors and 500 give a Swedish message): an unexpected 500 shows the
+  // message and keeps the saved status.
+  it("KSP-38: status server error shows the message and keeps the status", async () => {
     const user = userEvent.setup()
     patchAnswer.current = async () => jsonResponse({ detail: "Något gick fel. Försök igen." }, 500)
     renderAt("/tickets/5")
@@ -304,9 +305,9 @@ describe("Status change in the detail view", () => {
     expect(select).toHaveDisplayValue("Pågående")
   })
 
-  // TC5 in KSP-45 (KSP-38 AC3, R4): the status editor with an error message has no
+  // KSP-38 AC3 (accessible error messages): the status editor with an error message has no
   // accessibility errors, and the select keeps its label.
-  it("TC5: status error has no accessibility errors", async () => {
+  it("KSP-38: status error has no accessibility errors", async () => {
     const user = userEvent.setup()
     patchAnswer.current = async () => jsonResponse({ detail: "Ärendet har redan den statusen." }, 409)
     renderAt("/tickets/5")
@@ -320,8 +321,9 @@ describe("Status change in the detail view", () => {
     expect(await axe(document.body)).toHaveNoViolations()
   })
 
-  // K1 point 1 (KSP-38): the message from the API is shown without the status code.
-  it("K1: status error shows no status code", async () => {
+  // HIST-14 (errors in Swedish without technical details): the message from the API is shown
+  // without the status code.
+  it("HIST-14: status error shows no status code", async () => {
     const user = userEvent.setup()
     patchAnswer.current = async () =>
       jsonResponse({ detail: "Statusen kunde inte ändras. Försök igen." }, 503)

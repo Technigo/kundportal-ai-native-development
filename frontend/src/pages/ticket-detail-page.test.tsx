@@ -174,7 +174,7 @@ describe("TicketDetailPage", () => {
   })
 
   it("HIST-14: network error shows the shared message in an alert", async () => {
-    // Same text as the ticket list until KSP-38 (error messages in the UI) decides.
+    // The same text as the ticket list, decided in KSP-38 (error messages in the UI).
     fetchMock.mockRejectedValue(new TypeError("Failed to fetch"))
     renderAt("/tickets/5")
 
@@ -183,9 +183,10 @@ describe("TicketDetailPage", () => {
     expectNoTechnicalWords(screen.getByRole("alert"))
   })
 
-  // K1 point 1 and R3 (KSP-38): an answer that is not JSON, for example an HTML page from
+  // HIST-14 (errors in Swedish without technical details) and KSP-38 AC2 (no readable answer
+  // gives the shared text): an answer that is not JSON, for example an HTML page from
   // the proxy when it cannot reach the backend, shows the shared Swedish text.
-  it("K1: non-JSON error answer shows the shared message", async () => {
+  it("HIST-14: non-JSON error answer shows the shared message", async () => {
     fetchMock.mockResolvedValue(
       new Response("<html><body>Bad Gateway</body></html>", {
         status: 502,
@@ -200,9 +201,10 @@ describe("TicketDetailPage", () => {
     expectNoTechnicalWords(screen.getByRole("alert"))
   })
 
-  // R3: JSON without a detail string is not a readable answer either. The alert must not
+  // KSP-38 AC2 (no readable answer gives the shared text): JSON without a detail string is
+  // not a readable answer either. The alert must not
   // be empty.
-  it("K1: error answer without detail shows the shared message", async () => {
+  it("HIST-14: error answer without detail shows the shared message", async () => {
     fetchMock.mockResolvedValue(jsonResponse({ error: "x" }, 500))
     renderAt("/tickets/5")
 
@@ -217,8 +219,9 @@ describe("TicketDetailPage", () => {
     expect(screen.queryByText("Kategori")).not.toBeInTheDocument()
   })
 
-  // KSP-38 AC4: a ticket that does not exist (CORE-10, 404) shows a link back to the list
-  // inside the error message. The header link (KSP-75) does not count, so the link is
+  // KSP-38 AC4 (link back when the ticket does not exist): a ticket that does not exist
+  // (CORE-10, unknown ticket gives 404) shows a link back to the list inside the error
+  // message. The header link (KSP-75, the app header) does not count, so the link is
   // looked for within the alert. Only for 404: after a 500 the advice is to try again.
   it("KSP-38: unknown ticket shows a link back to the list in the alert", async () => {
     renderAt("/tickets/999")
@@ -229,7 +232,7 @@ describe("TicketDetailPage", () => {
   })
 
   it("KSP-38: non-integer id shows the same link back", async () => {
-    // B8: the API answers 404 for "abc" too, so the page must not decide by the id.
+    // B8 (core spec decision: a non-integer id gives 404): the API answers 404 for "abc" too, so the page must not decide by the id.
     renderAt("/tickets/abc")
 
     const alert = await screen.findByRole("alert")
@@ -245,9 +248,10 @@ describe("TicketDetailPage", () => {
     expect(router.state.location.pathname).toBe("/")
   })
 
-  // TC5 in KSP-45 (KSP-38 AC3, R4): the 404 message with the link has no accessibility errors.
+  // KSP-38 AC3 (accessible error messages): the 404 message with the link has no
+  // accessibility errors.
   // jsdom cannot compute colours, so contrast is checked by hand (docs/verifiering.md).
-  it("TC5: unknown ticket with link back has no accessibility errors", async () => {
+  it("KSP-38: unknown ticket with link back has no accessibility errors", async () => {
     renderAt("/tickets/999")
 
     await screen.findByRole("link", { name: LINK_BACK })

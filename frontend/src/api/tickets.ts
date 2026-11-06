@@ -7,7 +7,8 @@ import type {
 } from "@/api/types"
 import { BACKEND_UNREACHABLE, errorDetail } from "@/api/errors"
 
-// httpStatus is missing when the backend could not be reached.
+// httpStatus is missing only when no answer came at all (fetch failed). An answer without a
+// readable detail, such as a 502 from the dev proxy when the backend is down, has httpStatus.
 export type TicketResult =
   | { state: "ok"; ticket: Ticket }
   | { state: "error"; message: string; httpStatus?: number }
@@ -33,7 +34,8 @@ function requestBody(draft: TicketDraft): { [K in keyof TicketCreate]: TicketDra
 
 // Ticket endpoints answer with the ticket, or with {"detail": "<Swedish message>"} on
 // errors (KSP-31 AC7). The detail is shown as it is. Without a readable detail, or when the
-// backend cannot be reached, the shared Swedish text is shown instead (KSP-38 AC2).
+// backend cannot be reached, the shared Swedish text is shown instead (KSP-38 AC2,
+// network errors and 500 give a Swedish message).
 async function toTicketResult(request: Promise<Response>): Promise<TicketResult> {
   try {
     const response = await request

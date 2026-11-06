@@ -21,7 +21,8 @@ describe("Ticket list when the backend cannot be reached", () => {
       </MemoryRouter>,
     )
 
-    // KSP-38 (F1): the text is for a case worker, without technical words (K1).
+    // KSP-38 (error messages in the UI): the text is for a case worker, without technical
+    // words (HIST-14, errors in Swedish without technical details).
     // Written out here on purpose: the other tests import the constant.
     expect(
       await screen.findByText("Kundserviceportalen svarar inte just nu. Försök igen om en stund."),

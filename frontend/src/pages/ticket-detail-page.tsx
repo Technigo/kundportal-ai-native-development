@@ -41,7 +41,8 @@ export function TicketDetailPage() {
         />
       )}
       {/* The detail from the API as it is (KSP-31 AC7), in the same alert as the ticket list.
-          KSP-38 AC4: a ticket that does not exist (404, CORE-10, also "abc" by B8) gets a
+          KSP-38 AC4 (link back when the ticket does not exist): a ticket that does not exist
+          (404 by CORE-10, also "abc" by B8, a non-integer id gives 404) gets a
           link back to the list in the same alert. The status code decides, not the text. */}
       {result?.state === "error" && (
         <Alert variant="destructive">

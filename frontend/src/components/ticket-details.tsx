@@ -29,7 +29,8 @@ export function TicketDetails({
 
       <CardContent className="flex flex-col gap-6">
         {/* One <dl> per column: a <dl> may only hold <dt>/<dd> groups wrapped in one <div>
-            (axe: definition-list, dlitem; found by TC5 in KSP-45). */}
+            (axe rules definition-list and dlitem; found by the jest-axe accessibility check in
+            KSP-45, component tests for the timeline and error messages). */}
         <div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
           <dl className="flex flex-col gap-4">
             <Field label="Kategori">{categoryLabel(ticket.category)}</Field>

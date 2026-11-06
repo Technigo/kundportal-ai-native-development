@@ -39,7 +39,7 @@ async function fetchTickets(): Promise<ListState> {
       const tickets = (await response.json()) as TicketListBody
       return { state: "ok", tickets }
     }
-    // KSP-38 R3: without a readable detail the shared Swedish text is shown, never an empty alert.
+    // KSP-38 AC2 (no readable answer gives the shared Swedish text): never an empty alert.
     return { state: "error", message: (await errorDetail(response)) ?? BACKEND_UNREACHABLE }
   } catch {
     return { state: "error", message: BACKEND_UNREACHABLE }

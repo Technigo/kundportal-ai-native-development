@@ -39,9 +39,10 @@ describe("Ticket list", () => {
     vi.unstubAllGlobals()
   })
 
-  // K1 point 1 (KSP-38, added by Amalia): a network error shows the Swedish text only,
+  // HIST-14 (errors in Swedish without technical details), added by Amalia for KSP-38
+  // (error messages in the UI): a network error shows the Swedish text only,
   // never the browser's own error.
-  it("K1: list network error shows no technical words", async () => {
+  it("HIST-14: list network error shows no technical words", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("Failed to fetch")))
     render(
       <MemoryRouter>
@@ -53,9 +54,10 @@ describe("Ticket list", () => {
     expectNoTechnicalWords(screen.getByRole("alert"))
   })
 
-  // TC7 in KSP-45 (KSP-38 AC2, added by Amalia): a 500 shows the message from the API,
+  // KSP-38 AC2 (network errors and 500 give a Swedish message), added by Amalia: a 500 shows
+  // the message from the API,
   // not the empty list.
-  it("TC7: list server error shows the message from the API", async () => {
+  it("KSP-38: list server error shows the message from the API", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({

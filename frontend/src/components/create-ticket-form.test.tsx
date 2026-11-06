@@ -155,9 +155,10 @@ describe("Create ticket form", () => {
     expect(await screen.findByRole("heading", { name: TITLE })).toBeInTheDocument()
   })
 
-  // K1 point 1 (KSP-38, added by Amalia): a network error when creating shows the Swedish
+  // HIST-14 (errors in Swedish without technical details), added by Amalia for KSP-38
+  // (error messages in the UI): a network error when creating shows the Swedish
   // text only, never the browser's own error.
-  it("K1: form network error shows no technical words", async () => {
+  it("HIST-14: form network error shows no technical words", async () => {
     const user = userEvent.setup()
     mockApi(() => {
       throw new TypeError("Failed to fetch")
@@ -175,9 +176,10 @@ describe("Create ticket form", () => {
     expectNoTechnicalWords(alert)
   })
 
-  // TC7 in KSP-45 (KSP-38 AC2, added by Amalia): a 500 shows the message from the API in the
+  // KSP-38 AC2 (network errors and 500 give a Swedish message), added by Amalia: a 500 shows
+  // the message from the API in the
   // dialog, and the dialog stays open as when nothing was created.
-  it("TC7: form server error shows the message from the API", async () => {
+  it("KSP-38: form server error shows the message from the API", async () => {
     const user = userEvent.setup()
     mockApi(() => json(500, { detail: "Något gick fel. Försök igen." }))
     await openForm(user)
@@ -194,9 +196,10 @@ describe("Create ticket form", () => {
     expect(dialog).toBeInTheDocument()
   })
 
-  // TC5 in KSP-45 (KSP-38 AC3, R4, added by Amalia): the dialog with an error message has no
+  // KSP-38 AC3 (accessible error messages), added by Amalia: the dialog with an error message
+  // has no
   // accessibility errors. jsdom cannot compute colours, so contrast is checked by hand.
-  it("TC5: form error has no accessibility errors", async () => {
+  it("KSP-38: form error has no accessibility errors", async () => {
     const user = userEvent.setup()
     mockApi(() => errorResponse("Rubrik måste fyllas i."))
     await openForm(user)
