@@ -107,9 +107,6 @@ export function TicketStatusForm({
           aria-labelledby={labelId}
           value={chosen}
           onChange={(event) => choose(event.target.value as TicketStatus)}
-          // The theme's customizable select (appearance: base-select) puts the text at the top,
-          // so it is centred here instead of changing the theme.
-          className="flex items-center"
         >
           {statuses.map((status) => (
             <option key={status} value={status}>
