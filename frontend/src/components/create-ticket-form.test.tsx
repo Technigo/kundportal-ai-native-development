@@ -11,6 +11,7 @@ import { TicketListRefreshProvider } from "@/components/ticket-list-refresh"
 import { TicketListPage } from "@/pages/TicketListPage"
 
 // KSP-30: create-ticket dialog. The API owns validation; the form shows detail unchanged.
+// KSP-77: a created ticket is a link in the table.
 
 const TITLE = "Fakturan har fel belopp"
 const DESCRIPTION = "Kunden har fått dubbel debitering för oktober."
@@ -122,7 +123,7 @@ describe("Create ticket form", () => {
 
     await user.click(screen.getByRole("button", { name: "Registrera ärende" }))
 
-    expect(await screen.findByRole("heading", { name: TITLE })).toBeInTheDocument()
+    expect(await screen.findByRole("link", { name: TITLE })).toBeInTheDocument()
     expect(screen.queryByRole("dialog", { name: "Nytt ärende" })).not.toBeInTheDocument()
     expect(postBodies()).toEqual([
       {
@@ -150,12 +151,12 @@ describe("Create ticket form", () => {
     await user.type(screen.getByLabelText("Beskrivning"), DESCRIPTION)
     await chooseCodes(user)
     await user.click(screen.getByRole("button", { name: "Registrera ärende" }))
-    expect(await screen.findByRole("heading", { name: TITLE })).toBeInTheDocument()
+    expect(await screen.findByRole("link", { name: TITLE })).toBeInTheDocument()
 
     page.unmount()
     renderPage()
 
-    expect(await screen.findByRole("heading", { name: TITLE })).toBeInTheDocument()
+    expect(await screen.findByRole("link", { name: TITLE })).toBeInTheDocument()
   })
 
   // CORE-06: an empty title is sent, and the API message is shown unchanged inside the dialog.
@@ -282,7 +283,7 @@ describe("Create ticket form", () => {
     await user.type(screen.getByLabelText("Beskrivning"), DESCRIPTION)
     await chooseCodes(user)
     await user.click(screen.getByRole("button", { name: "Registrera ärende" }))
-    await screen.findByRole("heading", { name: TITLE })
+    await screen.findByRole("link", { name: TITLE })
 
     expect(postBodies()[0]).not.toHaveProperty("status")
   })
@@ -379,7 +380,7 @@ describe("Create ticket form", () => {
     await user.type(screen.getByLabelText("Beskrivning"), DESCRIPTION)
     await chooseCodes(user)
     await user.click(screen.getByRole("button", { name: "Registrera ärende" }))
-    await screen.findByRole("heading", { name: title })
+    await screen.findByRole("link", { name: title })
 
     expect(postBodies()[0]?.title).toBe(title)
   })
@@ -477,7 +478,7 @@ describe("Create ticket form", () => {
     expect(postBodies()).toHaveLength(1)
 
     release(json(201, createdTicket(postBodies()[0])))
-    expect(await screen.findByRole("heading", { name: TITLE })).toBeInTheDocument()
+    expect(await screen.findByRole("link", { name: TITLE })).toBeInTheDocument()
   })
 
   // KSP-30: an error that arrives after the draft was discarded is not shown.
@@ -528,7 +529,7 @@ describe("Create ticket form", () => {
     if (body === undefined) throw new Error("The form did not post a draft.")
     release(json(201, createdTicket(body)))
 
-    expect(await screen.findByRole("heading", { name: TITLE })).toBeInTheDocument()
+    expect(await screen.findByRole("link", { name: TITLE })).toBeInTheDocument()
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
   })
 })

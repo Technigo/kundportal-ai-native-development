@@ -10,11 +10,11 @@ const NativeSelect = React.forwardRef<
   HTMLSelectElement,
   React.SelectHTMLAttributes<HTMLSelectElement>
 >(({ className, children, ...props }, ref) => (
-  <div className="relative inline-flex w-full">
+  <div className="relative inline-flex w-full min-w-0 max-w-full">
     <select
       ref={ref}
       className={cn(
-        'bk-native-select flex h-11 w-full appearance-none items-center border-3 border-foreground bg-background px-3 py-0 pr-10 text-sm leading-[calc(2.75rem-6px)] font-bold tracking-wide uppercase text-foreground shadow-[4px_4px_0px_hsl(var(--shadow-color))] outline-none transition focus-visible:translate-x-[2px] focus-visible:translate-y-[2px] focus-visible:shadow-none disabled:cursor-not-allowed disabled:opacity-50 [&_option]:bg-background [&_option]:leading-5 [&_option]:text-foreground [&_selectedoption]:flex [&_selectedoption]:items-center [&_selectedoption]:leading-5',
+        'bk-native-select flex h-11 w-full min-w-0 max-w-full appearance-none items-center overflow-hidden text-ellipsis whitespace-nowrap border-3 border-foreground bg-background px-3 py-0 pr-10 text-sm leading-[calc(2.75rem-6px)] font-bold tracking-wide uppercase text-foreground shadow-[4px_4px_0px_hsl(var(--shadow-color))] outline-none transition focus-visible:translate-x-[2px] focus-visible:translate-y-[2px] focus-visible:shadow-none disabled:cursor-not-allowed disabled:opacity-50 [&_option]:bg-background [&_option]:leading-5 [&_option]:whitespace-nowrap [&_option]:text-foreground [&_selectedoption]:flex [&_selectedoption]:items-center [&_selectedoption]:leading-5',
         className
       )}
       {...props}
