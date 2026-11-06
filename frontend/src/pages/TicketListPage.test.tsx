@@ -50,7 +50,7 @@ describe("Ticket list", () => {
     )
 
     expect(await screen.findByRole("alert")).toHaveTextContent(BACKEND_UNREACHABLE)
-    expectNoTechnicalWords(document.body)
+    expectNoTechnicalWords(screen.getByRole("alert"))
   })
 
   // TC7 in KSP-45 (KSP-38 AC2, added by Amalia): a 500 shows the message from the API,

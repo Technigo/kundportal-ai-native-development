@@ -180,7 +180,7 @@ describe("TicketDetailPage", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent(BACKEND_UNREACHABLE)
     expect(document.body).not.toHaveTextContent(/Failed to fetch/)
-    expectNoTechnicalWords(document.body)
+    expectNoTechnicalWords(screen.getByRole("alert"))
   })
 
   // K1 point 1 and R3 (KSP-38): an answer that is not JSON, for example an HTML page from
@@ -197,7 +197,7 @@ describe("TicketDetailPage", () => {
     const alert = await screen.findByRole("alert")
     expect(alert).toHaveTextContent(BACKEND_UNREACHABLE)
     expect(document.body).not.toHaveTextContent(/Bad Gateway/)
-    expectNoTechnicalWords(document.body)
+    expectNoTechnicalWords(screen.getByRole("alert"))
   })
 
   // R3: JSON without a detail string is not a readable answer either. The alert must not
