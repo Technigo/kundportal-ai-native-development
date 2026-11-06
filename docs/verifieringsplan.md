@@ -94,6 +94,12 @@ Efter varje relevant verifieringstillfälle registreras verkliga resultat enligt
 
 Planerade, överhoppade eller ännu inte implementerade kontroller får inte redovisas som godkända.
 
+<a name="verifiering-issue-2"></a>
+
+### Issue #2 – Teknikbeslut och API-kontrakt
+
+Den 6 november 2026 gav den lokala körningen på [`afab9e7`](https://github.com/danielleven/kundportal-ai-native-development-grupp-1/commit/afab9e73414220512229b3ec6ca1ba325f4c2bf1) 27 godkända backendtester, varav 21 mot den separata MySQL-testdatabasen, och 7 godkända frontendtester. Typkontroll och bygge gick igenom. Se [arbetsloggen](arbetslogg.md#verifiering-issue-2) för kommandon, begränsningar och de 37 bekräftade punkterna.
+
 ## 7. Begränsningar
 
 - Backendtester verifierar beteenden mot testdatabasen. De visar inte att frontendens ärendegränssnitt fungerar.
