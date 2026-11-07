@@ -44,6 +44,7 @@ describe("submitTicket", () => {
       requesterEmail: "",
       subject: "",
       description: "Help",
+      category: "",
       priority: "low",
     });
     expect(await db.select().from(tickets)).toHaveLength(0);
@@ -57,6 +58,7 @@ describe("submitTicket", () => {
         requesterEmail: "ada@example.com",
         subject: "Broken invoice",
         description: "Totals are wrong",
+        category: "  Billing  ",
         priority: "high",
       })),
     ).rejects.toThrow("NEXT_REDIRECT:/tickets");
@@ -67,6 +69,7 @@ describe("submitTicket", () => {
       requesterName: "Ada Lovelace",
       requesterEmail: "ada@example.com",
       subject: "Broken invoice",
+      category: "Billing",
       priority: "high",
       status: "open",
     });
@@ -83,18 +86,50 @@ describe("submitTicket", () => {
     expect(await db.select().from(tickets)).toHaveLength(0);
   });
 
+  it("returns a category error and keeps the entered category when it is only spaces, and saves nothing", async () => {
+    const state = await submitTicket(
+      undefined,
+      formData({ requesterName: "Ada", subject: "Hello", description: "Body", category: "   " }),
+    );
+
+    expect(state?.errors).toEqual({ category: ["Please enter a category."] });
+    expect(state?.values.category).toBe("   ");
+    expect(await db.select().from(tickets)).toHaveLength(0);
+  });
+
   it("saves a ticket without a requester email", async () => {
     await expect(
-      submitTicket(undefined, formData({ requesterName: "Grace", subject: "Phone call", description: "Invoice query" })),
+      submitTicket(undefined, formData({ requesterName: "Grace", subject: "Phone call", description: "Invoice query", category: "Billing" })),
     ).rejects.toThrow("NEXT_REDIRECT");
 
     const [saved] = await db.select().from(tickets);
     expect(saved).toMatchObject({ requesterName: "Grace", requesterEmail: null });
   });
 
+  it("gives a ticket sent with an empty priority the priority normal", async () => {
+    await expect(
+      submitTicket(undefined, formData({ requesterName: "Ada", subject: "Hello", description: "Body", category: "Billing", priority: "" })),
+    ).rejects.toThrow("NEXT_REDIRECT");
+
+    const [saved] = await db.select().from(tickets);
+    expect(saved).toMatchObject({ priority: "normal" });
+  });
+
+  it("rejects an unknown priority sent directly, keeps the values and saves nothing", async () => {
+    const state = await submitTicket(
+      undefined,
+      formData({ requesterName: "Ada", subject: "Hello", description: "Body", category: "Billing", priority: "urgent" }),
+    );
+
+    expect(Object.keys(state?.errors ?? {})).toEqual(["priority"]);
+    expect(state?.values.priority).toBe("urgent");
+    expect(await db.select().from(tickets)).toHaveLength(0);
+    expect(mocks.redirect).not.toHaveBeenCalled();
+  });
+
   it("ignores a status sent in the form", async () => {
     await expect(
-      submitTicket(undefined, formData({ requesterName: "Ada", subject: "Spoof", description: "x", status: "closed" })),
+      submitTicket(undefined, formData({ requesterName: "Ada", subject: "Spoof", description: "x", category: "Billing", status: "closed" })),
     ).rejects.toThrow("NEXT_REDIRECT");
 
     const [saved] = await db.select().from(tickets);

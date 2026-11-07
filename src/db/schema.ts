@@ -15,6 +15,7 @@ export const tickets = sqliteTable(
     requesterEmail: text("requester_email"),
     subject: text("subject").notNull(),
     description: text("description").notNull(),
+    category: text("category").notNull().default("General"),
     status: text("status", { enum: ticketStatuses }).notNull().default("open"),
     priority: text("priority", { enum: ticketPriorities }).notNull().default("normal"),
     createdAt: createdAt(),

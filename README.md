@@ -46,6 +46,7 @@ There's no sign-in yet: anyone who opens the app is treated as a case handler an
 | `npm test` | Run unit and component tests once (Vitest) |
 | `npm run test:watch` | Run Vitest in watch mode while you develop |
 | `npm run test:e2e` | Reset a separate `data/e2e.db`, build, and run the Playwright tests |
+| `npm run test:mutation` | Break `submitTicket` on purpose and check that the right tests fail (`-- --e2e` adds Playwright) |
 | `npm run db:generate` | Create a migration in `drizzle/` from changes to `src/db/schema.ts` |
 | `npm run db:migrate` | Apply migrations to `DATABASE_URL` |
 | `npm run db:seed` | Insert demo tickets |

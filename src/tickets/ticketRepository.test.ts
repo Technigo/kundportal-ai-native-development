@@ -18,6 +18,7 @@ describe("createTicket", () => {
       requesterEmail: "ada@example.com",
       subject: "Login fails",
       description: "I get a 500 error.",
+      category: "Billing",
       priority: "high",
     });
 
@@ -26,6 +27,7 @@ describe("createTicket", () => {
       requesterEmail: "ada@example.com",
       subject: "Login fails",
       description: "I get a 500 error.",
+      category: "Billing",
       priority: "high",
       status: "open",
     });
@@ -38,10 +40,18 @@ describe("createTicket", () => {
       requesterName: "Grace Hopper",
       subject: "Phone call",
       description: "Called about an invoice.",
+      category: "Billing",
       priority: "normal",
     });
 
     expect(ticket.requesterEmail).toBeNull();
+  });
+
+  it("gives a ticket saved without a category the category General", async () => {
+    await db.insert(tickets).values({ requesterName: "Ada", subject: "Old ticket", description: "Saved before categories" });
+
+    const [saved] = await db.select().from(tickets);
+    expect(saved?.category).toBe("General");
   });
 });
 

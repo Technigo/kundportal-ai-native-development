@@ -31,6 +31,7 @@ test("submitting a valid ticket shows it at the top of the list", async ({ page 
   await page.getByLabel("Requester email (optional)").fill("ada@example.com");
   await page.getByLabel("Subject").fill(subject);
   await page.getByLabel("Description").fill("The box was crushed and two items are broken.");
+  await page.getByLabel("Category").fill("Delivery");
   await page.getByLabel("Priority").selectOption("high");
   await page.getByRole("button", { name: "Register ticket" }).click();
 
@@ -53,4 +54,33 @@ test("shows an error for an invalid requester email and keeps the input", async 
   await expect(page.getByText("Please enter a valid email address.")).toBeVisible();
   await expect(page).toHaveURL("/tickets/new");
   await expect(page.getByLabel("Requester name")).toHaveValue("Ada Lovelace");
+});
+
+test("shows an error when the category is missing and keeps the input", async ({ page }) => {
+  await page.goto("/tickets/new");
+  await page.getByLabel("Requester name").fill("Ada Lovelace");
+  await page.getByLabel("Subject").fill("Valid subject");
+  await page.getByLabel("Description").fill("Something is wrong.");
+  await page.getByRole("button", { name: "Register ticket" }).click();
+
+  await expect(page.getByText("Please enter a category.")).toBeVisible();
+  await expect(page).toHaveURL("/tickets/new");
+  await expect(page.getByLabel("Subject")).toHaveValue("Valid subject");
+});
+
+test("shows an error when the requester name is missing and saves nothing", async ({ page }) => {
+  const subject = `No requester ${Date.now()}`;
+
+  await page.goto("/tickets/new");
+  await page.getByLabel("Subject").fill(subject);
+  await page.getByLabel("Description").fill("Something is wrong.");
+  await page.getByLabel("Category").fill("Billing");
+  await page.getByRole("button", { name: "Register ticket" }).click();
+
+  await expect(page.getByText("Please enter who contacted us.")).toBeVisible();
+  await expect(page).toHaveURL("/tickets/new");
+  await expect(page.getByLabel("Subject")).toHaveValue(subject);
+
+  await page.goto("/tickets");
+  await expect(page.getByText(subject)).toHaveCount(0);
 });
