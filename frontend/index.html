@@ -401,6 +401,11 @@
       }
       .detail-body {
         min-height: 0;
+        /* Luft så att fokusringen runt dropdownen inte klipps av scrollytan. */
+        margin-left: -0.5rem;
+        margin-right: -0.5rem;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
         overflow-y: auto;
         overscroll-behavior: contain;
       }
@@ -427,6 +432,74 @@
       .detail-error {
         color: var(--error);
       }
+      .detail-message {
+        flex: 0 0 auto;
+        margin: 0 0 1rem;
+        padding: 0.75rem 1rem;
+        border-radius: 6px;
+        border: 1px solid var(--error);
+        background: #fdecea;
+        color: var(--error);
+      }
+      .detail-message[data-kind='ok'] {
+        border-color: var(--ok);
+        background: #e8f5ee;
+        color: var(--ok);
+      }
+      .detail-message[hidden] {
+        display: none;
+      }
+      .detail-status-form {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+      .detail-status-form select {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 100%;
+        min-height: 2.75rem;
+        padding: 0.5rem 2rem 0.5rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background-color: var(--surface);
+        /* Egen nedåtpil av två gradienter, så att den följer --text och får jämnt avstånd till kanten. */
+        background-image:
+          linear-gradient(45deg, transparent 50%, var(--text) 50%),
+          linear-gradient(135deg, var(--text) 50%, transparent 50%);
+        background-repeat: no-repeat;
+        background-position:
+          calc(100% - 1.5rem) 50%,
+          calc(100% - 1rem) 50%;
+        background-size: 0.5rem 0.5rem;
+        color: var(--text);
+        font: inherit;
+      }
+      .detail-footer {
+        flex: 0 0 auto;
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border);
+      }
+      .detail-footer:empty {
+        display: none;
+      }
+      .detail-status-submit {
+        min-height: 2.75rem;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--accent);
+        border-radius: 6px;
+        background: var(--accent);
+        color: #fff;
+        font: inherit;
+        cursor: pointer;
+      }
+      .detail-status-submit:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
       @media (max-width: 40rem) {
         #view-detail:not([hidden]) {
           padding: 0.5rem;
@@ -440,6 +513,9 @@
         }
         .detail-fields dd {
           margin-bottom: 0.75rem;
+        }
+        .detail-footer .detail-status-submit {
+          width: 100%;
         }
       }
     </style>
@@ -481,7 +557,9 @@
             <h2 id="h-detail">Ärende</h2>
             <button type="button" class="detail-close" aria-label="Stäng">×</button>
           </div>
+          <p id="detail-message" class="detail-message" role="status" hidden></p>
           <div id="case-detail" class="detail-body"></div>
+          <div id="detail-footer" class="detail-footer"></div>
         </div>
       </section>
     </main>
@@ -630,9 +708,21 @@
         deadline: 'Deadline',
       };
       const DEFAULT_LIST_FIELDS = ['arendenummer', 'rubrik', 'prioritet', 'status', 'deadline'];
+      const DETAIL_FIELDS = [
+        'arendenummer',
+        'rubrik',
+        'beskrivning',
+        'kategori',
+        'prioritet',
+        'status',
+        'skapad',
+        'deadline',
+      ];
 
       let detailRequest = 0;
       let detailTrigger = null;
+
+      /* ---------- Lista ---------- */
 
       function setDetailScrollLock(locked) {
         document.documentElement.classList.toggle('detail-open', locked);
@@ -781,16 +871,140 @@
         wrap.append(table);
         container.append(wrap);
       }
-      const DETAIL_FIELDS = [
-        'arendenummer',
-        'rubrik',
-        'beskrivning',
-        'kategori',
-        'prioritet',
-        'status',
-        'skapad',
-        'deadline',
-      ];
+
+      function updateListRow(arende) {
+        if (arende?.arendenummer == null) return;
+        const wanted = String(arende.arendenummer);
+        const row = [...document.querySelectorAll('#case-list tr[data-arendenummer]')].find(
+          (tr) => tr.dataset.arendenummer === wanted,
+        );
+        if (!row) return;
+        for (const cell of row.querySelectorAll('td[data-field]')) {
+          const clip = cell.querySelector('.case-clip');
+          if (!clip) continue;
+          const value = arende[cell.dataset.field];
+          const text = value == null ? '' : String(value);
+          clip.textContent = text;
+          if (text) clip.title = text;
+          else clip.removeAttribute('title');
+        }
+      }
+
+      /* ---------- Detalj: meddelanden ---------- */
+
+      function showDetailMessage(text, kind = 'error') {
+        const el = document.getElementById('detail-message');
+        el.textContent = text;
+        el.dataset.kind = kind;
+        el.hidden = false;
+      }
+
+      function clearDetailMessage() {
+        const el = document.getElementById('detail-message');
+        el.hidden = true;
+        el.textContent = '';
+        delete el.dataset.kind;
+      }
+
+      /* ---------- Detalj: statusbyte ---------- */
+
+      function isCaseObject(data) {
+        return data != null && typeof data === 'object' && !Array.isArray(data);
+      }
+
+      // Spara är inaktiv medan något sparas och så länge vald status är samma som den sparade.
+      function updateStatusControls({ select, button, confirmedStatus }, busy) {
+        select.disabled = busy;
+        button.disabled = busy || select.value === confirmedStatus;
+        button.textContent = busy ? 'Sparar…' : 'Spara';
+      }
+
+      function changeStatus(arendenummer, status) {
+        return api('PATCH', `/api/arenden/${encodeURIComponent(arendenummer)}/status`, { status });
+      }
+
+      // Fältfel vid statusfältet när servern skickar ett. data.fel visas alltid överst.
+      function showStatusError(form, res) {
+        const fieldMessage = res.status === 400 ? res.data?.faltfel?.status : null;
+        if (fieldMessage) showFieldErrors(form, { status: fieldMessage });
+        showDetailMessage(res.data?.fel || 'Statusen kunde inte ändras.');
+      }
+
+      // Körs när servern har bekräftat ändringen: lista och detalj visar bara serverns svar.
+      function showUpdatedCase(arende) {
+        updateListRow(arende);
+        const host = document.getElementById('case-detail');
+        host.replaceChildren();
+        renderCaseDetail(host, arende);
+        showDetailMessage('Statusen är ändrad.', 'ok');
+        document.getElementById('detail-status')?.focus(); // detaljen ritades om, så fokus måste sättas tillbaka
+      }
+
+      function createStatusForm(arende, onSaved) {
+        const requestId = detailRequest; // ignorera svar om detaljvyn hunnit stängas eller bytas
+        const confirmedStatus = arende.status ?? '';
+
+        const form = document.createElement('form');
+        form.id = 'detail-status-form';
+        form.className = 'detail-status-form';
+
+        const select = document.createElement('select');
+        select.id = 'detail-status';
+        select.name = 'status';
+        select.setAttribute('aria-labelledby', 'detail-status-label');
+        for (const status of PORTAL_CONFIG.STATUSAR) {
+          select.append(new Option(status, status));
+        }
+        select.value = confirmedStatus;
+
+        const fieldError = document.createElement('span');
+        fieldError.className = 'field-error';
+        fieldError.dataset.errorFor = 'status';
+
+        form.append(select, fieldError);
+
+        // Spara-knappen ligger längst ner i dialogen (utanför det scrollande innehållet)
+        // och hör till formuläret via form-attributet.
+        const button = document.createElement('button');
+        button.type = 'submit';
+        button.className = 'detail-status-submit';
+        button.setAttribute('form', form.id);
+        document.getElementById('detail-footer').replaceChildren(button);
+
+        const controls = { select, button, confirmedStatus };
+        let pending = false;
+        updateStatusControls(controls, false); // Spara är inaktiv tills en annan status är vald
+        select.addEventListener('change', () => updateStatusControls(controls, false));
+
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          if (pending) return;
+          const nextStatus = select.value;
+          if (nextStatus === confirmedStatus) return;
+
+          pending = true;
+          updateStatusControls(controls, true);
+          clearFieldErrors(form);
+          clearDetailMessage();
+
+          const res = await changeStatus(arende.arendenummer, nextStatus);
+          if (requestId !== detailRequest) return;
+
+          if (res.ok && isCaseObject(res.data)) {
+            onSaved(res.data);
+            return;
+          }
+          pending = false;
+          select.value = confirmedStatus; // visa aldrig en status som servern inte har bekräftat
+          updateStatusControls(controls, false);
+          select.focus();
+          showStatusError(form, res);
+        });
+
+        return form;
+      }
+
+      /* ---------- Detalj: visning ---------- */
 
       function renderCaseDetail(container, arende) {
         const dl = document.createElement('dl');
@@ -799,9 +1013,14 @@
           const dt = document.createElement('dt');
           dt.textContent = LIST_FIELD_LABELS[field] || field;
           const dd = document.createElement('dd');
-          const value = arende[field];
-          dd.textContent =
-            field === 'skapad' ? formatCreatedAt(value) : value == null ? '' : String(value);
+          if (field === 'status') {
+            dt.id = 'detail-status-label';
+            dd.append(createStatusForm(arende, showUpdatedCase));
+          } else {
+            const value = arende[field];
+            dd.textContent =
+              field === 'skapad' ? formatCreatedAt(value) : value == null ? '' : String(value);
+          }
           dl.append(dt, dd);
         }
         container.append(dl);
@@ -814,8 +1033,10 @@
         detail.hidden = false;
         setDetailScrollLock(true);
         clearGlobalMessage();
+        clearDetailMessage();
         detail.querySelector('.detail-close').focus();
         host.replaceChildren();
+        document.getElementById('detail-footer').replaceChildren();
 
         const loading = document.createElement('p');
         loading.className = 'detail-status';
@@ -826,7 +1047,7 @@
         if (requestId !== detailRequest) return;
 
         host.replaceChildren();
-        if (!res.ok || res.data == null || typeof res.data !== 'object') {
+        if (!res.ok || !isCaseObject(res.data)) {
           const error = document.createElement('p');
           error.className = 'detail-error';
           error.textContent = res.data?.fel || 'Kunde inte hämta ärendet.';
