@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router"
 
 import { fetchTicket, type TicketResult } from "@/api/tickets"
 import { TicketDetails } from "@/components/ticket-details"
+import { TicketPageLayout } from "@/components/ticket-page-layout"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -31,7 +32,7 @@ export function TicketDetailPage() {
   const result = loaded?.id === ticketId ? loaded.result : null
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col gap-8 p-6">
+    <TicketPageLayout>
       {result === null && <TicketDetailsSkeleton />}
       {result?.state === "ok" && (
         <TicketDetails
@@ -56,7 +57,7 @@ export function TicketDetailPage() {
           </AlertDescription>
         </Alert>
       )}
-    </main>
+    </TicketPageLayout>
   )
 }
 
