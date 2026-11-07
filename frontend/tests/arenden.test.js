@@ -5,7 +5,7 @@ import { JSDOM } from 'jsdom';
 
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 
-const FALL_A = {
+const CASE_A = {
   arendenummer: '2026-1',
   rubrik: 'Kan inte logga in',
   beskrivning: 'Kunden får felmeddelande vid inloggning.',
@@ -16,7 +16,7 @@ const FALL_A = {
   deadline: '2026-11-30',
 };
 
-const FALL_B = {
+const CASE_B = {
   arendenummer: '2026-2',
   rubrik: 'Saknar aktivitetsrapport',
   beskrivning: 'Kunden undrar hur rapporten skickas in.',
@@ -35,39 +35,73 @@ function jsonResponse(status, body) {
   };
 }
 
+async function flushView() {
+  // onShowListView / onShowDetailView är async (api/fetch) – vänta tills vyn hunnit ritas.
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  await new Promise((resolve) => setTimeout(resolve, 0));
+}
+
 async function loadPage(fetchStub) {
   const dom = new JSDOM(html, {
     runScripts: 'dangerously',
     pretendToBeVisual: true,
     url: 'http://localhost/',
-    beforeParse(window) { window.fetch = fetchStub; },
+    beforeParse(window) {
+      window.fetch = fetchStub;
+    },
   });
   await new Promise((resolve) => dom.window.addEventListener('load', resolve));
-  // onShowListView är async (api/fetch) – vänta tills listan hunnit ritas.
-  await new Promise((resolve) => setTimeout(resolve, 0));
-  await new Promise((resolve) => setTimeout(resolve, 0));
+  await flushView();
   return dom.window;
+}
+
+function requestPath(url) {
+  return new URL(String(url), 'http://localhost').pathname;
 }
 
 function listText(document) {
   return document.getElementById('view-list').textContent;
 }
 
+function caseRow(document, arendenummer) {
+  return [...document.querySelectorAll('#case-list tbody tr')].find((tr) =>
+    tr.textContent.includes(arendenummer),
+  );
+}
+
+function pressKey(window, element, key) {
+  element.dispatchEvent(
+    new window.KeyboardEvent('keydown', {
+      key,
+      bubbles: true,
+      cancelable: true,
+    }),
+  );
+}
+
+function detailFetch(url) {
+  const path = requestPath(url);
+  if (path === '/api/arenden') return jsonResponse(200, [CASE_A, CASE_B]);
+  if (path === `/api/arenden/${CASE_B.arendenummer}`) return jsonResponse(200, CASE_B);
+  if (path === `/api/arenden/${CASE_A.arendenummer}`) return jsonResponse(200, CASE_A);
+  return jsonResponse(404, { fel: 'Sökvägen finns inte.' });
+}
+
 describe('Ärendelistan och detaljvyn', () => {
   it('AK10: alla ärenden från servern visas i listan', async () => {
     const { document } = await loadPage(async (url) => {
-      if (String(url).includes('/api/arenden')) return jsonResponse(200, [FALL_A, FALL_B]);
+      if (String(url).includes('/api/arenden')) return jsonResponse(200, [CASE_A, CASE_B]);
       return jsonResponse(404, { fel: 'Sökvägen finns inte.' });
     });
 
     const text = listText(document);
-    expect(text).toContain(FALL_A.arendenummer);
-    expect(text).toContain(FALL_B.arendenummer);
-    expect(text).toContain(FALL_A.rubrik);
-    expect(text).toContain(FALL_B.rubrik);
-    expect(text).toContain(String(FALL_A.prioritet));
-    expect(text).toContain(FALL_A.status);
-    expect(text).toContain(FALL_A.deadline);
+    expect(text).toContain(CASE_A.arendenummer);
+    expect(text).toContain(CASE_B.arendenummer);
+    expect(text).toContain(CASE_A.rubrik);
+    expect(text).toContain(CASE_B.rubrik);
+    expect(text).toContain(String(CASE_A.prioritet));
+    expect(text).toContain(CASE_A.status);
+    expect(text).toContain(CASE_A.deadline);
     expect(text).toContain('Ärendenummer');
     expect(text).toContain('Rubrik');
     expect(text).toContain('Prioritet');
@@ -90,7 +124,51 @@ describe('Ärendelistan och detaljvyn', () => {
     expect(document.getElementById('view-list')).toBeTruthy();
   });
 
-  it.todo('AK11: klick på ett ärende visar alla åtta fält');
+  it('AK11: klick på ett ärende visar alla åtta fält', async () => {
+    const { document } = await loadPage(async (url) => {
+      const path = requestPath(url);
+      if (path === '/api/arenden') return jsonResponse(200, [CASE_A, CASE_B]);
+      if (path === `/api/arenden/${CASE_B.arendenummer}`) return jsonResponse(200, CASE_B);
+      return jsonResponse(404, { fel: 'Sökvägen finns inte.' });
+    });
+
+    expect(document.getElementById('view-list').hidden).toBe(false);
+    expect(listText(document)).toContain(CASE_A.arendenummer);
+    expect(listText(document)).toContain(CASE_B.arendenummer);
+
+    const row = [...document.querySelectorAll('#case-list tbody tr')].find((tr) =>
+      tr.textContent.includes(CASE_B.arendenummer),
+    );
+    expect(row, 'raden för valt ärende').toBeTruthy();
+    (row.querySelector('button, a') ?? row).click();
+    await flushView();
+
+    const detail = document.getElementById('view-detail');
+    expect(detail.hidden, 'detaljvyn ska visas').toBe(false);
+    const text = detail.textContent;
+    expect(text).toContain(CASE_B.arendenummer);
+    expect(text).toContain(CASE_B.rubrik);
+    expect(text).toContain(CASE_B.beskrivning);
+    expect(text).toContain(CASE_B.kategori);
+    expect(text).toContain(CASE_B.status);
+    // 2026-11-03T10:00:00.000Z är 11:00 i Stockholm (CET, UTC+1).
+    expect(text).toContain('2026-11-03 11:00');
+    expect(text).not.toContain(CASE_B.skapad);
+    expect(text).toContain(CASE_B.deadline);
+    expect(text).not.toContain(CASE_A.rubrik);
+    expect(text).not.toContain(CASE_A.beskrivning);
+
+    const withoutOtherFields = [
+      CASE_B.arendenummer,
+      CASE_B.rubrik,
+      CASE_B.beskrivning,
+      CASE_B.kategori,
+      CASE_B.status,
+      '2026-11-03 11:00',
+      CASE_B.deadline,
+    ].reduce((acc, value) => acc.replaceAll(String(value), ''), text);
+    expect(withoutOtherFields).toContain(String(CASE_B.prioritet));
+  });
   it.todo('AK12: statusbyte skickas till servern och ny status visas');
   it.todo('AK13: serverns felmeddelande vid ogiltig status visas och gamla statusen visas kvar');
   it.todo('AK14: sparad ändring av kategori/prioritet visas i detaljvyn');

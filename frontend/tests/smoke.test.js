@@ -11,7 +11,9 @@ async function loadPage(fetchStub = async () => ({ ok: true, status: 200, json: 
     runScripts: 'dangerously',
     pretendToBeVisual: true,
     url: 'http://localhost/',
-    beforeParse(window) { window.fetch = fetchStub; },
+    beforeParse(window) {
+      window.fetch = fetchStub;
+    },
   });
   await new Promise((resolve) => dom.window.addEventListener('load', resolve));
   return dom.window;
@@ -37,14 +39,29 @@ describe('skelett', () => {
     const form = window.document.createElement('form');
     form.innerHTML = '<input name="rubrik"><span data-error-for="rubrik"></span>';
     window.Portal.showFieldErrors(form, { rubrik: 'Rubrik måste fyllas i' });
-    expect(form.querySelector('[data-error-for="rubrik"]').textContent).toBe('Rubrik måste fyllas i');
+    expect(form.querySelector('[data-error-for="rubrik"]').textContent).toBe(
+      'Rubrik måste fyllas i',
+    );
     expect(form.querySelector('[name="rubrik"]').getAttribute('aria-invalid')).toBe('true');
   });
 
   it('api() returnerar ett begripligt fel när servern inte nås', async () => {
-    const window = await loadPage(async () => { throw new Error('nätverk'); });
+    const window = await loadPage(async () => {
+      throw new Error('nätverk');
+    });
     const res = await window.Portal.api('GET', '/api/arenden');
     expect(res.ok).toBe(false);
     expect(res.data.fel).toContain('Kunde inte nå servern');
+  });
+
+  it('formatCreatedAt visar skapad-tid i svensk lokal tid', async () => {
+    const { Portal } = await loadPage();
+    // Vintertid (CET, UTC+1): 10:00 UTC är 11:00 i Stockholm.
+    expect(Portal.formatCreatedAt('2026-11-03T10:00:00.000Z')).toBe('2026-11-03 11:00');
+    // Sommartid (CEST, UTC+2): 10:00 UTC är 12:00 i Stockholm.
+    expect(Portal.formatCreatedAt('2026-07-03T10:00:00.000Z')).toBe('2026-07-03 12:00');
+    expect(Portal.formatCreatedAt('')).toBe('');
+    expect(Portal.formatCreatedAt(null)).toBe('');
+    expect(Portal.formatCreatedAt('inte-ett-datum')).toBe('inte-ett-datum');
   });
 });
