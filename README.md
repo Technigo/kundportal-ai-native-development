@@ -33,7 +33,7 @@ Projektet körs på **port 8010** (inte uvicorns standard 8000, som ofta använd
 
 Databasen är en SQLite-fil i `backend/data/app.db` som skapas vid första start. Sökvägen kan ändras med miljövariabeln `DATABASE_URL`.
 
-**Frontend** (kräver Node.js 20 eller senare och pnpm, i en egen terminal)
+**Frontend** (kräver Node.js 22.13 eller senare och pnpm, eftersom pnpm 11 kräver det, i en egen terminal)
 
 ```powershell
 cd frontend
