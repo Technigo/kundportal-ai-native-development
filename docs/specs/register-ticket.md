@@ -2,6 +2,7 @@
 
 Ägare: Alexandra Petersson · Granskare: Jessica Swahn
 Bygger på avsnitt 1 i [project-brief.md](../project-brief.md) (AC1.1–AC1.6).
+Täcker också kravet "Handle at least one invalid use case with a clear message to the user" i [team.md](../team.md) genom AC-R3 och AC-R4.
 
 ## Läget i dag
 
@@ -30,6 +31,7 @@ Bygger på avsnitt 1 i [project-brief.md](../project-brief.md) (AC1.1–AC1.6).
 
 - All inmatning valideras på servern, oavsett vad webbläsaren skickar (AC1.5).
 - Blanksteg runt varje textfält trimmas bort innan värdet kontrolleras och sparas, så ett fält med bara mellanslag räknas som tomt.
+- En tom prioritet räknas som att ingen prioritet valts, och ärendet får `normal`.
 - En status som skickas med formuläret ignoreras. Ett nytt ärende börjar alltid som `open` (AC1.6).
 - Medan formuläret skickas är knappen inaktiv och visar "Registering…", så ett ärende kan inte skickas två gånger genom dubbelklick.
 - Felen visas vid respektive fält och kopplas med `aria-describedby`, och fältet markeras med `aria-invalid`.
@@ -42,7 +44,7 @@ Bygger på avsnitt 1 i [project-brief.md](../project-brief.md) (AC1.1–AC1.6).
 | Namn över 120 tecken | Name must be at most 120 characters. |
 | Ogiltig e-post | Please enter a valid email address. |
 | E-post över 254 tecken | Email must be at most 254 characters. |
-| Ämne under 3 tecken | Subject must be at least 3 characters. |
+| Ämne saknas eller under 3 tecken | Subject must be at least 3 characters. |
 | Ämne över 120 tecken | Subject must be at most 120 characters. |
 | Beskrivning saknas | Please describe the problem. |
 | Beskrivning över 5000 tecken | Description must be at most 5000 characters. |
@@ -51,11 +53,11 @@ Bygger på avsnitt 1 i [project-brief.md](../project-brief.md) (AC1.1–AC1.6).
 ## Acceptanskriterier
 
 - **AC-R1 (happy path):** Givet ett giltigt namn, ämne och beskrivning, när handläggaren klickar på Register ticket, så sparas ärendet med status `open` och prioritet `normal`, och handläggaren skickas till ärendelistan med ärendet överst (AC1.1, AC1.2).
-- **AC-R2 (happy path, valfri e-post):** Ett ärende kan sparas utan e-post. Anges en e-postadress sparas den trimmad (AC1.3).
+- **AC-R2 (happy path, valfri e-post):** Ett ärende kan sparas utan e-post. En e-post som bara innehåller mellanslag räknas som ingen e-post. Anges en e-postadress sparas den trimmad (AC1.3).
 - **AC-R3 (error path, obligatoriskt fält saknas):** Givet ett tomt namn, ämne eller beskrivning, eller ett som bara innehåller mellanslag, när handläggaren skickar formuläret, så sparas ingenting, fältets meddelande från tabellen visas och de inmatade värdena finns kvar (AC1.4, AC1.5).
 - **AC-R4 (error path, ogiltig e-post):** Givet e-postadressen `not-an-email`, när handläggaren skickar formuläret, så sparas ingenting och "Please enter a valid email address." visas (AC1.3, AC1.4).
 - **AC-R5 (kantfall, gränser):** Värden precis på gränserna (ämne 3 och 120, namn 120, beskrivning 5000, e-post 254) godkänns. I gränssnittet hindrar `maxLength` handläggaren från att skriva fler tecken än gränsen. Om servern ändå tar emot ett värde som är ett tecken över i en direkt förfrågan avvisas det med fältets meddelande (AC1.5).
-- **AC-R6 (error path, okänd prioritet via direkt förfrågan):** I gränssnittet kan bara `low`, `normal` och `high` väljas. Om servern ändå tar emot prioriteten `urgent` i en direkt förfrågan sparas ingenting (AC1.2, AC1.5).
+- **AC-R6 (error path, okänd prioritet via direkt förfrågan):** I gränssnittet kan bara `low`, `normal` och `high` väljas. Om servern ändå tar emot prioriteten `urgent` i en direkt förfrågan sparas ingenting, och ett fel för prioritet returneras tillsammans med de inmatade värdena (AC1.2, AC1.4, AC1.5).
 - **AC-R7 (status ignoreras via direkt förfrågan):** Formuläret har inget fält för status. Om servern ändå tar emot `status=closed` i en direkt förfrågan tillsammans med ett i övrigt giltigt ärende sparas ärendet som `open` (AC1.6).
 
 ## Uppdelning i små steg (test-först enligt `ticket-change`)
@@ -73,7 +75,7 @@ Bygger på avsnitt 1 i [project-brief.md](../project-brief.md) (AC1.1–AC1.6).
 | Var valideras inmatningen? | På servern, med zod | Webbläsarens kontroller kan kringgås. Formuläret använder `noValidate`, så det är serverns meddelanden som handläggaren ser |
 | Behövs ett eget meddelande för okänd prioritet? | Nej, zods standardmeddelande behålls | `normal` är förvalt i listan, så en okänd prioritet kan inte väljas i gränssnittet. Den kan bara komma via en direkt förfrågan, och då avvisar servern den |
 | Vilket språk har gränssnitt och felmeddelanden? | Engelska | Beslutat av teamet i ett gruppsamtal på Slack den 21 oktober 2026, där alla i teamet var med |
-| Ska handläggaren se ett meddelande om sparandet i databasen misslyckas? | Ja. Det beskrivs i specifikationen för kravet "Handle at least one invalid use case with a clear message to the user" (inte skriven än) | Den specifikationen samlar felmeddelanden för fler fall än registreringen |
+| Ska handläggaren se ett meddelande om sparandet i databasen misslyckas? | Nej, utanför scope. Står i [limitations.md](../limitations.md) | Kravet "Handle at least one invalid use case with a clear message to the user" uppfylls redan av valideringsfelen (AC-R3, AC-R4). Databasen är en lokal SQLite-fil, så ett misslyckat sparande är ovanligt |
 
 ## Öppna frågor
 

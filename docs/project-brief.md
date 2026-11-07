@@ -47,6 +47,8 @@ Status: **Done** = implemented and tested, **Planned** = not built yet. Each cri
 - AC1.5: Input is validated on the server: name 1-120 characters, subject 3-120, description 1-5000, email at most 254.
 - AC1.6: A status sent in the form is ignored; a new ticket always starts as `open`.
 
+Detailed specification: [docs/specs/register-ticket.md](specs/register-ticket.md)
+
 ### 2. List tickets (Done)
 
 - AC2.1: The list shows every ticket with subject, requester, status, priority and date.
