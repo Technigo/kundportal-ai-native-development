@@ -60,14 +60,21 @@ function fakeBackend(patchAnswer: { current: PatchAnswer }): Mock {
       const { status } = JSON.parse(String(init.body)) as { status: TicketStatus }
       return patchAnswer.current(ticket, status, tickets)
     }
+    // The timeline (KSP-37) fetches the history. Its behaviour is tested in
+    // ticket-timeline.test.tsx, so here it is just the entry created.
+    if (url.endsWith("/history")) {
+      return jsonResponse([{ id: 1, event_type: "created", from_status: null, to_status: "new", occurred_at: "2026-10-25T09:00:00.000000Z" }])
+    }
     return jsonResponse(ticket)
   })
 }
 
+// GET calls for the ticket itself, not the timeline's history calls (KSP-37).
 function getCalls(fetchMock: Mock): string[] {
   return fetchMock.mock.calls
     .filter((call) => (call[1] as RequestInit | undefined)?.method === undefined)
     .map((call) => call[0] as string)
+    .filter((url) => !url.endsWith("/history"))
 }
 
 const succeed: PatchAnswer = async (ticket, status) => jsonResponse({ ...ticket, status })

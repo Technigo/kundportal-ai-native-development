@@ -40,11 +40,15 @@ function jsonResponse(body: unknown, status = 200): Response {
 }
 
 // Answers like the backend: 200 with the ticket, or 404 with the Swedish detail (CORE-10).
+// The history (KSP-37, the timeline) answers with the entry created, as for a new ticket.
 function fakeBackend(): Mock {
   const tickets: Record<string, Ticket> = { "5": ticket5, "6": ticket6 }
   return vi.fn(async (url: string) => {
-    const id = url.replace("/api/tickets/", "")
+    const [, id, rest] = url.match(/^\/api\/tickets\/([^/]+)(\/.*)?$/) ?? []
     const found = tickets[id]
+    if (found && rest === "/history") {
+      return jsonResponse([{ id: 1, event_type: "created", from_status: null, to_status: "new", occurred_at: "2026-10-25T09:00:00.000000Z" }])
+    }
     return found ? jsonResponse(found) : jsonResponse({ detail: "Ärendet finns inte." }, 404)
   })
 }
@@ -66,8 +70,12 @@ function renderAt(path: string) {
   return router
 }
 
+// Calls for the ticket itself. The timeline's history calls (KSP-37) are tested in
+// ticket-timeline.test.tsx.
 function requestedUrls(fetchMock: Mock): string[] {
-  return fetchMock.mock.calls.map((call) => call[0] as string)
+  return fetchMock.mock.calls
+    .map((call) => call[0] as string)
+    .filter((url) => !url.endsWith("/history"))
 }
 
 describe("TicketDetailPage", () => {
