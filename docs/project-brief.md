@@ -38,14 +38,15 @@ Reasons for the choices are recorded in [docs/decisions/](decisions/README.md).
 
 Status: **Done** = implemented and tested, **Planned** = not built yet. Each criterion is mapped to its tests in [docs/verification.md](verification.md).
 
-### 1. Register a ticket (Done)
+### 1. Register a ticket (Done, except AC1.7)
 
-- AC1.1: Given a valid name, subject and description, when the handler submits the form, then the ticket is saved with status `open` and the handler is redirected to the ticket list.
+- AC1.1: Given a valid name, subject, description and category, when the handler submits the form, then the ticket is saved with status `open` and the time it was created, and the handler is redirected to the ticket list.
 - AC1.2: Priority is `low`, `normal` or `high` and defaults to `normal`.
 - AC1.3: The requester email is optional. If given, it must be a valid email address.
 - AC1.4: Given invalid input, when the handler submits, then nothing is saved, the field errors are shown, and the entered values are kept.
-- AC1.5: Input is validated on the server: name 1-120 characters, subject 3-120, description 1-5000, email at most 254.
+- AC1.5: Input is validated on the server: name 1-120 characters, subject 3-120, description 1-5000, category 1-50, email at most 254. Limits apply to the trimmed value.
 - AC1.6: A status sent in the form is ignored; a new ticket always starts as `open`.
+- AC1.7: A category is required. It is free text, at most 50 characters, and is saved trimmed. Tickets created before categories existed have the category `General`. (Planned)
 
 Detailed specification: [docs/specs/register-ticket.md](specs/register-ticket.md)
 
