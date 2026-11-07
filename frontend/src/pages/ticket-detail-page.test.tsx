@@ -152,7 +152,10 @@ describe("TicketDetailPage", () => {
     renderAt("/tickets/5")
 
     await screen.findByText(ticket5.title)
-    expect(screen.getByText("2026-10-25 10:00")).toBeInTheDocument()
+    // Looked for in the field Skapad: the timeline (KSP-37) can show the same time for the
+    // entry created, depending on whether it has loaded yet.
+    const createdField = screen.getByText("Skapad").parentElement!
+    expect(within(createdField).getByText("2026-10-25 10:00")).toBeInTheDocument()
     expect(document.body).not.toHaveTextContent(/09:00/)
     expect(document.body).not.toHaveTextContent(ticket5.created_at)
   })

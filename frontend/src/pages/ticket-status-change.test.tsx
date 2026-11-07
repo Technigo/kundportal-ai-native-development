@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react"
+import { render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { axe } from "jest-axe"
 import { createMemoryRouter, RouterProvider } from "react-router"
@@ -257,8 +257,10 @@ describe("Status change in the detail view", () => {
     await user.click(saveButton())
 
     expect(patchCalls(fetchMock)).toEqual([{ url: "/api/tickets/7/status", body: { status: "new" } }])
-    await screen.findByRole("button", { name: "Ändra status" })
-    expect(screen.getByText("Nytt")).toBeInTheDocument()
+    // The badge sits next to the pencil button. "Nytt" is also the first entry in the timeline
+    // (KSP-37), so the text is looked for next to the button only.
+    const pencil = await screen.findByRole("button", { name: "Ändra status" })
+    expect(within(pencil.parentElement!).getByText("Nytt")).toBeInTheDocument()
   })
 
   it("HIST-14: failed save shows the detail from the API and keeps the saved status", async () => {

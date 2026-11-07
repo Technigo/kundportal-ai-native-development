@@ -39,10 +39,13 @@ describe("TicketTimeline", () => {
   it("HIST-05: a new ticket shows one entry, created", () => {
     render(<TicketTimeline entries={[created]} />)
 
+    // The heading is the status, as for the other entries, and the event is written under it
+    // (Amalia's decision 2026-11-07, replacing "Ärendet skapades" with "Status: Nytt").
     const [entry, ...rest] = entries()
     expect(rest).toHaveLength(0)
-    expect(entry).toHaveTextContent("Ärendet skapades")
-    expect(entry).toHaveTextContent("Status: Nytt")
+    expect(within(entry).getByRole("heading", { level: 3 })).toHaveTextContent(/^Nytt/)
+    expect(within(entry).getByText("Ärendet skapades").tagName).toBe("P")
+    expect(entry).not.toHaveTextContent("Status:")
     // 09:00 UTC is 10:00 in Stockholm on 2026-10-25 (winter time from that night).
     expect(within(entry).getByText("2026-10-25 10:00").tagName).toBe("TIME")
     expect(within(entry).getByText("2026-10-25 10:00")).toHaveAttribute("datetime", created.occurred_at)
@@ -84,6 +87,18 @@ describe("TicketTimeline", () => {
     const till = within(second).getByText("till")
     expect(till).toHaveClass("sr-only")
     expect(second.textContent).toMatch(/Nytt.*till.*Pågående/)
+  })
+
+  // The old status is struck through (<s>, no longer valid), the new one is not. Amalia's
+  // decision 2026-11-07 after trying the timeline in the browser.
+  it("HIST-05: the old status is struck through, the new one is not", () => {
+    render(<TicketTimeline entries={threeEntries} />)
+
+    const second = entries()[1]
+    expect(within(second).getByText("Nytt").tagName).toBe("S")
+    expect(within(second).getByText("Pågående").tagName).not.toBe("S")
+    expect(within(entries()[0]).queryByRole("deletion")).not.toBeInTheDocument()
+    expect(entries()[0].querySelector("s")).toBeNull()
   })
 
   // T2 in the timeline spec: the UI keeps the order from the API (HIST-03, HIST-11) and does
