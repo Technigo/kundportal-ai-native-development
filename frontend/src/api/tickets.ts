@@ -73,13 +73,15 @@ export function fetchTicket(id: string): Promise<TicketResult> {
 // The history of a ticket, oldest first (HIST-03), for the timeline in KSP-37. Any error,
 // with or without an answer, is just "error": the timeline shows its own message and not
 // the detail from the API (an exception decided in KSP-38, error messages in the UI).
+// An answer that is not a list is an error too, so the timeline never crashes the view.
 export type HistoryResult = { state: "ok"; entries: HistoryEntry[] } | { state: "error" }
 
 export async function fetchHistory(id: string): Promise<HistoryResult> {
   try {
     const response = await fetch(`/api/tickets/${encodeURIComponent(id)}/history`)
     if (!response.ok) return { state: "error" }
-    return { state: "ok", entries: (await response.json()) as HistoryEntry[] }
+    const body: unknown = await response.json()
+    return Array.isArray(body) ? { state: "ok", entries: body as HistoryEntry[] } : { state: "error" }
   } catch {
     return { state: "error" }
   }

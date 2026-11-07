@@ -244,6 +244,18 @@ describe("Timeline in the detail view", () => {
     expect(alert).not.toHaveTextContent(/Failed to fetch/)
   })
 
+  // HIST-14: an answer that is not a list is not a readable history either. The view must not
+  // crash: the ticket is shown and the timeline has its message (found when an old test fake
+  // answered the history with the ticket).
+  it("HIST-14: a history answer that is not a list shows the message", async () => {
+    overrides.history.push(async (store) => jsonResponse(store.tickets["5"]))
+    renderAt("/tickets/5")
+
+    expect(await screen.findByRole("heading", { name: /Paketet kom aldrig fram/ })).toBeInTheDocument()
+    const alert = await within(await screen.findByRole("region", { name: "Historik" })).findByRole("alert")
+    expect(alert).toHaveTextContent(HISTORY_ERROR)
+  })
+
   // HIST-14: the retry button fetches only the history, not the ticket.
   it("HIST-14: retry fetches only the history", async () => {
     const user = userEvent.setup()
