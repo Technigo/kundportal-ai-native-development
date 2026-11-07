@@ -49,7 +49,7 @@ Förslaget blir en tabell med testnamn, krav-id, Givet/När/Då, förväntat res
 | KSP-22 (`POST /tickets`) | CORE-01, 05–09, 11–14 | Tio tester (21 fall) enligt v1, före koden: 21 failed → 100 passed ([PR #34](https://github.com/desiboli/kundportal-ai-native-development/pull/34)) |
 | KSP-33, 34 (historiken) | HIST-01, 02, 07, 10 | Granskade av Azalea 2026-10-28, före koden: 10 failed → 117 passed ([PR #44](https://github.com/desiboli/kundportal-ai-native-development/pull/44)) |
 | KSP-25, 26 (CORE-tester) | CORE-02–04, 10–15 | Med Nicklas förbättring v2-nicklas, granskade 2026-10-28 |
-| KSP-41 (HIST-09) | HIST-09 | Med Azaleas förbättring v2-azalea, körning 4: av sju förslag valdes fem, ett ändrades och ett ströks. Ett eget test lades till |
+| KSP-41 (HIST-09) | HIST-09 | Med Azaleas förbättring v2-azalea, körning 4: av sju förslag valdes fem, ett ändrades och ett ströks. Ett test på tjänstenivå lades till, som AI rekommenderade och Azalea valde |
 
 **Förbättringar:** var och en har gjort en egen, namngiven version som jämförts med v1:
 [`testforslag-v2-nicklas.md`](testforslag-v2-nicklas.md) och
@@ -66,7 +66,7 @@ Instruktionen gör förslagen bättre, men ersätter inte granskningen. Exempel 
   litet skript som Azalea körde själv visade motsatsen, och det styrde hur trimningen byggdes (KSP-22).
 - **Luckor som ingen förslagskörning täcker.** Alla fyra körningarna för HIST-09 såg att "rollback tas
   bort" inte går att fånga över HTTP, men ingen föreslog ett test som fångar det. Testet på tjänstenivå
-  lades till av människan.
+  kom till i granskningen efteråt: AI rekommenderade det och Azalea valde det.
 - **Rätt anledning.** Ett rött test betyder inte att det prövar rätt risk. Mutationen "`commit` före
   historikposten" fångades först bara som "en post saknas" (9 failed). Det syntes bara för att någon
   läste felraderna.
