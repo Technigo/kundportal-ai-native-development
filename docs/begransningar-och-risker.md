@@ -17,7 +17,7 @@ underlag. Här samlas det som tidigare stod utspritt i specarna, ADR:erna och ve
 | Ingen inloggning, så historiken visar inte vem som gjorde en ändring | Uppgiften har ingen inloggning | HIST-specen, avsnittet om vad som inte ingår |
 | Bara lokal körning, med en SQLite-fil i `backend/data/app.db` | Uppgiften kräver ingen driftsättning | [README](../README.md) |
 | Historikposter kan inte redigeras eller raderas | Historiken ska gå att lita på, så den är oföränderlig | HIST-specen, [ADR-001](decisions/ADR-001-atomicitet-status-och-historik.md) |
-| Ingen sökning eller filtrering i listan, bara nyaste först | Utanför kärnan. Det var tänkt som Amalias tilläggsfunktion med egen spec | CORE-specen, tabellen över vad som ingår |
+| Sök och filter i listan körs i webbläsaren på hela listan från `GET /tickets`, inte i API:t | Med många ärenden hämtas alla varje gång. Utanför kärnan enligt CORE-specen, tillagt som KSP-77 (sök och filter i ärendetabellen) | PR #102 (sök och filter i ärendetabellen): https://github.com/desiboli/kundportal-ai-native-development/pull/102 |
 
 ### Backend (Azalea)
 
@@ -31,7 +31,7 @@ underlag. Här samlas det som tidigare stod utspritt i specarna, ADR:erna och ve
 
 | Begränsning | Följd | Var det står |
 | --- | --- | --- |
-| Tidslinjen i detaljvyn (HIST-05) är inte klar. Felmeddelandena i UI (UI-delen av HIST-14) är klara i PR #107 (felmeddelanden i UI) | Historiken syns inte i gränssnittet | KSP-37, KSP-38, [veckostatus V7](status/vecka-7.md) |
+| Tidslinjen i detaljvyn (HIST-05, KSP-37) pågår i PR #109 (tidslinje i detaljvyn): https://github.com/desiboli/kundportal-ai-native-development/pull/109. Felmeddelandena i UI (UI-delen av HIST-14, KSP-38) pågår i PR #107 (felmeddelanden i UI): https://github.com/desiboli/kundportal-ai-native-development/pull/107. Båda öppna 2026-11-07 | Tills de är mergade syns historiken och felmeddelandena inte i gränssnittet på `main` | [Veckostatus V7](status/vecka-7.md) |
 | Kontrasten kontrolleras inte automatiskt, eftersom jest-axe i jsdom inte kan räkna ut färger (Amalia) | Kontrasten kontrolleras bara för hand. Vit text i felmeddelandena hade kontrasten 3.78 (kravet är 4.5), och det upptäcktes vid kontrollen för hand | [Verifieringsplanen](verifiering.md), kontroll för hand. PR #107 |
 | Temat och `native-select` är ändrade lokalt efter installationen från BOLDkit: `--destructive-foreground` är svart i stället för vitt, och `native-select` kortar för lång text med "…" (Amalia) | Installeras Purple-preseten eller `native-select` igen försvinner ändringarna, och vit text på rött får kontrasten 3.78 igen | Kommentaren i `frontend/src/styles/globals.css`. PR #107 (felmeddelanden i UI) och PR #102 (sök och filter) |
 | Engelska standardtexter i BOLDkits `data-table.tsx`, till exempel "Rows per page" och "Page … of …" (Amalia) | Syns inte i dag, eftersom sortering, filter och sidbyte är avstängda, men kommer med om någon slår på dem | Granskningarna av PR #102 |
@@ -42,8 +42,8 @@ underlag. Här samlas det som tidigare stod utspritt i specarna, ADR:erna och ve
 
 | Begränsning | Följd | Var det står |
 | --- | --- | --- |
-| En saknad `rollback` syns inte över HTTP, eftersom varje begäran får en egen session som stängs | Bara testerna på tjänstenivå skyddar mot det (HIST-09, HIST-10) | `test_atomicity.py`, [verifieringsplanen](verifiering.md) avsnitt 5, K1 |
-| `commit` borttagen i statusbytet (M3b) fångas av ett enda omstartstest | Om det testet ändras kan felet passera | `test_restart.py`, verifieringsplanen avsnitt 5 |
+| En saknad `rollback` syns inte över HTTP, eftersom varje begäran får en egen session som stängs | Bara testerna på tjänstenivå skyddar mot det (HIST-09, HIST-10) | `test_atomicity.py`, [verifieringsplanen](verifiering.md) avsnitt 5, K1 (`rollback` borttagen i `create`) |
+| M3b (`commit` borttagen i statusbytet) fångas av hela sviten (37 röda 2026-11-04), men bland omstartstesterna för HIST-04 av bara ett av tre, testet med flera byten | Om just det testet ändras ser omstartstesterna inte längre att statusen går förlorad vid omstart. Övriga tester ser felet före omstarten | `test_restart.py`, verifieringsplanen avsnitt 5 (M3b och M3b igen) |
 | Invarianten (senaste posten är ärendets status) fångar otakt, men inte att både status och post försvann | Den behöver omstartstesterna bredvid sig | [ADR-001](decisions/ADR-001-atomicitet-status-och-historik.md) |
 | Ordningen vid samma tidpunkt (HIST-11) skyddas av ett enda test, det enda med fast klocka | Nicklas korsvisa mutation fångades bara av det | Verifieringsplanen avsnitt 5, steg 2 |
 | Mutationerna är gjorda för hand och är få | Fler små fel i jämförelser och gränser är inte prövade | [Teststrategin](teststrategi.md) avsnitt 3 |
@@ -58,7 +58,7 @@ underlag. Här samlas det som tidigare stod utspritt i specarna, ADR:erna och ve
 | Status och historik hamnar i otakt | Låg | Hög: tidslinjen visar något annat än ärendet | En transaktion i `TicketService`, rollback vid alla fel, invarianten efter varje scenario och tester med framkallat fel (ADR-001, HIST-09, HIST-10) |
 | En PR mergas med röda tester | Låg | Medel | CI kör backend och frontend på varje PR, och rulesetet för `main` kräver att båda kontrollerna är gröna före merge (KSP-17, CI för backend). Kvar: ett krav som saknar test fångas inte av CI |
 | AI:s påståenden tas för sanna utan kontroll | Medel | Medel till hög: fel test eller fel förklaring | Tester före koden, mutationer, och regler i misstagsloggarna efter en människas ja ([arbetssättet](ai/arbetssatt.md)) |
-| Ett godkännande gäller inte längre efter nya commits | Medel | Medel: kod mergas utan granskning | Granskaren godkänner igen efter nya commits (hände med PR #56 och #81) |
+| Ett godkännande gäller inte längre efter nya commits | Medel | Medel: kod mergas utan granskning | Granskaren godkänner igen efter nya commits. Hände med PR #56 (HIST-raderna i verifieringsplanen): https://github.com/desiboli/kundportal-ai-native-development/pull/56 och PR #81 (HIST-09 grön i verifieringsplanen): https://github.com/desiboli/kundportal-ai-native-development/pull/81 |
 | *(fylls i av övriga)* | | | |
 
 ## 3. Förslag på vidareutveckling
@@ -68,7 +68,7 @@ underlag. Här samlas det som tidigare stod utspritt i specarna, ADR:erna och ve
 | Interna anteckningar och tilldelning av ärenden | Vanliga behov i kundservice | `event_type` är öppen, så nya händelser kan läggas till utan att ändra de gamla (HIST-specen, avsnitt 13). Varje utökning får egen spec |
 | Inloggning, så att historiken visar vem som ändrade | Spårbarhet | En användare per handläggare och ett fält i historikposten |
 | Loggning av databasfel vid 503 | Felsökning | Logga `__cause__` där vägen fångar `StatusNotSaved` (`backend/app/api/tickets.py`) |
-| Sökning och filtrering i listan | Fler ärenden blir svåra att överblicka | Parametrar på `GET /tickets` |
+| Sök och filter i API:t i stället för i webbläsaren | När ärendena blir många går det inte att hämta alla på en gång | Parametrar för sökord, status, prioritet och kategori på `GET /tickets`, med samma regler som filtret i klienten (KSP-77) |
 | Automatisk mutationsprövning, till exempel `pytest-gremlins` | Fler mutationer än för hand | Som komplement, eftersom inget verktyg tar bort en ensam `commit()` |
 | Skicka handläggaren till det nya ärendet när det har skapats (Amalia) | I dag stängs dialogen utan bekräftelse när ärendet skapas från detaljvyn, så det är svårt att veta att det lyckades | Navigera till `/tickets/{id}` med id:t från svaret på `POST /tickets`. Förslag i granskningen av PR #103 (sidhuvud med navigation) |
 | *(fylls i av övriga)* | | |
