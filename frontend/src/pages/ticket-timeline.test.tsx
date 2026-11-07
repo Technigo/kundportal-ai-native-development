@@ -101,8 +101,10 @@ function historyRegion(): HTMLElement {
   return screen.getByRole("region", { name: "Historik" })
 }
 
+// Waits for the region, since the ticket is fetched first and the history after it.
 async function entryTexts(): Promise<string[]> {
-  const list = await within(historyRegion()).findByRole("list")
+  const region = await screen.findByRole("region", { name: "Historik" })
+  const list = await within(region).findByRole("list")
   return within(list)
     .getAllByRole("listitem")
     .map((item) => item.textContent ?? "")

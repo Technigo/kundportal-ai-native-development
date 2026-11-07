@@ -1,4 +1,5 @@
 import type {
+  HistoryEntry,
   Ticket,
   TicketCategory,
   TicketCreate,
@@ -67,6 +68,21 @@ export function createTicket(draft: TicketDraft): Promise<TicketResult> {
 // is not an integer: the backend answers 404 "Ärendet finns inte." for both (CORE-10, B8).
 export function fetchTicket(id: string): Promise<TicketResult> {
   return toTicketResult(fetch(`/api/tickets/${encodeURIComponent(id)}`))
+}
+
+// The history of a ticket, oldest first (HIST-03), for the timeline in KSP-37. Any error,
+// with or without an answer, is just "error": the timeline shows its own message and not
+// the detail from the API (an exception decided in KSP-38, error messages in the UI).
+export type HistoryResult = { state: "ok"; entries: HistoryEntry[] } | { state: "error" }
+
+export async function fetchHistory(id: string): Promise<HistoryResult> {
+  try {
+    const response = await fetch(`/api/tickets/${encodeURIComponent(id)}/history`)
+    if (!response.ok) return { state: "error" }
+    return { state: "ok", entries: (await response.json()) as HistoryEntry[] }
+  } catch {
+    return { state: "error" }
+  }
 }
 
 // Changes the status (KSP-32). The code is sent, never the label, and the answer is the
