@@ -7,6 +7,8 @@
   ],
   "scripts": {
     "dev": "concurrently --kill-others-on-fail -n api,web -c yellow,cyan \"npm run dev --workspace @kundportal/api\" \"npm run dev --workspace @kundportal/web\"",
+    "test:requirements": "node --test scripts/requirement-coverage.test.cjs",
+    "check:requirements": "node scripts/requirement-coverage.cjs",
     "build": "npm run build --workspaces --if-present",
     "test": "npm run test --workspaces --if-present"
   },
