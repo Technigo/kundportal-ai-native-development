@@ -1,0 +1,66 @@
+- generic [ref=e4]:
+  - navigation [ref=e5]:
+    - link [ref=e6] [cursor=pointer]:
+      - /url: /myntro
+      - img "Myntro logo" [ref=e7]
+    - generic [ref=e8]:
+      - text: 
+      - list [ref=e9]:
+        - listitem [ref=e10]:
+          - link "Home" [ref=e11] [cursor=pointer]:
+            - /url: /myntro
+        - listitem [ref=e12]:
+          - link "News" [ref=e13] [cursor=pointer]:
+            - /url: /myntro/posts
+        - listitem [ref=e14]:
+          - link "Content" [ref=e15] [cursor=pointer]:
+            - /url: /myntro/presskits
+        - listitem [ref=e16]:
+          - link "Contacts" [ref=e17] [cursor=pointer]:
+            - /url: /myntro/contacts
+        - listitem [ref=e18]:
+          - button "Follow" [ref=e19] [cursor=pointer]
+  - generic [ref=e24]:
+    - generic [ref=e25]:
+      - generic [ref=e26]:
+        - heading "Latest news" [level=1] [ref=e27]
+        - generic [ref=e28]:
+          - button "All years" [ref=e30] [cursor=pointer]
+          - button "All months" [ref=e32] [cursor=pointer]
+          - button "All topics" [ref=e34] [cursor=pointer]
+          - generic [ref=e35]:
+            - generic [ref=e36]: 
+            - textbox [ref=e38]
+      - separator [ref=e39]
+    - generic [ref=e51]:
+      - generic [ref=e52]:
+        - generic [ref=e53]: News types
+        - link " Latest news" [ref=e54] [cursor=pointer]:
+          - /url: /myntro/posts
+        - link "News" [ref=e55] [cursor=pointer]:
+          - /url: /myntro/posts/news
+        - link "Press releases" [ref=e56] [cursor=pointer]:
+          - /url: /myntro/posts/pressreleases
+        - link "Blog posts" [ref=e57] [cursor=pointer]:
+          - /url: /myntro/posts/blogposts
+      - generic [ref=e58]:
+        - generic [ref=e59]: About Myntro
+        - generic [ref=e60]: Myntro, old Alektum Group, is a European financial institution with more than 30 years of experience helping to build a more sustainable financial system across Europe. We specialise in investing in non-performing loans and managing debt portfolios, supported by deposit-funded savings products. Founded in Sweden and headquartered in Gothenburg, Myntro operates across 10 markets with a team of approximately 500 employees. We work closely with banks, businesses and individuals to release capital, strengthen cash flows and help people regain control of their financial lives. Responsible debt management is central to our approach. By combining deep expertise with a strong values-driven culture, we aim to reduce the risk of over-indebtedness and contribute to a healthier economy - one where individuals can maintain balanced personal finances and businesses can rely on being paid. Myntro generates annual revenues of approximately EUR 250 million and operates as a regulated credit market institution with SDR status under the supervision of the Swedish Financial Supervisory Authority.
+      - generic [ref=e61]: Contacts
+  - generic [ref=e65]:
+    - generic [ref=e66]:
+      - generic [ref=e67]:  Follow us
+      - list [ref=e68]:
+        - listitem [ref=e69]:
+          - link "News (RSS)" [ref=e70] [cursor=pointer]:
+            - /url: https://api.client.notified.com/api/rss/publish/view/31689?type=news
+        - listitem [ref=e71]:
+          - link "Press releases (RSS)" [ref=e72] [cursor=pointer]:
+            - /url: https://api.client.notified.com/api/rss/publish/view/31689?type=press
+        - listitem [ref=e73]:
+          - link "Blog posts (RSS)" [ref=e74] [cursor=pointer]:
+            - /url: https://api.client.notified.com/api/rss/publish/view/31689?type=blog
+    - link [ref=e76] [cursor=pointer]:
+      - /url: https://notified.com
+      - img "Notified logo" [ref=e77]
+      - text: Powered by Notified
