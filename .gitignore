@@ -9,4 +9,8 @@ AGENTS.md
 specs
 node_modules
 .vite/
-docs/
+docs
+!/docs/
+/docs/*
+!/docs/test-requirements-review.md
+cases.db

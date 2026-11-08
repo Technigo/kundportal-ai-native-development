@@ -16,12 +16,28 @@ class CaseStatus(str, Enum):
     CLOSED = "closed"
 
 
+class CaseCategory(str, Enum):
+    """Allowed case categories (kept in sync with the frontend)."""
+    ACCOUNT = "Account"
+    BILLING = "Billing"
+    TECHNICAL_SUPPORT = "Technical support"
+    OTHER = "Other"
+
+
+class CasePriority(str, Enum):
+    """Allowed case priorities (kept in sync with the frontend)."""
+    LOW = "Low"
+    NORMAL = "Normal"
+    HIGH = "High"
+    URGENT = "Urgent"
+
+
 class CaseBase(BaseModel):
     """Base case schema."""
     title: str = Field(..., min_length=1, max_length=200)
     description: str = Field(..., min_length=1)
-    category: str = Field(..., min_length=1, max_length=50)
-    priority: str = Field(..., min_length=1, max_length=20)
+    category: CaseCategory
+    priority: CasePriority
     status: CaseStatus = CaseStatus.NEW
     customer_email: EmailStr
 
@@ -35,8 +51,8 @@ class CaseUpdate(BaseModel):
     """Schema for updating a case."""
     title: Optional[str] = Field(None, min_length=1, max_length=200)
     description: Optional[str] = Field(None, min_length=1)
-    category: Optional[str] = Field(None, max_length=50)
-    priority: Optional[str] = Field(None, max_length=20)
+    category: Optional[CaseCategory] = None
+    priority: Optional[CasePriority] = None
     status: Optional[CaseStatus] = None
     customer_email: Optional[EmailStr] = None
 
@@ -46,12 +62,12 @@ class Case(BaseModel):
     id: str
     title: str
     description: str
-    category: str
-    priority: str
+    category: CaseCategory
+    priority: CasePriority
     status: CaseStatus
     customer_email: str
     created_at: datetime
     updated_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
