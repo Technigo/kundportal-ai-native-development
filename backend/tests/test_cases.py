@@ -11,8 +11,8 @@ import pytest
 VALID_CASE = {
     "title": "Login issue",
     "description": "Customer cannot log in to the portal.",
-    "category": "technical",
-    "priority": "high",
+    "category": "Technical support",
+    "priority": "High",
     "customer_email": "customer@example.com",
 }
 
@@ -155,8 +155,8 @@ def test_update_case_changes_fields_and_preserves_identity(client):
         json={
             "title": "Updated title",
             "description": "Updated description",
-            "category": "billing",
-            "priority": "low",
+            "category": "Billing",
+            "priority": "Low",
             "status": "in_progress",
             "customer_email": "updated@example.com",
         },
@@ -167,8 +167,8 @@ def test_update_case_changes_fields_and_preserves_identity(client):
     assert data["id"] == case_id
     assert data["title"] == "Updated title"
     assert data["description"] == "Updated description"
-    assert data["category"] == "billing"
-    assert data["priority"] == "low"
+    assert data["category"] == "Billing"
+    assert data["priority"] == "Low"
     assert data["status"] == "in_progress"
     assert data["customer_email"] == "updated@example.com"
     assert data["created_at"] == original_created_at

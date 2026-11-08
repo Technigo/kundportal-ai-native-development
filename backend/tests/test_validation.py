@@ -11,8 +11,8 @@ import pytest
 VALID_CASE = {
     "title": "Login issue",
     "description": "Customer cannot log in to the portal.",
-    "category": "technical",
-    "priority": "high",
+    "category": "Technical support",
+    "priority": "High",
     "customer_email": "customer@example.com",
 }
 
