@@ -10,6 +10,43 @@ afterEach(() => {
 });
 
 describe('CaseForm', () => {
+  it('[UI-CONSISTENCY-001] gives every form field an accessible name', () => {
+    render(<CaseForm onCreated={vi.fn()} />);
+
+    for (const [label, role] of [
+      ['Rubrik', 'textbox'],
+      ['Beskrivning', 'textbox'],
+      ['Kategori', 'combobox'],
+      ['Prioritet', 'combobox']
+    ]) {
+      expect(screen.getByRole(role, { name: label })).toBeInTheDocument();
+    }
+  });
+
+  it('[CASE-CREATE-009] and [UI-CONSISTENCY-002] explains which required fields must be corrected', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    const user = userEvent.setup();
+
+    render(<CaseForm onCreated={vi.fn()} />);
+    await user.click(screen.getByRole('button', { name: 'Skapa ärende' }));
+
+    for (const [label, message] of [
+      ['Rubrik', 'Ange en rubrik.'],
+      ['Beskrivning', 'Ange en beskrivning.'],
+      ['Kategori', 'Välj en kategori.'],
+      ['Prioritet', 'Välj en prioritet.']
+    ]) {
+      const field = screen.getByRole(label === 'Kategori' || label === 'Prioritet' ? 'combobox' : 'textbox', { name: label });
+      expect(field).toHaveAttribute('aria-invalid', 'true');
+      const errorId = field.getAttribute('aria-describedby');
+      expect(errorId).toBeTruthy();
+      expect(document.getElementById(errorId!)).toHaveTextContent(message);
+      expect(document.getElementById(errorId!)).toHaveAttribute('role', 'alert');
+    }
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it('[CASE-CREATE-003] requires a category', () => {
     render(<CaseForm onCreated={vi.fn()} />);
     const category = screen.getByRole('combobox', { name: 'Kategori' });

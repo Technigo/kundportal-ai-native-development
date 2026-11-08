@@ -4,14 +4,18 @@
 
 En handläggare kan ändra status från ärendedetaljen. Giltiga statusar: `Nytt`, `Pågående`, `Väntar på kund`, `Avslutat`. Alla övergångar mellan giltiga statusar tillåts.
 
-## Krav och testmappning
+## Krav
 
-| Krav-ID | Acceptanskriterium | Minst ett automatiserat test |
-|---|---|---|
-| CASE-STATUS-001 | Var och en av de fyra statusarna kan sättas från var och en av de andra giltiga statusarna. | `caseStatus.test.ts`: 16 kombinationer inklusive oförändrad status. `CaseStatusForm.test.tsx`: tillåtna alternativ, initialt vald status och PATCH-anrop. |
-| CASE-STATUS-002 | Okänd status avvisas med begripligt fel; befintlig status förblir oförändrad. | `caseStatus.test.ts`: separata tester för felbesked vid ogiltig indata och oförändrad lagrad status. `CaseStatusForm.test.tsx`: begripligt 400-fel. `CaseDetail.test.tsx`: befintlig status visas efter avvisad ändring. |
-| CASE-STATUS-003 | Statusändringen sparas beständigt och syns efter ny hämtning av ärendet. | `caseStatus.test.ts`: ny databasanslutning och hämtning, oförändrade övriga fält samt listans status. `CaseStatusForm.test.tsx`: bekräftad uppdatering, sparmeddelande, skydd mot dubbelsparning, felhantering och omförsök. `CaseDetail.test.tsx` och `CaseList.test.tsx`: uppdaterad status i respektive vy. |
-| CASE-STATUS-004 | Statusändring på ett ärende som inte finns ger begripligt `not found`-fel. | `caseStatus.test.ts`: 404 för saknat ärende och 400 för ogiltigt ID. `CaseStatusForm.test.tsx`: begripligt besked vid 404. |
+| Krav-ID | Acceptanskriterium |
+|---|---|
+| CASE-STATUS-001 | Var och en av de fyra statusarna kan sättas från var och en av de andra giltiga statusarna. |
+| CASE-STATUS-002 | Okänd status avvisas med begripligt fel. |
+| CASE-STATUS-003 | Statusändringen sparas beständigt och syns efter ny hämtning av ärendet. |
+| CASE-STATUS-004 | Statusändring på ett ärende som inte finns ger begripligt `not found`-fel. |
+| CASE-STATUS-005 | Ärendets sparade status förblir oförändrad när en ogiltig status avvisas. |
+| CASE-STATUS-006 | Ett ogiltigt ärende-ID avvisas med valideringsfel. |
+| CASE-STATUS-007 | En statusändring visas i ärendelistan. |
+| CASE-STATUS-008 | En statusändring bevarar ärendets övriga fält. |
 
 ## Implementation
 

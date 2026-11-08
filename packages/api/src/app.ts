@@ -1,6 +1,12 @@
 import express from 'express';
 import type Database from 'better-sqlite3';
-import { isValidCaseId, validateCaseNote, validateCaseStatus, validateCreateCase } from './caseValidation.js';
+import {
+  isValidCaseId,
+  validateCaseNote,
+  validateCaseStatus,
+  validateCreateCase,
+  validateUpdateCase
+} from './caseValidation.js';
 
 interface CaseRow {
   id: number;
@@ -16,6 +22,7 @@ interface CaseRow {
 interface CaseSummaryRow {
   id: number;
   title: string;
+  description: string;
   category: string;
   priority: string;
   status: string;
@@ -34,7 +41,7 @@ export function createApp(connection: Database.Database) {
   app.get('/api/cases', (_request, response) => {
     const cases = connection
       .prepare(`
-        SELECT id, title, category, priority, status, created_at AS createdAt
+        SELECT id, title, description, category, priority, status, created_at AS createdAt
         FROM cases
         ORDER BY created_at DESC, id DESC
       `)
@@ -65,6 +72,57 @@ export function createApp(connection: Database.Database) {
     } catch (error) {
       console.error('Failed to load case details:', error);
       return response.status(500).json({ error: 'Ärendet kunde inte hämtas. Försök igen.' });
+    }
+  });
+
+  app.delete('/api/cases/:id', (request, response) => {
+    if (!isValidCaseId(request.params.id)) {
+      return response.status(400).json({ error: 'Ärende-ID måste vara ett positivt heltal.' });
+    }
+
+    try {
+      const result = connection.prepare('DELETE FROM cases WHERE id = ?')
+        .run(Number(request.params.id));
+      if (result.changes === 0) {
+        return response.status(404).json({ error: 'Ärendet hittades inte.' });
+      }
+
+      return response.status(204).end();
+    } catch (error) {
+      console.error('Failed to delete case:', error);
+      return response.status(500).json({ error: 'Ärendet kunde inte tas bort. Försök igen.' });
+    }
+  });
+
+  app.patch('/api/cases/:id', (request, response) => {
+    if (!isValidCaseId(request.params.id)) {
+      return response.status(400).json({ error: 'Ärende-ID måste vara ett positivt heltal.' });
+    }
+
+    const validation = validateUpdateCase(request.body);
+    if (!validation.success) {
+      return response.status(400).json({ error: validation.error });
+    }
+
+    try {
+      const updated = connection
+        .prepare(`
+          UPDATE cases
+          SET title = @title, description = @description, category = @category,
+              priority = @priority, status = @status, note = @note
+          WHERE id = @id
+          RETURNING id, title, description, category, priority, status, created_at AS createdAt, note
+        `)
+        .get({ ...validation.value, id: Number(request.params.id) }) as CaseRow | undefined;
+
+      if (!updated) {
+        return response.status(404).json({ error: 'Ärendet hittades inte.' });
+      }
+
+      return response.json(updated);
+    } catch (error) {
+      console.error('Failed to update case:', error);
+      return response.status(500).json({ error: 'Ärendet kunde inte sparas. Försök igen.' });
     }
   });
 

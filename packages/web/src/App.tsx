@@ -1,63 +1,72 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { CaseForm, type CreatedCase } from './CaseForm';
 import { CaseList } from './CaseList';
 
-type ApiStatus = 'checking' | 'connected' | 'unavailable';
+type View = 'list' | 'create';
 
 export function App() {
-  const [apiStatus, setApiStatus] = useState<ApiStatus>('checking');
+  const [view, setView] = useState<View>('list');
   const [createdCase, setCreatedCase] = useState<CreatedCase | null>(null);
   const [listRefresh, setListRefresh] = useState(0);
-
-  useEffect(() => {
-    fetch('/api/health')
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`API responded with ${response.status}`);
-        }
-        return response.json() as Promise<{ status: string }>;
-      })
-      .then(({ status }) => {
-        setApiStatus(status === 'ok' ? 'connected' : 'unavailable');
-      })
-      .catch(() => {
-        setApiStatus('unavailable');
-      });
-  }, []);
 
   function handleCreated(caseItem: CreatedCase) {
     setCreatedCase(caseItem);
     setListRefresh((refresh) => refresh + 1);
+    setView('list');
   }
 
   return (
     <main className="shell">
       <header className="topbar">
-        <span className="brand-mark" aria-hidden="true">K</span>
-        <span>Kundserviceportalen</span>
+        <a className="brand" href="/" aria-label="Kundserviceportalen – startsida" tabIndex={0}>
+          <span className="brand-mark" aria-hidden="true">K</span>
+          <span>Kundserviceportalen</span>
+        </a>
+        <nav className="main-nav main-nav--tabs" aria-label="Huvudmeny">
+          <button
+            className="main-nav__item case-edit-button"
+            type="button"
+            aria-current={view === 'list' ? 'page' : undefined}
+            onClick={() => setView('list')}
+          >
+            Alla ärenden
+          </button>
+          <button
+            className="main-nav__item case-edit-button"
+            type="button"
+            aria-current={view === 'create' ? 'page' : undefined}
+            onClick={() => setView('create')}
+          >
+            Skapa ärende
+          </button>
+        </nav>
       </header>
-      <section className="welcome" aria-labelledby="welcome-title">
-        <p className="eyebrow">INTERNT VERKTYG</p>
-        <h1 id="welcome-title">Kundärenden.</h1>
-        <p className="intro">Registrera ett nytt ärende eller se sparade ärenden.</p>
-        <div className={`connection connection--${apiStatus}`} role="status">
-          <span className="connection-dot" aria-hidden="true" />
-          {apiStatus === 'checking' && 'Kontrollerar anslutning till API…'}
-          {apiStatus === 'connected' && 'Frontend och API är anslutna'}
-          {apiStatus === 'unavailable' && 'API:et kunde inte nås'}
+      <section className="welcome" aria-labelledby="workspace-title">
+        <div className="workspace-heading">
+          <div>
+            <h1 id="workspace-title">{view === 'list' ? 'Alla ärenden' : 'Skapa ärende'}</h1>
+            <p className="intro">
+              {view === 'list'
+                ? 'Håll koll på inkomna kundärenden och deras status.'
+                : 'Fyll i uppgifterna för att registrera ett nytt ärende.'}
+            </p>
+          </div>
         </div>
-        {apiStatus === 'unavailable' && (
-          <p className="form-message form-message--error" role="alert">
-            Det går inte att nå tjänsten. Starta om projektet och försök igen.
-          </p>
+        {view === 'create' ? (
+          <>
+            <hr className="workspace-divider" />
+            <CaseForm onCreated={handleCreated} />
+          </>
+        ) : (
+          <>
+            {createdCase && (
+              <p className="created-summary" role="status">
+                Ärende #{createdCase.id} sparades med status {createdCase.status}.
+              </p>
+            )}
+            <CaseList refreshKey={listRefresh} onCreateCase={() => setView('create')} />
+          </>
         )}
-        <CaseForm onCreated={handleCreated} />
-        {createdCase && (
-          <p className="created-summary">
-            Ärende #{createdCase.id} sparades med status {createdCase.status}.
-          </p>
-        )}
-        <CaseList refreshKey={listRefresh} />
       </section>
     </main>
   );

@@ -73,28 +73,37 @@ describe('POST /api/cases', () => {
       .expect(201);
   });
 
-  it('[CASE-CREATE-003] accepts allowed categories and rejects unknown categories', async () => {
+  it('[CASE-CREATE-003] accepts the allowed categories', async () => {
     for (const category of ['Konto', 'Fakturering', 'Tekniskt', 'Övrigt']) {
       await request(app).post('/api/cases').send(validCase({ category })).expect(201);
     }
+  });
 
+  it('[CASE-CREATE-014] rejects unknown categories', async () => {
     await request(app).post('/api/cases').send(validCase({ category: 'Annat' })).expect(400);
     await request(app).post('/api/cases').send(validCase({ category: '' })).expect(400);
   });
 
-  it('[CASE-CREATE-004] accepts allowed priorities and rejects unknown priorities', async () => {
+  it('[CASE-CREATE-004] accepts the allowed priorities', async () => {
     for (const priority of ['Låg', 'Normal', 'Hög']) {
       await request(app).post('/api/cases').send(validCase({ priority })).expect(201);
     }
+  });
 
+  it('[CASE-CREATE-015] rejects unknown priorities', async () => {
     await request(app).post('/api/cases').send(validCase({ priority: 'Kritisk' })).expect(400);
     await request(app).post('/api/cases').send(validCase({ priority: '' })).expect(400);
   });
 
-  it('[CASE-CREATE-005] assigns new status and a system creation time', async () => {
+  it('[CASE-CREATE-005] assigns new status by default', async () => {
     const response = await request(app).post('/api/cases').send(validCase()).expect(201);
 
     expect(response.body.status).toBe('Nytt');
+  });
+
+  it('[CASE-CREATE-016] assigns a system creation time', async () => {
+    const response = await request(app).post('/api/cases').send(validCase()).expect(201);
+
     expect(Number.isNaN(Date.parse(response.body.createdAt))).toBe(false);
   });
 
@@ -113,6 +122,10 @@ describe('POST /api/cases', () => {
   });
 
   it('[CASE-CREATE-007] rejects invalid input without storing a case', async () => {
+    await request(app).post('/api/cases').send(validCase({ title: '   ' })).expect(400);
+  });
+
+  it('[CASE-CREATE-017] does not store a case after rejecting invalid input', async () => {
     await request(app).post('/api/cases').send(validCase({ title: '   ' })).expect(400);
 
     const result = database.prepare('SELECT COUNT(*) AS count FROM cases').get() as { count: number };

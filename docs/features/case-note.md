@@ -10,16 +10,23 @@ En handläggare kan lägga till eller redigera en intern textanteckning från ä
 - Text trimmas och får vara högst 2 000 tecken.
 - Att spara tom text eller enbart blanksteg raderar anteckningen.
 
-## Krav och testmappning
+## Krav
 
-| Krav-ID | Acceptanskriterium | Minst ett automatiserat test |
-|---|---|---|
-| CASE-NOTE-001 | Ärende kan skapas och visas utan anteckning. | `caseNote.test.ts`: skapa/läsa utan anteckning och uppgradera befintlig databas. `CaseNoteForm.test.tsx`: tom editor. |
-| CASE-NOTE-002 | Icke-tom anteckning kan läggas till, trimmas och kopplas till rätt ärende. Gränsen 2 000 godtas; 2 001 avvisas. | `caseNote.test.ts`: trimning, rätt ärende, 2 000 tecken och avvisning av 2 001. `CaseNoteForm.test.tsx`: längdgräns och PATCH-anrop. |
-| CASE-NOTE-003 | Befintlig anteckning kan redigeras och ändringen finns kvar efter omläsning. | `caseNote.test.ts`: redigering efter återöppnad databas, bevarade övriga fält och anteckning vid statusändring. `CaseNoteForm.test.tsx`: förifyllning, bekräftelse, fel, omförsök och dubbelsparningsskydd. `CaseDetail.test.tsx`: omläsning, bevarat utkast vid statusändring och sena sparsvar. |
-| CASE-NOTE-004 | Tömning eller enbart blanksteg, följt av spara, raderar anteckningen. | `caseNote.test.ts`: tom text och blanksteg ger `null` efter återöppnad databas. `CaseNoteForm.test.tsx`: raderingsbekräftelse. |
-| CASE-NOTE-005 | Ogiltig längd avvisas utan att befintlig anteckning ändras. | `caseNote.test.ts`: separata tester för längdfel och bevarad text samt felaktiga indatatyper. `CaseNoteForm.test.tsx`: begripligt valideringsfel. |
-| CASE-NOTE-006 | Anteckning på ärende som inte finns ger begripligt `not found`-fel. | `caseNote.test.ts`: 404 för saknat ärende och 400 för ogiltigt ID. `CaseNoteForm.test.tsx`: begripligt besked vid 404. |
+| Krav-ID | Acceptanskriterium |
+|---|---|
+| CASE-NOTE-001 | Ärende kan skapas och visas utan anteckning. |
+| CASE-NOTE-002 | Icke-tom anteckning kan läggas till, trimmas och kopplas till rätt ärende. Gränsen 2 000 godtas; 2 001 avvisas. |
+| CASE-NOTE-003 | Befintlig anteckning kan redigeras och ändringen finns kvar efter omläsning. |
+| CASE-NOTE-004 | Tömning eller enbart blanksteg, följt av spara, raderar anteckningen. |
+| CASE-NOTE-005 | En anteckning som överskrider maxlängden avvisas med ett begripligt valideringsfel. |
+| CASE-NOTE-006 | Anteckning på ärende som inte finns ger begripligt `not found`-fel. |
+| CASE-NOTE-007 | En avvisad ogiltig anteckning ändrar inte den befintliga anteckningen. |
+| CASE-NOTE-008 | Ett ogiltigt ärende-ID avvisas med valideringsfel. |
+| CASE-NOTE-009 | En anteckning sparas endast på det valda ärendet. |
+| CASE-NOTE-010 | En anteckning på 2 000 tecken godtas. |
+| CASE-NOTE-011 | En befintlig anteckning bevaras vid statusändring. |
+| CASE-NOTE-012 | Övriga ärendefält bevaras när anteckningen uppdateras. |
+| CASE-NOTE-013 | En äldre databas uppgraderas med anteckningsfältet utan att befintliga ärenden förloras. |
 
 ## Implementation
 

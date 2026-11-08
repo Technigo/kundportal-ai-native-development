@@ -40,13 +40,19 @@ describe('GET /api/cases/:id', () => {
   });
 
   it.each(['abc', '0', '-1', '1.5', '1abc', '9007199254740992'])(
-    '[CASE-DETAIL-002] rejects invalid case ID %s',
+    '[CASE-DETAIL-005] rejects invalid case ID %s',
     async (id) => {
       const response = await request(app).get(`/api/cases/${id}`).expect(400);
 
       expect(response.body).toEqual({ error: 'Ärende-ID måste vara ett positivt heltal.' });
     }
   );
+
+  it('[CASE-DETAIL-005] returns a bad-request error for an invalid case ID', async () => {
+    const response = await request(app).get('/api/cases/0').expect(400);
+
+    expect(response.body).toEqual({ error: 'Ärende-ID måste vara ett positivt heltal.' });
+  });
 
   it('[CASE-DETAIL-003] returns a fetch error when the database query fails', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});

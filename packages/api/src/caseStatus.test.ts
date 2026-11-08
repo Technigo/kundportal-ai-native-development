@@ -60,6 +60,15 @@ describe('PATCH /api/cases/:id/status', () => {
     expect(response.body.status).toBe('Nytt');
   });
 
+  it('[CASE-STATUS-005] leaves the stored case unchanged when a status is rejected', async () => {
+    const original = await request(app).get(`/api/cases/${id}`).expect(200);
+    await request(app).patch(`/api/cases/${id}/status`).send({ status: 'Okänd' }).expect(400);
+
+    const unchanged = await request(app).get(`/api/cases/${id}`).expect(200);
+
+    expect(unchanged.body).toEqual(original.body);
+  });
+
   it('[CASE-STATUS-003] preserves the updated status after reopening the database', async () => {
     await request(app).patch(`/api/cases/${id}/status`).send({ status: 'Avslutat' }).expect(200);
     database.close();
@@ -71,7 +80,7 @@ describe('PATCH /api/cases/:id/status', () => {
     expect(response.body.status).toBe('Avslutat');
   });
 
-  it('[CASE-STATUS-003] returns unchanged case fields alongside the updated status', async () => {
+  it('[CASE-STATUS-008] preserves other case fields alongside the updated status', async () => {
     const original = await request(app).get(`/api/cases/${id}`).expect(200);
 
     const response = await request(app).patch(`/api/cases/${id}/status`).send({ status: 'Pågående' }).expect(200);
@@ -79,7 +88,7 @@ describe('PATCH /api/cases/:id/status', () => {
     expect(response.body).toEqual({ ...original.body, status: 'Pågående' });
   });
 
-  it('[CASE-STATUS-003] includes the updated status in the case list', async () => {
+  it('[CASE-STATUS-007] includes the updated status in the case list', async () => {
     await request(app).patch(`/api/cases/${id}/status`).send({ status: 'Väntar på kund' }).expect(200);
 
     const response = await request(app).get('/api/cases').expect(200);
@@ -94,13 +103,20 @@ describe('PATCH /api/cases/:id/status', () => {
   });
 
   it.each(['abc', '0', '-1', '1.5', '9007199254740992'])(
-    '[CASE-STATUS-004] rejects invalid case ID %s',
+    '[CASE-STATUS-006] rejects invalid case ID %s',
     async (invalidId) => {
       const response = await request(app).patch(`/api/cases/${invalidId}/status`).send({ status: 'Nytt' }).expect(400);
 
       expect(response.body).toEqual({ error: 'Ärende-ID måste vara ett positivt heltal.' });
     }
   );
+
+  it('[CASE-STATUS-006] returns a bad-request error for an invalid case ID', async () => {
+    const response = await request(app).patch('/api/cases/0/status')
+      .send({ status: 'Nytt' }).expect(400);
+
+    expect(response.body).toEqual({ error: 'Ärende-ID måste vara ett positivt heltal.' });
+  });
 
   it('[CASE-STATUS-003] reports a database failure explicitly', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});

@@ -13,6 +13,14 @@ type TextResult = { success: true; value: string } | { success: false; error: st
 type ValidationResult =
   | { success: true; value: CreateCaseInput }
   | { success: false; error: string };
+interface UpdateCaseInput extends CreateCaseInput {
+  status: (typeof statuses)[number];
+  note: string | null;
+}
+
+type UpdateValidationResult =
+  | { success: true; value: UpdateCaseInput }
+  | { success: false; error: string };
 
 function requiredText(value: unknown, label: string, maximumLength: number): TextResult {
   if (typeof value !== 'string') {
@@ -98,5 +106,27 @@ export function validateCreateCase(input: unknown): ValidationResult {
       category: input.category,
       priority: input.priority
     }
+  };
+}
+
+export function validateUpdateCase(input: unknown): UpdateValidationResult {
+  const caseFields = validateCreateCase(input);
+  if (!caseFields.success) {
+    return caseFields;
+  }
+
+  const status = validateCaseStatus(input);
+  if (!status.success) {
+    return status;
+  }
+
+  const note = validateCaseNote(input);
+  if (!note.success) {
+    return note;
+  }
+
+  return {
+    success: true,
+    value: { ...caseFields.value, status: status.value, note: note.value }
   };
 }

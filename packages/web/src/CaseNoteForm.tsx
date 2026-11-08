@@ -61,6 +61,7 @@ export function CaseNoteForm({ caseItem, onUpdated }: CaseNoteFormProps) {
       <label className="form-field">
         <span>Intern anteckning</span>
         <textarea
+          className="form-control"
           value={note}
           maxLength={2000}
           rows={4}

@@ -47,6 +47,7 @@ describe('GET /api/cases', () => {
     expect(response.body[0]).toMatchObject({
       id: newer.body.id,
       title: 'Nyare',
+      description: 'Beskrivning för Nyare.',
       category: 'Tekniskt',
       priority: 'Normal',
       status: 'Nytt',

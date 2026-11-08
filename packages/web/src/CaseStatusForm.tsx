@@ -56,6 +56,7 @@ export function CaseStatusForm({ caseItem, onUpdated }: CaseStatusFormProps) {
       <label className="form-field">
         <span>Ändra status</span>
         <select
+          className="form-control"
           value={status}
           disabled={saving}
           onChange={(event) => {

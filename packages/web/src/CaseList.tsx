@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 import { CaseDetail } from './CaseDetail';
 import { isCaseSummary, type CaseSummary } from './caseTypes';
 
 interface CaseListProps {
   refreshKey?: number;
+  onCreateCase?: () => void;
 }
 
-export function CaseList({ refreshKey = 0 }: CaseListProps) {
+export function CaseList({ refreshKey = 0, onCreateCase }: CaseListProps) {
   const [cases, setCases] = useState<CaseSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -52,52 +54,77 @@ export function CaseList({ refreshKey = 0 }: CaseListProps) {
   }, [refreshKey]);
 
   return (
-    <section className="case-list" aria-labelledby="case-list-title">
-      <h2 id="case-list-title">Ärenden</h2>
-      {loading && <p role="status">Laddar ärenden…</p>}
-      {error && (
-        <p className="form-message form-message--error" role="alert">
-          Ärendena kunde inte hämtas. Försök igen.
-        </p>
-      )}
-      {!loading && !error && cases.length === 0 && <p>Inga ärenden ännu.</p>}
-      {!loading && !error && cases.length > 0 && (
-        <ul className="case-items" aria-labelledby="case-list-title">
-          {cases.map((caseItem) => (
-            <li className="case-item" key={caseItem.id}>
-              <div className="case-item__heading">
-                <h3>
-                  <button
-                    className="case-link"
-                    type="button"
-                    aria-pressed={selectedCaseId === caseItem.id}
-                    aria-controls="case-detail"
-                    onClick={() => setSelectedCaseId(caseItem.id)}
-                  >
-                    {caseItem.title}
-                  </button>
-                </h3>
-                <span className="case-status">{caseItem.status}</span>
-              </div>
-              <p className="case-item__details">
-                {caseItem.category} · Prioritet: {caseItem.priority} · Skapad{' '}
-                {new Date(caseItem.createdAt).toLocaleString('sv-SE')}
-              </p>
-            </li>
-          ))}
-        </ul>
-      )}
-      {selectedCaseId !== null && (
-        <CaseDetail
-          key={selectedCaseId}
-          caseId={selectedCaseId}
-          onUpdated={(updated) => {
-            setCases((current) => current.map((item) =>
-              item.id === updated.id ? { ...item, status: updated.status } : item
-            ));
-          }}
-        />
-      )}
-    </section>
+    <div className="case-workspace">
+      <section className="case-list" aria-label="Alla ärenden">
+        {loading && <p role="status">Laddar ärenden…</p>}
+        {error && (
+          <p className="form-message form-message--error" role="alert">
+            Ärendena kunde inte hämtas. Försök igen.
+          </p>
+        )}
+        {!loading && !error && cases.length === 0 && (
+          <div className="case-empty">
+            <p>Du har inga ärenden ännu.</p>
+            <p>Skapa ditt första ärende för att börja hålla ordning på kundernas frågor.</p>
+            {onCreateCase && (
+              <button className="primary-button" type="button" onClick={onCreateCase}>
+                Skapa ditt första ärende
+              </button>
+            )}
+          </div>
+        )}
+        {!loading && !error && cases.length > 0 && (
+          <ul className="case-items" aria-label="Alla ärenden">
+            {cases.map((caseItem) => (
+              <li
+                id={`case-item-${caseItem.id}`}
+                className={`case-item${selectedCaseId === caseItem.id ? ' case-item--expanded' : ''}`}
+                key={caseItem.id}
+              >
+                {selectedCaseId === caseItem.id ? (
+                  <CaseDetail
+                    key={caseItem.id}
+                    caseId={caseItem.id}
+                    onCollapse={() => setSelectedCaseId(null)}
+                    onDeleted={() => {
+                      setCases((current) => current.filter((item) => item.id !== caseItem.id));
+                      setSelectedCaseId(null);
+                    }}
+                    onUpdated={(updated) => {
+                      setCases((current) => current.map((item) =>
+                        item.id === updated.id ? updated : item
+                      ));
+                    }}
+                  />
+                ) : (
+                  <>
+                    <div className="case-item__heading">
+                      <div className="case-item__title">
+                        <button
+                          className="case-expand-button"
+                          type="button"
+                          aria-label="Visa ärendedetaljer"
+                          aria-expanded={false}
+                          onClick={() => setSelectedCaseId(caseItem.id)}
+                        >
+                          <ChevronDown aria-hidden="true" size={18} strokeWidth={2} />
+                        </button>
+                        <h3>{caseItem.title}</h3>
+                      </div>
+                      <span className="case-status">{caseItem.status}</span>
+                    </div>
+                    <p className="case-item__description">{caseItem.description}</p>
+                    <p className="case-item__details">
+                      {caseItem.category} · Prioritet: {caseItem.priority} · Skapad{' '}
+                      {new Date(caseItem.createdAt).toLocaleString('sv-SE')}
+                    </p>
+                  </>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    </div>
   );
 }

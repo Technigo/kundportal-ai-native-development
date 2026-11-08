@@ -1,6 +1,7 @@
 export interface CaseSummary {
   id: number;
   title: string;
+  description: string;
   category: string;
   priority: string;
   status: string;
@@ -22,6 +23,8 @@ export function isCaseSummary(value: unknown): value is CaseSummary {
     typeof value.id === 'number' &&
     'title' in value &&
     typeof value.title === 'string' &&
+    'description' in value &&
+    typeof value.description === 'string' &&
     'category' in value &&
     typeof value.category === 'string' &&
     'priority' in value &&

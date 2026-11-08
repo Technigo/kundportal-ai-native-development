@@ -28,98 +28,289 @@ afterEach(() => {
 });
 
 describe('CaseDetail', () => {
-  it('[CASE-NOTE-003] keeps a confirmed status when a note response contains an older status', async () => {
-    let resolveNote!: (response: Response) => void;
-    const noteResponse = new Promise<Response>((resolve) => {
-      resolveNote = resolve;
+  it('[CASE-EDIT-003] displays details in read-only mode before editing starts', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
+      jsonResponse({ ...caseItem, note: 'Privat anteckning.' })
+    ));
+    const user = userEvent.setup();
+    render(<CaseDetail caseId={7} />);
+
+    const detail = await screen.findByRole('region', { name: caseItem.title });
+    const table = within(detail).getByRole('table', { name: 'Ärendeuppgifter' });
+    expect(within(table).getByRole('rowheader', { name: 'Intern anteckning' }).parentElement)
+      .toHaveTextContent('Privat anteckning.');
+    expect(within(table).getByRole('rowheader', { name: 'Rubrik' }).parentElement)
+      .toHaveTextContent(caseItem.title);
+    expect(within(table).getByRole('rowheader', { name: 'Beskrivning' }).parentElement)
+      .toHaveTextContent(caseItem.description.replace('\n', ' '));
+    expect(within(detail).queryByRole('textbox')).not.toBeInTheDocument();
+    expect(within(detail).queryByRole('combobox')).not.toBeInTheDocument();
+
+    await user.click(within(detail).getByRole('button', { name: 'Redigera ärende' }));
+
+    const editForm = within(detail).getByRole('form', { name: 'Redigera ärende' });
+    expect(editForm).toContainElement(table);
+    expect(within(editForm).getByRole('textbox', { name: 'Intern anteckning' }))
+      .toHaveValue('Privat anteckning.');
+    const createdRow = within(editForm).getByRole('rowheader', { name: 'Skapad' }).parentElement!;
+    expect(within(createdRow)
+      .queryByRole('textbox')).not.toBeInTheDocument();
+    expect(within(editForm).getByRole('rowheader', { name: 'Rubrik' }).parentElement)
+      .toContainElement(within(editForm).getByRole('textbox', { name: 'Rubrik' }));
+  });
+
+  it('[CASE-EDIT-001] edits all case fields and saves them in one request', async () => {
+    const updatedCase = {
+      ...caseItem,
+      title: 'Uppdaterad rubrik',
+      description: 'Uppdaterad beskrivning.',
+      category: 'Konto',
+      priority: 'Normal',
+      status: 'Avslutat',
+      note: 'Uppdaterad anteckning.'
+    };
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(jsonResponse(caseItem))
+      .mockResolvedValueOnce(jsonResponse(updatedCase));
+    vi.stubGlobal('fetch', fetchMock);
+    const user = userEvent.setup();
+    render(<CaseDetail caseId={7} />);
+
+    await user.click(await screen.findByRole('button', { name: 'Redigera ärende' }));
+    await user.clear(screen.getByRole('textbox', { name: 'Rubrik' }));
+    await user.type(screen.getByRole('textbox', { name: 'Rubrik' }), updatedCase.title);
+    await user.clear(screen.getByRole('textbox', { name: 'Beskrivning' }));
+    await user.type(screen.getByRole('textbox', { name: 'Beskrivning' }), updatedCase.description);
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Kategori' }), updatedCase.category);
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Prioritet' }), updatedCase.priority);
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Status' }), updatedCase.status);
+    await user.clear(screen.getByRole('textbox', { name: 'Intern anteckning' }));
+    await user.type(screen.getByRole('textbox', { name: 'Intern anteckning' }), updatedCase.note);
+    await user.click(screen.getByRole('button', { name: 'Spara ändringar' }));
+
+    expect(await screen.findByRole('button', { name: 'Redigera ärende' })).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock).toHaveBeenLastCalledWith('/api/cases/7', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: updatedCase.title,
+        description: updatedCase.description,
+        category: updatedCase.category,
+        priority: updatedCase.priority,
+        status: updatedCase.status,
+        note: updatedCase.note
+      })
     });
+  });
+
+  it('[CASE-EDIT-002] and [CASE-EDIT-005] explains required fields that block an update', async () => {
+    const fetchMock = vi.fn().mockResolvedValueOnce(jsonResponse(caseItem));
+    vi.stubGlobal('fetch', fetchMock);
+    const user = userEvent.setup();
+    render(<CaseDetail caseId={7} />);
+
+    await user.click(await screen.findByRole('button', { name: 'Redigera ärende' }));
+    const title = screen.getByRole('textbox', { name: 'Rubrik' });
+    await user.clear(title);
+    await user.click(screen.getByRole('button', { name: 'Spara ändringar' }));
+
+    expect(title).toBeRequired();
+    expect(title).toHaveAttribute('aria-invalid', 'true');
+    const errorId = title.getAttribute('aria-describedby');
+    expect(errorId).toBeTruthy();
+    expect(document.getElementById(errorId!)).toHaveTextContent('Ange en rubrik.');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('[CASE-EDIT-010] displays the internal note in the read-only detail', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
+      jsonResponse({ ...caseItem, note: 'Privat anteckning.' })
+    ));
+    render(<CaseDetail caseId={7} />);
+
+    const detail = await screen.findByRole('region', { name: caseItem.title });
+    const noteRow = within(detail).getByRole('rowheader', { name: 'Intern anteckning' }).parentElement!;
+    expect(within(noteRow).getByRole('cell')).toHaveTextContent('Privat anteckning.');
+  });
+
+  it('[CASE-EDIT-008] only shows editable fields after entering edit mode', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(caseItem)));
+    const user = userEvent.setup();
+    render(<CaseDetail caseId={7} />);
+
+    const detail = await screen.findByRole('region', { name: caseItem.title });
+    expect(within(detail).queryByRole('textbox')).not.toBeInTheDocument();
+    expect(within(detail).queryByRole('combobox')).not.toBeInTheDocument();
+
+    await user.click(within(detail).getByRole('button', { name: 'Redigera ärende' }));
+
+    expect(within(detail).getByRole('textbox', { name: 'Rubrik' })).toBeInTheDocument();
+    expect(within(detail).getByRole('combobox', { name: 'Status' })).toBeInTheDocument();
+  });
+
+  it('[CASE-EDIT-009] keeps the creation time read-only during editing', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(caseItem)));
+    render(<CaseDetail caseId={7} />);
+
+    const detail = await screen.findByRole('region', { name: caseItem.title });
+    const createdRow = within(detail).getByRole('rowheader', { name: 'Skapad' }).parentElement!;
+    const time = createdRow.querySelector('time')!;
+
+    expect(time).toBeInTheDocument();
+    expect(time).toHaveAttribute('datetime', caseItem.createdAt);
+    expect(within(createdRow).queryByRole('textbox')).not.toBeInTheDocument();
+  });
+
+  it('[CASE-DELETE-009] focuses the cancel action when confirmation opens', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(caseItem));
+    vi.stubGlobal('fetch', fetchMock);
+    const user = userEvent.setup();
+    render(<CaseDetail caseId={7} onDeleted={vi.fn()} />);
+
+    const detail = await screen.findByRole('region', { name: caseItem.title });
+    expect(within(detail).queryByRole('button', { name: 'Ta bort ärende' })).not.toBeInTheDocument();
+
+    await user.click(within(detail).getByRole('button', { name: 'Redigera ärende' }));
+    await user.click(within(detail).getByRole('button', { name: 'Ta bort ärende' }));
+
+    const confirmation = within(detail).getByRole('alertdialog', { name: 'Ta bort ärende?' });
+    expect(confirmation).toHaveTextContent(caseItem.title);
+    const cancelButton = within(confirmation).getByRole('button', { name: 'Avbryt' });
+    expect(cancelButton).toHaveFocus();
+  });
+
+  it('[CASE-DELETE-011] closes confirmation without sending a delete request when cancelled', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(caseItem));
+    vi.stubGlobal('fetch', fetchMock);
+    const user = userEvent.setup();
+    render(<CaseDetail caseId={7} onDeleted={vi.fn()} />);
+
+    const detail = await screen.findByRole('region', { name: caseItem.title });
+    await user.click(within(detail).getByRole('button', { name: 'Redigera ärende' }));
+    await user.click(within(detail).getByRole('button', { name: 'Ta bort ärende' }));
+    const confirmation = within(detail).getByRole('alertdialog', { name: 'Ta bort ärende?' });
+    await user.click(within(confirmation).getByRole('button', { name: 'Avbryt' }));
+
+    expect(within(detail).queryByRole('alertdialog')).not.toBeInTheDocument();
+    expect(within(detail).getByRole('table', { name: 'Ärendeuppgifter' })).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('[CASE-DELETE-008] shows a confirmation dialog with cancel and confirm actions', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(caseItem)));
+    const user = userEvent.setup();
+    render(<CaseDetail caseId={7} />);
+
+    const detail = await screen.findByRole('region', { name: caseItem.title });
+    await user.click(within(detail).getByRole('button', { name: 'Redigera ärende' }));
+    await user.click(within(detail).getByRole('button', { name: 'Ta bort ärende' }));
+
+    const dialog = within(detail).getByRole('alertdialog', { name: 'Ta bort ärende?' });
+    expect(within(dialog).getByRole('button', { name: 'Avbryt' })).toBeInTheDocument();
+    expect(within(dialog).getByRole('button', { name: 'Ta bort på riktigt' })).toBeInTheDocument();
+  });
+
+  it('[CASE-DELETE-002] and [CASE-DELETE-008] makes deletion available in edit mode and requires confirmation', async () => {
+    const onDeleted = vi.fn();
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(jsonResponse(caseItem))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }));
+    vi.stubGlobal('fetch', fetchMock);
+    const user = userEvent.setup();
+    render(<CaseDetail caseId={7} onDeleted={onDeleted} />);
+
+    const detail = await screen.findByRole('region', { name: caseItem.title });
+    await user.click(within(detail).getByRole('button', { name: 'Redigera ärende' }));
+    await user.click(within(detail).getByRole('button', { name: 'Ta bort ärende' }));
+    await user.click(within(screen.getByRole('alertdialog', { name: 'Ta bort ärende?' }))
+      .getByRole('button', { name: 'Ta bort på riktigt' }));
+
+    expect(fetchMock).toHaveBeenLastCalledWith('/api/cases/7', { method: 'DELETE' });
+    expect(onDeleted).toHaveBeenCalledOnce();
+  });
+
+  it('[CASE-DELETE-007] keeps the confirmation open and reports a delete failure', async () => {
     vi.stubGlobal('fetch', vi.fn()
       .mockResolvedValueOnce(jsonResponse(caseItem))
-      .mockReturnValueOnce(noteResponse)
-      .mockResolvedValueOnce(jsonResponse({ ...caseItem, note: 'Text.', status: 'Avslutat' })));
+      .mockResolvedValueOnce(jsonResponse({ error: 'Ärendet hittades inte.' }, 404)));
     const user = userEvent.setup();
-    render(<CaseDetail caseId={7} />);
-    await user.type(await screen.findByRole('textbox', { name: 'Intern anteckning' }), 'Text.');
-    await user.click(screen.getByRole('button', { name: 'Spara anteckning' }));
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Ändra status' }), 'Avslutat');
-    await user.click(screen.getByRole('button', { name: 'Spara status' }));
-    await screen.findByText('Status sparad.');
-    await act(async () => {
-      resolveNote(jsonResponse({ ...caseItem, note: 'Text.' }));
-    });
+    render(<CaseDetail caseId={7} onDeleted={vi.fn()} />);
 
-    expect(screen.getByText('Status', { selector: 'dt' }).nextElementSibling).toHaveTextContent('Avslutat');
+    await user.click(await screen.findByRole('button', { name: 'Redigera ärende' }));
+    await user.click(screen.getByRole('button', { name: 'Ta bort ärende' }));
+    await user.click(within(screen.getByRole('alertdialog', { name: 'Ta bort ärende?' }))
+      .getByRole('button', { name: 'Ta bort på riktigt' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Ärendet hittades inte.');
+    expect(screen.getByRole('alertdialog', { name: 'Ta bort ärende?' })).toBeInTheDocument();
   });
 
-  it('[CASE-NOTE-003] reads the saved note after reopening the detail view', async () => {
-    let stored = { ...caseItem, note: 'Första anteckningen.' };
-    vi.stubGlobal('fetch', vi.fn().mockImplementation((_url: string, options?: RequestInit) => {
-      if (options?.method === 'PATCH') {
-        stored = { ...stored, note: 'Redigerad anteckning.' };
-      }
-      return Promise.resolve(jsonResponse(stored));
-    }));
-    const user = userEvent.setup();
-    const { unmount } = render(<CaseDetail caseId={7} />);
-    const editor = await screen.findByRole('textbox', { name: 'Intern anteckning' });
-    await user.clear(editor);
-    await user.type(editor, 'Redigerad anteckning.');
-    await user.click(screen.getByRole('button', { name: 'Spara anteckning' }));
-    await screen.findByText('Anteckning sparad.');
-    unmount();
-
-    render(<CaseDetail caseId={7} />);
-
-    expect(await screen.findByRole('textbox', { name: 'Intern anteckning' }))
-      .toHaveValue('Redigerad anteckning.');
-  });
-
-  it('[CASE-NOTE-003] preserves an unsaved note draft when status is saved', async () => {
+  it('[CASE-DELETE-006] confirms deletion in standalone detail view when no list callback is supplied', async () => {
     vi.stubGlobal('fetch', vi.fn()
       .mockResolvedValueOnce(jsonResponse(caseItem))
-      .mockResolvedValueOnce(jsonResponse({ ...caseItem, status: 'Avslutat' })));
+      .mockResolvedValueOnce(new Response(null, { status: 204 })));
     const user = userEvent.setup();
     render(<CaseDetail caseId={7} />);
-    await user.type(await screen.findByRole('textbox', { name: 'Intern anteckning' }), 'Utkast.');
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Ändra status' }), 'Avslutat');
-    await user.click(screen.getByRole('button', { name: 'Spara status' }));
-    await screen.findByText('Status sparad.');
 
-    expect(screen.getByRole('textbox', { name: 'Intern anteckning' })).toHaveValue('Utkast.');
+    await user.click(await screen.findByRole('button', { name: 'Redigera ärende' }));
+    await user.click(screen.getByRole('button', { name: 'Ta bort ärende' }));
+    await user.click(within(screen.getByRole('alertdialog', { name: 'Ta bort ärende?' }))
+      .getByRole('button', { name: 'Ta bort på riktigt' }));
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Ärendet har tagits bort.');
+    expect(screen.queryByRole('table', { name: 'Ärendeuppgifter' })).not.toBeInTheDocument();
   });
 
-  it('[CASE-STATUS-002] retains the displayed status when a save is rejected', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn()
-        .mockResolvedValueOnce(jsonResponse(caseItem))
-        .mockResolvedValueOnce(jsonResponse({ error: 'Välj en giltig status.' }, 400))
-    );
+  it('[CASE-DELETE-010] allows retrying deletion after an API failure', async () => {
+    vi.stubGlobal('fetch', vi.fn()
+      .mockResolvedValueOnce(jsonResponse(caseItem))
+      .mockResolvedValueOnce(jsonResponse({ error: 'Försök igen.' }, 500))
+      .mockResolvedValueOnce(new Response(null, { status: 204 })));
     const user = userEvent.setup();
     render(<CaseDetail caseId={7} />);
-    await user.selectOptions(await screen.findByRole('combobox', { name: 'Ändra status' }), 'Avslutat');
-    await user.click(screen.getByRole('button', { name: 'Spara status' }));
-    await screen.findByRole('alert');
 
-    const term = screen.getByText('Status', { selector: 'dt' });
-    expect(term.nextElementSibling).toHaveTextContent('Pågående');
+    await user.click(await screen.findByRole('button', { name: 'Redigera ärende' }));
+    await user.click(screen.getByRole('button', { name: 'Ta bort ärende' }));
+    const confirmButton = within(screen.getByRole('alertdialog', { name: 'Ta bort ärende?' }))
+      .getByRole('button', { name: 'Ta bort på riktigt' });
+    await user.click(confirmButton);
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Försök igen.');
+    expect(screen.getByRole('alertdialog', { name: 'Ta bort ärende?' })).toBeInTheDocument();
+    await user.click(within(screen.getByRole('alertdialog', { name: 'Ta bort ärende?' }))
+      .getByRole('button', { name: 'Ta bort på riktigt' }));
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Ärendet har tagits bort.');
   });
 
-  it('[CASE-STATUS-003] displays the status saved from the detail view', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn()
-        .mockResolvedValueOnce(jsonResponse(caseItem))
-        .mockResolvedValueOnce(jsonResponse({ ...caseItem, status: 'Avslutat' }))
-    );
+  it('[CASE-EDIT-002] displays validation errors returned by the update API', async () => {
+    vi.stubGlobal('fetch', vi.fn()
+      .mockResolvedValueOnce(jsonResponse(caseItem))
+      .mockResolvedValueOnce(jsonResponse({ error: 'Välj en giltig kategori.' }, 400)));
     const user = userEvent.setup();
     render(<CaseDetail caseId={7} />);
-    await user.selectOptions(await screen.findByRole('combobox', { name: 'Ändra status' }), 'Avslutat');
-    await user.click(screen.getByRole('button', { name: 'Spara status' }));
-    await screen.findByText('Status sparad.');
 
-    const term = screen.getByText('Status', { selector: 'dt' });
-    expect(term.nextElementSibling).toHaveTextContent('Avslutat');
+    await user.click(await screen.findByRole('button', { name: 'Redigera ärende' }));
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Kategori' }), 'Konto');
+    await user.click(screen.getByRole('button', { name: 'Spara ändringar' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Välj en giltig kategori.');
+    expect(screen.getByRole('textbox', { name: 'Rubrik' })).toBeInTheDocument();
+  });
+
+  it('[UI-CONSISTENCY-007] exposes API validation errors as accessible feedback', async () => {
+    vi.stubGlobal('fetch', vi.fn()
+      .mockResolvedValueOnce(jsonResponse(caseItem))
+      .mockResolvedValueOnce(jsonResponse({ error: 'Välj en giltig kategori.' }, 400)));
+    const user = userEvent.setup();
+    render(<CaseDetail caseId={7} />);
+
+    await user.click(await screen.findByRole('button', { name: 'Redigera ärende' }));
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Kategori' }), 'Konto');
+    await user.click(screen.getByRole('button', { name: 'Spara ändringar' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Välj en giltig kategori.');
   });
 
   it('[CASE-DETAIL-001] fetches the selected case from the detail endpoint', async () => {
@@ -151,9 +342,14 @@ describe('CaseDetail', () => {
 
     render(<CaseDetail caseId={7} />);
     const detail = await screen.findByRole('region', { name: caseItem.title });
-    const term = within(detail).getByText(label, { selector: 'dt' });
+    const term = within(detail).getByRole('rowheader', { name: label });
 
-    expect(term.nextElementSibling).toHaveTextContent(value);
+    if (label === 'Skapad') {
+      expect(term.parentElement!.querySelector('time')).toHaveAttribute('datetime', caseItem.createdAt);
+      return;
+    }
+
+    expect(term.parentElement).toHaveTextContent(value);
   });
 
   it('[CASE-DETAIL-001] announces loading while fetching details', () => {

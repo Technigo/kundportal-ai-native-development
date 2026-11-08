@@ -1,21 +1,25 @@
-# UI-CONSISTENCY — Gemensam UI-stil och felbesked
+# UI-CONSISTENCY — Tillgängliga kontroller och begriplig feedback
 
 ## Leverans
 
-Frontendens gemensamma kontroller, feedback och statusmarkeringar använder ett konsekvent, tillgängligt formspråk. Palettens basfärger är `#FEF3E2`, `#F4AE52`, `#D4621A` och `#2A1A0E`; text- och interaktionskontrast justeras vid behov.
+Interaktiva kontroller kan identifieras och användas, och användaren får veta vad som behöver rättas när en åtgärd inte kan genomföras.
 
-## Krav och testmappning
+## Krav
 
-| Krav-ID | Acceptanskriterium | Minst ett automatiserat test |
-|---|---|---|
-| UI-CONSISTENCY-001 | Interaktiva formulärfält har synliga etiketter som är programmatiskt kopplade till fälten. | `[UI-CONSISTENCY-001]` formulärfält har tillgängliga etiketter |
-| UI-CONSISTENCY-002 | Validerings- och API-fel visas på svenska, är begripliga och exponeras som tillgänglig feedback. | `[UI-CONSISTENCY-002]` fel visas tillgängligt |
-| UI-CONSISTENCY-003 | Ärendestatus visas som text och kan inte enbart utläsas via färg. | `[UI-CONSISTENCY-003]` status har textetikett |
-| UI-CONSISTENCY-004 | Gemensamma designvariabler innehåller projektets palett och återanvänds i UI:t. | `[UI-CONSISTENCY-004]` palettvariabler används |
-| UI-CONSISTENCY-005 | Gemensamma fält- och knappkomponenter ger konsekvent etikett-, fokus-, fel- och interaktionsbeteende i ärende- och anteckningsformulär. | `[UI-CONSISTENCY-005]` delade komponenter i formulär |
+| Krav-ID | Acceptanskriterium |
+|---|---|
+| UI-CONSISTENCY-001 | Interaktiva formulärfält har tillgängliga namn som beskriver vad användaren ska ange eller välja. |
+| UI-CONSISTENCY-002 | När obligatoriska fält saknas stoppas inskickning och felen identifierar vilka fält som ska rättas. |
+| UI-CONSISTENCY-003 | Ärendestatus visas som text och kan inte enbart utläsas via färg. |
+| UI-CONSISTENCY-007 | API-fel visas på svenska som begriplig, tillgänglig feedback. |
 
 ## Definition av färdig
 
-- Återkommande fält, knappar, felmeddelanden och statusmarkeringar använder gemensamma komponenter.
+- Formulärfält och felmeddelanden kan tolkas med tangentbord och hjälpmedel.
 - Samtliga krav-ID:n täcks av tester som passerar.
-- Kontrast, fokusläge och smala/breda vyer granskas manuellt; resultatet dokumenteras separat från automatiserade testresultat.
+
+## Verifiering av tillgängliga och begripliga kontroller
+
+Kört 2026-11-08:
+
+- Testerna för formulärfält, valideringsfel och status finns i [CaseForm.test.tsx](../../packages/web/src/CaseForm.test.tsx), [CaseDetail.test.tsx](../../packages/web/src/CaseDetail.test.tsx) och [CaseList.test.tsx](../../packages/web/src/CaseList.test.tsx).
