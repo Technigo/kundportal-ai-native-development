@@ -52,21 +52,20 @@ export function App() {
             </p>
           </div>
         </div>
-        {view === 'create' ? (
-          <>
-            <hr className="workspace-divider" />
+        <div className="workspace-content">
+          {view === 'create' ? (
             <CaseForm onCreated={handleCreated} />
-          </>
-        ) : (
-          <>
-            {createdCase && (
-              <p className="created-summary" role="status">
-                Ärende #{createdCase.id} sparades med status {createdCase.status}.
-              </p>
-            )}
-            <CaseList refreshKey={listRefresh} onCreateCase={() => setView('create')} />
-          </>
-        )}
+          ) : (
+            <>
+              {createdCase && (
+                <p className="created-summary" role="status">
+                  Ärende #{createdCase.id} sparades med status {createdCase.status}.
+                </p>
+              )}
+              <CaseList refreshKey={listRefresh} onCreateCase={() => setView('create')} />
+            </>
+          )}
+        </div>
       </section>
     </main>
   );

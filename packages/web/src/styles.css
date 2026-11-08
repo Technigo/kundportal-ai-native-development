@@ -94,6 +94,10 @@ body {
   margin: clamp(2.5rem, 7vh, 5rem) auto;
 }
 
+.workspace-content {
+  margin-top: 1.75rem;
+}
+
 .workspace-heading {
   display: flex;
   align-items: flex-end;
@@ -125,12 +129,6 @@ h1 {
   border: 1px solid rgb(42 26 14 / 15%);
   border-radius: 0.65rem;
   background: #fffaf1;
-}
-
-.workspace-divider {
-  margin: 1.75rem 0;
-  border: 0;
-  border-top: 1px solid rgb(42 26 14 / 16%);
 }
 
 .form-field {
@@ -246,9 +244,6 @@ h1 {
 
 .case-list {
   min-width: 0;
-  margin-top: 2rem;
-  padding-top: 1.75rem;
-  border-top: 1px solid rgb(42 26 14 / 16%);
 }
 
 .case-workspace {
