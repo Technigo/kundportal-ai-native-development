@@ -271,6 +271,21 @@ describe("Timeline in the detail view", () => {
     expect(calls(backend.fetchMock, "/api/tickets/5/history")).toBe(2)
   })
 
+  // HIST-14: after a click on "Försök igen" the skeleton shows until the answer comes, so the
+  // case worker sees that something happens, and the button cannot be clicked again meanwhile
+  // (Mustafa's review of PR #109).
+  it("HIST-14: retry shows the skeleton while the history is fetched again", async () => {
+    const user = userEvent.setup()
+    overrides.history.push(answers500, neverAnswers)
+    renderAt("/tickets/5")
+    const alert = await within(await screen.findByRole("region", { name: "Historik" })).findByRole("alert")
+
+    await user.click(within(alert).getByRole("button", { name: "Försök igen" }))
+
+    expect(await screen.findByRole("status", { name: LOADING_HISTORY })).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "Försök igen" })).not.toBeInTheDocument()
+  })
+
   // HIST-14: when the history fails after a status change, the error replaces the old list,
   // so a list that is behind the ticket is never shown (M2 in the timeline spec).
   it("HIST-14: a failed refetch replaces the old list with the error", async () => {

@@ -30,7 +30,9 @@ export function TicketTimeline({ entries }: { entries: HistoryEntry[] }) {
         const status = last ? "current" : "completed"
         return (
           <TimelineItem key={entry.id} role="listitem" status={status}>
-            <div className="flex flex-col items-center" aria-hidden="true">
+            {/* A fixed width as wide as the largest dot, so all text starts at the same place
+                and the line goes through the middle of every dot (Mustafa's review of PR #109). */}
+            <div className="flex w-6 shrink-0 flex-col items-center" aria-hidden="true">
               {/* Earlier dots are smaller (16 px instead of 24 px), so the current one stands
                   out by size too, not only by colour. */}
               {/* BOLDkit's 4 px shadow took over on such small dots, so it is 2 px here. */}

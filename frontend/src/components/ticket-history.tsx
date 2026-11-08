@@ -51,7 +51,12 @@ export function TicketHistory({ ticketId, version }: { ticketId: string; version
               variant="outline"
               size="sm"
               className="self-start"
-              onClick={() => setAttempt((n) => n + 1)}
+              // The skeleton shows while the history is fetched again, so a click visibly does
+              // something, and the button is gone so it cannot be clicked twice.
+              onClick={() => {
+                setState({ kind: "loading" })
+                setAttempt((n) => n + 1)
+              }}
             >
               Försök igen
             </Button>
