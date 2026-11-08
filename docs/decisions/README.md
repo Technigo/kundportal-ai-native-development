@@ -27,4 +27,4 @@ Each file has:
 | [02](02-libsql-drizzle.md) | libSQL (SQLite) with Drizzle ORM | Accepted |
 | [03](03-vitest-playwright.md) | Vitest and Playwright, test-first | Accepted |
 | [04](04-status-change-and-history.md) | Status change rules and status history | Proposed |
-| [05](05-ticket-list-and-details.md) | Ticket list and ticket details | Proposed |
+| [05](05-ticket-list-and-details.md) | Ticket list and ticket details | Accepted |

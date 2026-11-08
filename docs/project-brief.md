@@ -58,9 +58,14 @@ Status: **Done** = implemented and tested, **Planned** = not built yet. Each cri
 - AC3.1: `/` redirects to `/dashboard`.
 - AC3.2: The main navigation has links to Dashboard and Tickets, reachable by keyboard, with the current page marked `aria-current="page"`.
 
-### 4. View ticket details (Planned)
+### 4. View ticket details (Done)
 
 - AC4.1: Given a ticket in the list, when the handler opens it, then the full description and requester details are shown.
+- AC4.2: The detail page shows subject, status, priority, created date, requester name, requester email (or "No email given") and the description with line breaks kept.
+- AC4.3: The detail page has a "Back to tickets" link.
+- AC4.4: Given an id that is not a positive integer or does not exist, when the handler opens `/tickets/[id]`, then they are redirected to `/tickets?notice=ticket-not-found` and the list shows "This ticket does not exist."
+- AC4.5: Given any other `notice` value, the list shows no message.
+- AC4.6: The subject in the list is a link to the ticket. The list keeps no control for changing data.
 
 Detailed specification: [docs/specs/ticket-list-and-details.md](specs/ticket-list-and-details.md)
 
@@ -76,4 +81,5 @@ Detailed specification: [docs/specs/status-change.md](specs/status-change.md)
 
 1. Boilerplate: UI, server logic and storage connected (done).
 2. Register and list tickets, tested (done).
-3. Ticket details and status tracking with history (next).
+3. Ticket details, tested (done).
+4. Status tracking with history (next).

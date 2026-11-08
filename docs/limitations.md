@@ -2,7 +2,7 @@
 
 ## Limitations
 
-- No ticket detail view and no status change yet. Tickets always stay `open`.
+- No status change yet. Tickets always stay `open`.
 - No status history is stored.
 - The status history does not record who made a change, because there is no sign-in.
 - No email is sent to the requester.
@@ -22,10 +22,8 @@
 
 ## Proposed further development
 
-1. Ticket detail view.
-2. Status change with a stored history table.
-3. Sign-in and roles (handler, admin).
-4. Customer view of their own tickets.
-5. Email notification on status change.
-6. Pagination, search and filters in the list.
-7. A CI pipeline for lint, typecheck and tests.
+1. Status change with a stored history table.
+2. Sign-in and roles (handler, admin).
+3. Customer view of their own tickets.
+4. Email notification on status change.
+5. Pagination, search and filters in the list.

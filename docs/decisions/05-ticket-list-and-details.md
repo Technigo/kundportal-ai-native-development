@@ -1,6 +1,6 @@
 # 05: Ticket list and ticket details
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Deciders:** Marie Flem Honningdalnes (owner), to be confirmed by the team after review by Alexandra Petersson
 
 ## Context
