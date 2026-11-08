@@ -120,6 +120,53 @@ Svara med 2–3 konkreta exempel, gärna med länk till en PR, ett test eller et
 
 ## Nicklas
 
+**1. Var hjälpte AI?**
+
+- **En instruktion som gick att mäta.** Jag skrev först en egen facitlista med 19 gränsfall för
+  CORE-11–14 (tomt, längd och tecken) och lät sedan AI föreslå tester med instruktionen v1. Den
+  missade tre fall och alla fyra gränser. Med min förbättring v2-nicklas fick den med alla 19 och
+  4 av 4. [PR #20](https://github.com/desiboli/kundportal-ai-native-development/pull/20)
+- **Mutationsprövningen som agentuppdrag.** Uppdraget skrevs och sparades innan körningen, och en
+  agent lade in sju fel i koden ett i taget (N1–N7). Jag gissade före varje körning. N3 visade att
+  bara ett av fem osynliga tecken prövades, så testerna för de fyra andra lades till.
+  [PR #72](https://github.com/desiboli/kundportal-ai-native-development/pull/72),
+  [PR #73](https://github.com/desiboli/kundportal-ai-native-development/pull/73)
+- **Granskning med körning.** När jag granskade körde AI testerna och små mutationer åt mig. I
+  API-kontraktet hittade vi att längden kontrollerades före trimningen (CORE-12).
+  [PR #26](https://github.com/desiboli/kundportal-ai-native-development/pull/26)
+
+**2. När skapade AI extra arbete eller fel?**
+
+- **Text som gick ut utan att jag sett den.** AI ändrade en PR-titel och lade till en mening i ett
+  svar utan att visa mig först. Ett osynligt tecken (U+200B) hamnade också i en fil två gånger.
+  Båda blev regler i min misstagslogg.
+- **Kommandon som gjorde något annat än jag trodde.** `gh` utan `-R` letade i kursens repo, och en
+  kommentar på samma rad som ett kommando skapade fyra extra Python-miljöer i zsh. I Linear blev en
+  text med radbrytningar till flera kortkommandon, så att ett halvt svar postades och en ansvarig
+  togs bort. Det fick städas för hand.
+- **Ett resultat som såg komplett ut men inte var det.** Uppdraget för N5 gällde bara mina
+  testfiler, så raden visade inte de 38 tester i `test_error_format.py` som också föll. Azalea
+  hittade det i granskningen. [PR #105](https://github.com/desiboli/kundportal-ai-native-development/pull/105)
+
+**3. Vilka beslut fick jag fatta själv, och varför?**
+
+- **Vad som räcker för Verifierat.** Vi hann inte mutationspröva allt, så jag valde de krav där ett
+  fel skadar mest (sparning, historik, statusregler och validering). Resten står kvar som *Grönt*,
+  som en känd begränsning. Det är en prioritering, inte en fråga om kod.
+- **Om ett test föll av rätt anledning.** AI rapporterade antalet röda, men jag fick läsa
+  felraderna. Vid N7 föll statustesterna redan när ärendet skulle förberedas, inte på sina egna krav.
+- **Vems sak det är.** Jag satte inte Verifierat på Azaleas rader, fast AI kunde ha gjort det,
+  eftersom planen säger att hon fyller i sina egna.
+
+**4. Vad skulle jag förbättra?**
+
+- **Pröva mot hela sviten.** En mutation ska köras mot alla tester, inte bara mina, så att
+  resultatet visar vad teamet faktiskt fångar.
+- **Kontroll för hand i varje vecka, inte i slutet.** Min kontroll den 3/11 hittade saker som inga
+  tester ser.
+- **Följa README från noll tidigt.** Jag gjorde det först 4/11 och hittade att frontenden kräver
+  Node 22.19, inte 20.
+
 ## Sammanfattning
 
 (Skrivs när alla har svarat.)
