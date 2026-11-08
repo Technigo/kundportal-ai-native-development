@@ -85,5 +85,35 @@ datum, steg, mutation, krav, test som föll, gjord av.
 
 ## 8. Min granskning
 
-*Fylls i efter körningen: vilka resultat jag kontrollerade själv, vad som förvånade och vad
-som ska ändras i testerna.*
+Körningen 2026-11-02 på `d795736` (main efter PR #70), nollpunkt och slut 166 passed.
+Agenten höll sig inom gränserna: inga tester ändrade, en mutation i taget, `git status` ren
+efter varje återställning, inget committat. Resultatet står i `docs/verifiering.md` avsnitt 5.
+
+**Kontrollerat själv:** jag körde N7 (sparningen bortkopplad) för hand i ett eget fönster.
+`test_core02_ticket_survives_restart` föll på samma rad med samma fel som agenten rapporterade
+(404 efter omstart). Efter återställningen: 166 passed.
+
+**Mina gissningar:** jag gissade före varje körning. N1–N6 stämde på antal och test. N7 stämde
+i stort, men två saker blev annorlunda:
+
+- Statustesterna för fel indata (HIST-06, HIST-07, andra fält) föll också, eftersom de behöver
+  ett sparat ärende först. De föll i förberedelsen och säger därför inget om sina egna krav
+  när sparningen är borta. Det är rätt så, men värt att veta.
+- Längdtesterna klarade sig, eftersom de bara kollar svaret 201 och aldrig läser tillbaka
+  ärendet.
+
+**Alla sju fångades av rätt test.** Inget test var grönt trots en mutation.
+
+**Svagheter jag ska åtgärda i en egen PR:**
+
+1. Bara U+200B prövas av de fem nollbreddstecknen som trimmas (N3).
+2. Rubriken saknar ett enkelt gränstest i mina filer: 100 tecken godkänns, 101 avvisas (N4).
+3. CORE-18 (flera fel samtidigt) vilar på ett enda fall med två fel (N6).
+4. Längdtesterna kontrollerar inte att det som sparades är trimmat och lika långt (N7).
+5. Beskrivningen överst i `test_core_read.py` säger fortfarande att GET svarar 501.
+
+**Steg 2, korsvis:** jag valde en mutation som Azalea inte kände till: poster med samma tid
+sorteras med högst id först. Hennes test för HIST-11 fångade den, och bara det testet, eftersom
+det är det enda med en fast klocka. Jag valde att vända ordningen i stället för att ta bort
+id-sorteringen, eftersom SQLite ofta ger rätt ordning ändå och provet då inte säger något om
+testerna.

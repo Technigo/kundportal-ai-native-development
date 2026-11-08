@@ -33,7 +33,7 @@ Projektet körs på **port 8010** (inte uvicorns standard 8000, som ofta använd
 
 Databasen är en SQLite-fil i `backend/data/app.db` som skapas vid första start. Sökvägen kan ändras med miljövariabeln `DATABASE_URL`.
 
-**Frontend** (kräver Node.js 20 eller senare och pnpm, i en egen terminal)
+**Frontend** (kräver Node.js 22.19 eller senare och pnpm, i en egen terminal. pnpm 11 kräver 22.13, men `pnpm test:run` startar först med 22.19)
 
 ```powershell
 cd frontend
@@ -42,11 +42,11 @@ pnpm install
 pnpm dev                 # http://localhost:5173
 pnpm lint
 pnpm build
+pnpm test:run             # vitest, en gång (pnpm test är watch-läge)
 ```
 
 **Hela stacken:** starta backenden först (port 8010), sedan frontenden i en annan terminal.
-Öppna http://localhost:5173. Startsidan visar "Backenden svarar. Databasen: ansluten." när
-allt hänger ihop. Frontenden anropar backenden via `/api/...`, som Vite skickar vidare till
+Öppna http://localhost:5173. Startsidan är ärendelistan. Frontenden anropar backenden via `/api/...`, som Vite skickar vidare till
 port 8010 (se `frontend/vite.config.ts`). Visas "Kunde inte nå backenden" är backenden inte
 igång.
 
