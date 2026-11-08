@@ -14,6 +14,60 @@ Svara med 2–3 konkreta exempel, gärna med länk till en PR, ett test eller et
 
 ## Amalia
 
+**1. Var hjälpte AI?**
+
+- **Granskning av mina egna beslut innan bygget.** Innan tidslinjen byggdes bad jag AI leta efter
+  motsägelser och saknade fall i min spec. Den hittade att två av mina egna beslut krockade: att den
+  gamla listan ligger kvar vid en ny hämtning bryter en kort stund mot att den senaste posten ska
+  stämma med ärendets status (KSP-37 AC3, tidslinjen), och det var inte bestämt vad som händer om den
+  nya hämtningen misslyckas. Det löstes innan någon kod skrevs.
+  [PR #109](https://github.com/desiboli/kundportal-ai-native-development/pull/109)
+- **Tester som hittade fel i befintlig kod.** När testerna för felmeddelandena (KSP-38) skrevs hittade
+  AI att ett svar utan `detail` gav ett tomt felmeddelande, och jest-axe hittade att uppgifterna i
+  detaljvyn låg för djupt i `<dl>`, så att skärmläsare kan missa kopplingen mellan etikett och värde.
+  Båda fanns sedan tidigare. [PR #107](https://github.com/desiboli/kundportal-ai-native-development/pull/107)
+- **Snabb kontroll mot källor.** AI räknade ut kontrasten från temat, sökte i BOLDkit-registret och
+  hittade en tidslinjekomponent utan nya beroenden, och kontrollerade vilka filer två grenar delar
+  innan en merge.
+
+**2. När skapade AI extra arbete eller fel?**
+
+- **Påståenden som inte var prövade.** AI skrev att ordgränser skyddar svenska ord i kontrollen av
+  tekniska ord, men hade bara provat "statusen". Mustafa visade i granskningen att "Välj en giltig
+  status." flaggades. AI påstod också att PR #103 (sidhuvudet) måste mergas före mitt arbete, utan att
+  jämföra filerna (misstag 1 i min misstagslogg). [PR #106](https://github.com/desiboli/kundportal-ai-native-development/pull/106)
+- **Id i koden som ingen annan kunde slå upp.** AI använde id från min privata spec (K1, R3) i
+  kommentarer och testnamn. Mustafa fångade det, och allt fick skrivas om. Det blev fem commits med
+  rättningar efter hans granskning.
+- **Den gick längre än jag bad om, eller tolkade mig fel.** Den byggde detaljvyn när jag bara ville ha
+  testerna, la in en förklaring i PR:en som var menad för mig, och återställde en gång ny kod med
+  `git checkout` när en mutation skulle tas bort.
+
+**3. Vilka beslut fick jag fatta själv, och varför?**
+
+- **Kontrasten.** jest-axe kan inte räkna färger i testmiljön, så felet syntes inte i testerna. Jag
+  mätte 3.78 för vit text på rött vid kontrollen för hand (kravet är 4.5) och bestämde svart text. Var
+  rättningen skulle sitta (temat eller komponenten) avgjorde jag efter Mustafas granskning.
+- **Utseendet.** Att den aktuella pricken inte stack ut, att skuggan tog över, och att "Ärendet
+  skapades" som rubrik kunde förvirra såg jag först när jag provade tidslinjen i webbläsaren. AI hade
+  godkänt alla de valen.
+- **Vad som är värt att göra.** Jag strök granskningspunkter som inte höll när jag provade dem
+  (sökning på "#5", engelska texter i avstängda funktioner), och bedömde att långa rader i detaljvyn
+  var "good enough". Mustafas fynd om "svarar inte" rättade jag trots liten risk, eftersom det känns
+  svårt att avvisa en granskares fynd. Det är bedömningar av projektets storlek och av teamet, inte av
+  koden.
+
+**4. Vad skulle jag förbättra?**
+
+- **Lägga beslut i repot direkt när de påverkar teamets kod.** Min spec för felmeddelandena och
+  tidslinjen började som en kursövning och låg privat. Men den innehöll till slut beslut som styr
+  koden, och när AI använde dess id (K1, R3) kunde ingen annan i teamet slå upp dem. Om projektet
+  fortsatte skulle jag lägga besluten i `docs/specs/` så fort de påverkar koden.
+- **Kontroll för hand tidigare.** Kontrasten och utseendet hittades först när allt var byggt. En kort
+  kontroll i webbläsaren efter första versionen hade sparat ett varv.
+- **Pröva mot hela underlaget.** En kontroll ska prövas mot alla texter i felkatalogen, och en
+  påstådd krock mot `git diff --stat`, innan AI säger att något håller.
+
 ## Azalea
 
 **1. Var hjälpte AI?**
