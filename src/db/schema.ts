@@ -23,3 +23,21 @@ export const tickets = sqliteTable(
 );
 
 export type Ticket = typeof tickets.$inferSelect;
+
+export const ticketStatusChanges = sqliteTable(
+  "ticket_status_changes",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    ticketId: integer("ticket_id")
+      .notNull()
+      .references(() => tickets.id),
+    fromStatus: text("from_status", { enum: ticketStatuses }).notNull(),
+    toStatus: text("to_status", { enum: ticketStatuses }).notNull(),
+    changedAt: integer("changed_at", { mode: "timestamp_ms" })
+      .notNull()
+      .default(sql`(unixepoch('subsec') * 1000)`),
+  },
+  (table) => [index("ticket_status_changes_ticket_idx").on(table.ticketId, table.changedAt)],
+);
+
+export type TicketStatusChange = typeof ticketStatusChanges.$inferSelect;
