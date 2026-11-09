@@ -38,6 +38,12 @@ describe("TicketList", () => {
     expect(within(rows[1]!).getByText("Closed")).toBeInTheDocument();
   });
 
+  it("links each subject to the ticket details", () => {
+    render(<TicketList tickets={[ticket({ id: 7, subject: "Invoice missing" })]} />);
+
+    expect(screen.getByRole("link", { name: "Invoice missing" })).toHaveAttribute("href", "/tickets/7");
+  });
+
   it("shows an empty state when there are no tickets", () => {
     render(<TicketList tickets={[]} />);
     expect(screen.queryByRole("table")).not.toBeInTheDocument();
