@@ -48,6 +48,7 @@ export default function CaseDetail({ caseId, onBack }: { caseId: string; onBack:
 
   async function handleDelete() {
     if (!caseRecord || isDeleting) return;
+    if (!window.confirm("Are you sure you want to delete this case?")) return;
     setIsDeleting(true);
     setDeleteError("");
     try {

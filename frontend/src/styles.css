@@ -141,6 +141,7 @@ input:focus, textarea:focus, select:focus { border-color: #168e7e; box-shadow: 0
 .case-detail-link:focus-visible { border-radius: 3px; box-shadow: 0 0 0 3px rgba(61, 210, 180, .4); outline: none; }
 .detail-heading { margin-bottom: 28px; }
 .detail-title-row { align-items: center; display: flex; gap: 20px; justify-content: space-between; }
+.detail-actions { align-items: center; display: flex; gap: 20px; }
 .detail-title-row h1 { margin-bottom: 10px; }
 .case-detail-card { background: #fff; border: 1px solid #dbe5ee; border-radius: 16px; box-shadow: 0 12px 35px rgba(24, 54, 82, .06); margin-bottom: 20px; padding: 28px; }
 .detail-card-heading { align-items: center; border-bottom: 1px solid #e5ebf1; display: flex; justify-content: space-between; margin-bottom: 22px; padding-bottom: 16px; }
@@ -159,6 +160,7 @@ input:focus, textarea:focus, select:focus { border-color: #168e7e; box-shadow: 0
 .save-success-message { color: #087d6d; font-size: 14px; font-weight: 700; }
 @media (max-width: 680px) {
   .detail-title-row { align-items: flex-start; flex-direction: column; }
+  .detail-actions { align-items: stretch; flex-direction: column; gap: 12px; width: 100%; }
   .detail-title-row .primary-button, .detail-title-row .danger-button { width: 100%; }
   .case-detail-card { padding: 22px 20px; }
   .detail-metadata { grid-template-columns: 1fr; }
