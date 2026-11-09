@@ -100,6 +100,9 @@ function detailFetch(url) {
 
 // docs/API.md (400-svaret) och standardtexten i ValidationError, backend/src/errors.js.
 const STATUS_ERROR = 'Ärendet kunde inte sparas. Rätta de markerade fälten.';
+const STATUS_SAVED = 'Statusen är ändrad.';
+const MIXED_FIELDS_FAILED = 'Statusen är ändrad. Övriga fält kunde inte sparas.';
+const MIXED_STATUS_FAILED = 'Övriga fält är sparade. Statusen kunde inte ändras.';
 const STATUS_FIELD_ERROR = 'Status måste vara en av: Nytt, Pågående, Väntar på kund, Avslutat';
 // docs/API.md, valideringstabellen. validateRubrik('') i backend/src/validation/fields.js.
 const RUBRIK_FEL = 'Rubrik måste fyllas i';
@@ -164,13 +167,21 @@ function listStatus(document, arendenummer) {
   return listField(document, arendenummer, 'status');
 }
 
+function saveButton(document) {
+  const buttons = [...document.querySelectorAll('#detail-footer button')].filter(
+    (button) => button.textContent === 'Spara' || button.textContent === 'Spara ändringar',
+  );
+  expect(buttons, 'en enda knapp Spara').toHaveLength(1);
+  expect(buttons[0].textContent, 'knappens text').toBe('Spara');
+  return buttons[0];
+}
+
 function statusForm(document) {
   const detail = document.getElementById('view-detail');
   const form = detail.querySelector('#detail-status-form');
   return {
     detail,
     select: form?.querySelector('select[name="status"]') ?? null,
-    button: detail.querySelector('button[form="detail-status-form"]'),
     fieldError: form?.querySelector('[data-error-for="status"]') ?? null,
   };
 }
@@ -204,13 +215,9 @@ function clickReset(document) {
 
 function editForm(document) {
   const form = document.getElementById('detail-edit-form');
-  const button = form
-    ? (form.querySelector('button[type="submit"]') ??
-      document.querySelector('#view-detail button[form="detail-edit-form"]'))
-    : null;
   return {
     form,
-    button,
+    button: form ? saveButton(document) : null,
     rubrik: form?.querySelector('[name="rubrik"]'),
     beskrivning: form?.querySelector('[name="beskrivning"]'),
     kategori: form?.querySelector('[name="kategori"]'),
@@ -311,9 +318,11 @@ async function openEditAndStatusCase() {
 async function failStatus(document) {
   const status = statusForm(document);
   const invalidStatus = 'Stängd';
-  status.select.append(new document.defaultView.Option(invalidStatus, invalidStatus));
+  if (![...status.select.options].some((option) => option.value === invalidStatus)) {
+    status.select.append(new document.defaultView.Option(invalidStatus, invalidStatus));
+  }
   chooseStatus(status.select, invalidStatus);
-  status.button.click();
+  saveButton(document).click();
   await flushView();
 }
 
@@ -434,9 +443,9 @@ describe('Ärendelistan och detaljvyn', () => {
     const { document } = window;
     await openDetail(document, CASE_A.arendenummer);
 
-    const { select, button, fieldError } = statusForm(document);
+    const { select, fieldError } = statusForm(document);
+    const button = saveButton(document);
     expect(select, 'statusdropdown').toBeTruthy();
-    expect(button, 'bekräftelseknapp').toBeTruthy();
     expect(fieldError, 'fältfel för status').toBeTruthy();
     expect([...select.options].map((option) => option.value)).toEqual([
       ...window.Portal.PORTAL_CONFIG.STATUSAR,
@@ -464,7 +473,7 @@ describe('Ärendelistan och detaljvyn', () => {
     const message = document.getElementById('detail-message');
     expect(message.hidden).toBe(false);
     expect(message.dataset.kind).toBe('ok');
-    expect(message.textContent).toBe('Statusen är ändrad.');
+    expect(message.textContent).toBe(STATUS_SAVED);
     expect(document.getElementById('global-message').hidden).toBe(true);
   });
 
@@ -483,14 +492,12 @@ describe('Ärendelistan och detaljvyn', () => {
     try {
       const { document } = await loadPage(stub);
       await openDetail(document, CASE_A.arendenummer);
-      const { select, button } = statusForm(document);
+      const { select } = statusForm(document);
+      const button = saveButton(document);
       expect(select, 'statusdropdown').toBeTruthy();
-      expect(button, 'bekräftelseknapp').toBeTruthy();
       chooseStatus(select, 'Pågående');
       button.click();
-      select.form.dispatchEvent(
-        new document.defaultView.Event('submit', { bubbles: true, cancelable: true }),
-      );
+      button.click();
 
       expect(calls.filter((call) => call.method === 'PATCH')).toHaveLength(1);
       release();
@@ -512,9 +519,9 @@ describe('Ärendelistan och detaljvyn', () => {
     const { document } = await loadPage(stub);
     await openDetail(document, CASE_A.arendenummer);
 
-    const { select, button } = statusForm(document);
+    const { select } = statusForm(document);
+    const button = saveButton(document);
     expect(select, 'statusdropdown').toBeTruthy();
-    expect(button, 'bekräftelseknapp').toBeTruthy();
     const invalidStatus = 'Stängd';
     select.append(new document.defaultView.Option(invalidStatus, invalidStatus));
     chooseStatus(select, invalidStatus);
@@ -534,7 +541,7 @@ describe('Ärendelistan och detaljvyn', () => {
     const form = statusForm(document);
     expect(form.fieldError.textContent).toBe(STATUS_FIELD_ERROR);
     expect(form.select.getAttribute('aria-invalid')).toBe('true');
-    expect(form.select.value).toBe('Nytt');
+    expect(form.select.value).toBe(invalidStatus);
     expect(listStatus(document, CASE_A.arendenummer)).toBe('Nytt');
     expect(detailValue(document, 'Rubrik')).toBe(CASE_A.rubrik);
   });
@@ -559,6 +566,7 @@ describe('Ärendelistan och detaljvyn', () => {
     const patches = patchesTo(calls, casePath(CASE_EDIT.arendenummer));
     expect(patches).toHaveLength(1);
     expect(patches[0].body).toEqual({ kategori: 'Ersättning och stöd', prioritet: 4 });
+    expect(patchesTo(calls, statusPath(CASE_EDIT.arendenummer))).toHaveLength(0);
 
     const after = editForm(document);
     expect(after.kategori.value).toBe('Ersättning och stöd');
@@ -702,6 +710,7 @@ describe('Ärendelistan och detaljvyn', () => {
     await saveEdit(edit);
 
     expect(calls.filter((call) => call.method === 'PATCH')).toHaveLength(0);
+    expect(patchesTo(calls, statusPath(CASE_EDIT.arendenummer))).toHaveLength(0);
     expect(detailValue(document, 'Kategori')).toBe(CASE_EDIT.kategori);
     expect(detailValue(document, 'Prioritet')).toBe(String(CASE_EDIT.prioritet));
     expect(detailValue(document, 'Deadline')).toBe(CASE_EDIT.deadline);
@@ -744,22 +753,30 @@ describe('Ärendelistan och detaljvyn', () => {
     expect(patchesTo(calls, casePath(CASE_EDIT.arendenummer))).toHaveLength(1);
   });
 
-  it('Återställ efter 400 återställer alla fyra fälten och rör inte status eller lista', async () => {
+  it('Återställ efter 400 återställer alla fem fälten och rör inte listan', async () => {
     const typed = { beskrivning: 'Ny beskrivning', kategori: 'Ersättning och stöd' };
     const { document, calls } = await loadEdit(async ({ method, path }) => {
       if (method === 'PATCH' && path === casePath(CASE_EDIT.arendenummer)) {
         return jsonResponse(400, { fel: STATUS_ERROR, faltfel: { kategori: KATEGORI_FEL } });
+      }
+      if (method === 'PATCH' && path === statusPath(CASE_EDIT.arendenummer)) {
+        return jsonResponse(400, {
+          fel: 'Statusen kunde inte ändras.',
+          faltfel: { status: STATUS_FIELD_ERROR },
+        });
       }
       return null;
     });
     const edit = requireEditForm(document);
     setControl(edit.beskrivning, typed.beskrivning);
     setControl(edit.kategori, typed.kategori);
+    chooseStatus(statusForm(document).select, 'Pågående');
     await saveEdit(edit);
 
     const draft = editForm(document);
     expect(draft.beskrivning.value).toBe(typed.beskrivning);
     expect(draft.kategori.value).toBe(typed.kategori);
+    expect(statusForm(document).select.value).toBe('Pågående');
 
     clickReset(document);
 
@@ -768,10 +785,11 @@ describe('Ärendelistan och detaljvyn', () => {
     expect(restored.beskrivning.value).toBe(CASE_EDIT.beskrivning);
     expect(restored.kategori.value).toBe(CASE_EDIT.kategori);
     expect(restored.prioritet.value).toBe(String(CASE_EDIT.prioritet));
+    expect(statusForm(document).select.value).toBe(CASE_EDIT.status);
     expect(patchesTo(calls, casePath(CASE_EDIT.arendenummer))).toEqual([
       { method: 'PATCH', path: casePath(CASE_EDIT.arendenummer), body: typed },
     ]);
-    expect(statusForm(document).select.value).toBe(CASE_EDIT.status);
+    expect(patchesTo(calls, statusPath(CASE_EDIT.arendenummer))).toHaveLength(1);
     expect(listField(document, CASE_EDIT.arendenummer, 'rubrik')).toBe(CASE_EDIT.rubrik);
     expect(listField(document, CASE_EDIT.arendenummer, 'prioritet')).toBe(
       String(CASE_EDIT.prioritet),
@@ -811,7 +829,7 @@ describe('Ärendelistan och detaljvyn', () => {
     });
     const status = statusForm(document);
     chooseStatus(status.select, 'Pågående');
-    status.button.click();
+    saveButton(document).click();
     await flushView();
 
     const message = document.getElementById('detail-message');
@@ -869,6 +887,48 @@ describe('Ärendelistan och detaljvyn', () => {
       release();
     }
 
+    let releaseStatus;
+    let releaseFields;
+    const gateStatus = new Promise((resolve) => {
+      releaseStatus = resolve;
+    });
+    const gateFields = new Promise((resolve) => {
+      releaseFields = resolve;
+    });
+    try {
+      const both = await loadEdit(async ({ method, path }) => {
+        if (method !== 'PATCH') return null;
+        if (path === statusPath(CASE_EDIT.arendenummer)) {
+          await gateStatus;
+          return jsonResponse(200, { ...CASE_EDIT, status: 'Pågående' });
+        }
+        if (path === casePath(CASE_EDIT.arendenummer)) {
+          await gateFields;
+          return jsonResponse(200, { ...CASE_EDIT, kategori: 'Jobb och sökning' });
+        }
+        return null;
+      });
+      const bothEdit = requireEditForm(both.document);
+      setControl(bothEdit.kategori, 'Jobb och sökning');
+      chooseStatus(statusForm(both.document).select, 'Pågående');
+      bothEdit.button.click();
+      bothEdit.button.click();
+      expect(patchesTo(both.calls, casePath(CASE_EDIT.arendenummer))).toHaveLength(1);
+      expect(patchesTo(both.calls, statusPath(CASE_EDIT.arendenummer))).toHaveLength(1);
+      releaseStatus();
+      await flushView();
+      bothEdit.form.dispatchEvent(
+        new both.document.defaultView.Event('submit', { bubbles: true, cancelable: true }),
+      );
+      expect(patchesTo(both.calls, casePath(CASE_EDIT.arendenummer))).toHaveLength(1);
+      expect(patchesTo(both.calls, statusPath(CASE_EDIT.arendenummer))).toHaveLength(1);
+      releaseFields();
+      await flushView();
+    } finally {
+      releaseStatus();
+      releaseFields();
+    }
+
     const rejected = await loadEdit(async ({ method, path }) => {
       if (method === 'PATCH' && path === casePath(CASE_EDIT.arendenummer)) {
         return jsonResponse(400, { fel: STATUS_ERROR, faltfel: { rubrik: RUBRIK_FEL } });
@@ -918,11 +978,14 @@ describe('Ärendelistan och detaljvyn', () => {
 
     await failStatus(document);
     expectDetailError(document, statusFel);
+    chooseStatus(statusForm(document).select, CASE_EDIT.status);
     await failRubrik(document);
     expectDetailError(document, STATUS_ERROR);
 
+    setControl(editForm(document).rubrik, CASE_EDIT.rubrik);
     await failStatus(document);
     expectDetailError(document, statusFel);
+    chooseStatus(statusForm(document).select, CASE_EDIT.status);
 
     hold = true;
     gate = new Promise((resolve) => {
@@ -937,19 +1000,107 @@ describe('Ärendelistan och detaljvyn', () => {
     expectDetailError(document, STATUS_ERROR);
   });
 
-  it('fältfel i redigering rensar inte statusfel', async () => {
-    const { document } = await openEditAndStatusCase();
-    await failStatus(document);
-    expect(statusForm(document).fieldError.textContent).toBe(STATUS_FIELD_ERROR);
-    await failRubrik(document);
+  it('fältfel från båda anropen visas vid rätt fält', async () => {
+    const { document, calls } = await openEditAndStatusCase();
+    const edit = requireEditForm(document);
+    setControl(edit.rubrik, '');
+    const status = statusForm(document);
+    status.select.append(new document.defaultView.Option('Stängd', 'Stängd'));
+    chooseStatus(status.select, 'Stängd');
+    await saveEdit(edit);
+
     expectEditAndStatusErrors(document);
+    expect(status.select.value).toBe('Stängd');
+    expect(patchesTo(calls, casePath(CASE_EDIT.arendenummer))).toHaveLength(1);
+    expect(patchesTo(calls, statusPath(CASE_EDIT.arendenummer))).toHaveLength(1);
   });
 
-  it('fältfel i status rensar inte redigeringsfel', async () => {
-    const { document } = await openEditAndStatusCase();
-    await failRubrik(document);
-    expect(editForm(document).fieldError('rubrik').textContent).toBe(RUBRIK_FEL);
-    await failStatus(document);
-    expectEditAndStatusErrors(document);
+  it('fält avvisas och status sparas', async () => {
+    const { document } = await loadEdit(async ({ method, path }) => {
+      if (method === 'PATCH' && path === casePath(CASE_EDIT.arendenummer)) {
+        return jsonResponse(400, { fel: STATUS_ERROR, faltfel: { rubrik: RUBRIK_FEL } });
+      }
+      if (method === 'PATCH' && path === statusPath(CASE_EDIT.arendenummer)) {
+        return jsonResponse(200, { ...CASE_EDIT, status: 'Pågående' });
+      }
+      return null;
+    });
+    const edit = requireEditForm(document);
+    setControl(edit.rubrik, '');
+    chooseStatus(statusForm(document).select, 'Pågående');
+    await saveEdit(edit);
+
+    expectFieldState(editForm(document), 'rubrik', { value: '', message: RUBRIK_FEL });
+    expect(statusForm(document).select.value).toBe('Pågående');
+    expect(listField(document, CASE_EDIT.arendenummer, 'rubrik')).toBe(CASE_EDIT.rubrik);
+    expect(listStatus(document, CASE_EDIT.arendenummer)).toBe('Pågående');
+    expect(document.getElementById('detail-message').textContent).toBe(MIXED_FIELDS_FAILED);
+
+    clickReset(document);
+    expect(editForm(document).rubrik.value).toBe(CASE_EDIT.rubrik);
+    expect(statusForm(document).select.value).toBe('Pågående');
+    expect(listStatus(document, CASE_EDIT.arendenummer)).toBe('Pågående');
+  });
+
+  it('fält sparas och status avvisas', async () => {
+    const updated = { ...CASE_EDIT, kategori: 'Ersättning och stöd', prioritet: 4 };
+    const { document } = await loadEdit(async ({ method, path }) => {
+      if (method === 'PATCH' && path === casePath(CASE_EDIT.arendenummer)) {
+        return jsonResponse(200, updated);
+      }
+      if (method === 'PATCH' && path === statusPath(CASE_EDIT.arendenummer)) {
+        return jsonResponse(400, {
+          fel: 'Statusen kunde inte ändras.',
+          faltfel: { status: STATUS_FIELD_ERROR },
+        });
+      }
+      return null;
+    });
+    const edit = requireEditForm(document);
+    setControl(edit.kategori, 'Ersättning och stöd');
+    setControl(edit.prioritet, '4');
+    const status = statusForm(document);
+    status.select.append(new document.defaultView.Option('Stängd', 'Stängd'));
+    chooseStatus(status.select, 'Stängd');
+    await saveEdit(edit);
+
+    const after = editForm(document);
+    expect(after.kategori.value).toBe('Ersättning och stöd');
+    expect(after.prioritet.value).toBe('4');
+    expect(statusForm(document).select.value).toBe('Stängd');
+    expect(statusForm(document).fieldError.textContent).toBe(STATUS_FIELD_ERROR);
+    expect(listField(document, CASE_EDIT.arendenummer, 'prioritet')).toBe('4');
+    expect(listStatus(document, CASE_EDIT.arendenummer)).toBe(CASE_EDIT.status);
+    expect(document.getElementById('detail-message').textContent).toBe(MIXED_STATUS_FAILED);
+
+    clickReset(document);
+    expect(statusForm(document).select.value).toBe(CASE_EDIT.status);
+    expect(editForm(document).kategori.value).toBe('Ersättning och stöd');
+    expect(listField(document, CASE_EDIT.arendenummer, 'prioritet')).toBe('4');
+    expect(listStatus(document, CASE_EDIT.arendenummer)).toBe(CASE_EDIT.status);
+  });
+
+  it('Enter i rubrikfältet gör samma sparning och Enter i beskrivningen skickar inget', async () => {
+    const { document, calls } = await loadEdit(async ({ method, path }) => {
+      if (method === 'PATCH' && path === casePath(CASE_EDIT.arendenummer)) {
+        return jsonResponse(200, { ...CASE_EDIT, kategori: 'Ersättning och stöd' });
+      }
+      if (method === 'PATCH' && path === statusPath(CASE_EDIT.arendenummer)) {
+        return jsonResponse(200, { ...CASE_EDIT, status: 'Pågående' });
+      }
+      return null;
+    });
+    const edit = requireEditForm(document);
+    setControl(edit.beskrivning, 'Ny rad');
+    pressKey(document.defaultView, edit.beskrivning, 'Enter');
+    await flushView();
+    expect(calls.filter((call) => call.method === 'PATCH')).toHaveLength(0);
+
+    setControl(edit.kategori, 'Ersättning och stöd');
+    chooseStatus(statusForm(document).select, 'Pågående');
+    pressKey(document.defaultView, edit.rubrik, 'Enter');
+    await flushView();
+    expect(patchesTo(calls, casePath(CASE_EDIT.arendenummer))).toHaveLength(1);
+    expect(patchesTo(calls, statusPath(CASE_EDIT.arendenummer))).toHaveLength(1);
   });
 });
