@@ -79,16 +79,14 @@ Script: [scripts/mutation-check.mjs](../scripts/mutation-check.mjs).
 
 ## Latest run results
 
-Run on 2026-11-07 on branch `Alexandra/register-ticket`.
-Run on 2026-11-09 on branch `marie/ticket-list-details`.
+Run on 2026-11-09 on branch `Alexandra/register-ticket`, after merging `main` (ticket details).
 
 | Command | Result |
 |---|---|
-| `npm test` | 7 files, 50 tests passed |
-| `npm test` | 10 files, 59 tests passed |
+| `npm test` | 10 files, 78 tests passed |
 | `npm run lint` | No errors |
 | `npm run typecheck` | No errors |
-| `npm run test:e2e` | 8 tests passed |
+| `npm run test:e2e` | 17 tests passed |
 | `npm run test:mutation -- --e2e` | 5 of 5 caught (3 Vitest, 2 e2e) |
 
 Update this table when you rerun the checks.
