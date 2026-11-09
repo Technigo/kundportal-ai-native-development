@@ -10,6 +10,45 @@ test("lists all tickets with their requester, newest first", async ({ page }) =>
   await expect(rows.nth(3)).toContainText("Add a second user to our account");
 });
 
+test("opens a ticket from the list, shows its details and goes back", async ({ page }) => {
+  await page.goto("/tickets");
+  await page.getByRole("link", { name: "Invoice shows the wrong VAT rate" }).click();
+
+  await expect(page).toHaveURL(/\/tickets\/\d+$/);
+  const details = page.getByRole("article");
+  await expect(details.getByRole("heading", { level: 1, name: "Invoice shows the wrong VAT rate" })).toBeVisible();
+  await expect(details.getByText("Anna Berg")).toBeVisible();
+  await expect(details.getByText("anna.berg@example.com")).toBeVisible();
+  await expect(details.getByText("Invoice 2026-0912 uses 25% instead of 12%.")).toBeVisible();
+
+  await page.getByRole("link", { name: "Back to tickets" }).click();
+  await expect(page).toHaveURL("/tickets");
+});
+
+test("sets the page title from the ticket subject", async ({ page }) => {
+  await page.goto("/tickets");
+  await page.getByRole("link", { name: "Invoice shows the wrong VAT rate" }).click();
+
+  await expect(page).toHaveTitle("Invoice shows the wrong VAT rate · Kundserviceportalen");
+});
+
+for (const id of ["99999", "abc", "01", "1e0", "0x1"]) {
+  test(`redirects from /tickets/${id} to the list with a message`, async ({ page }) => {
+    await page.goto(`/tickets/${id}`);
+
+    await expect(page).toHaveURL("/tickets?notice=ticket-not-found");
+    await expect(page.getByRole("status")).toHaveText("This ticket does not exist.");
+    await expect(page.getByRole("table")).toBeVisible();
+  });
+}
+
+test("shows no message for an unknown notice code", async ({ page }) => {
+  await page.goto("/tickets?notice=something-else");
+
+  await expect(page.getByRole("table")).toBeVisible();
+  await expect(page.getByRole("status")).toHaveCount(0);
+});
+
 test("shows a validation error and keeps the input when the subject is too short", async ({ page }) => {
   await page.goto("/tickets/new");
   await page.getByLabel("Requester name").fill("Ada Lovelace");
@@ -53,4 +92,23 @@ test("shows an error for an invalid requester email and keeps the input", async 
   await expect(page.getByText("Please enter a valid email address.")).toBeVisible();
   await expect(page).toHaveURL("/tickets/new");
   await expect(page.getByLabel("Requester name")).toHaveValue("Ada Lovelace");
+});
+
+test("long words in subject and description do not overflow the page", async ({ page }) => {
+  const subject = `${"S".repeat(100)}${Date.now()}`;
+  const description = `https://example.com/${"a".repeat(300)}`;
+
+  await page.goto("/tickets/new");
+  await page.getByLabel("Requester name").fill("Ada Lovelace");
+  await page.getByLabel("Subject").fill(subject);
+  await page.getByLabel("Description").fill(description);
+  await page.getByRole("button", { name: "Register ticket" }).click();
+  await expect(page).toHaveURL("/tickets");
+
+  const overflows = () => page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+  expect(await overflows()).toBe(false);
+
+  await page.getByRole("link", { name: subject }).click();
+  await expect(page.getByRole("article")).toBeVisible();
+  expect(await overflows()).toBe(false);
 });

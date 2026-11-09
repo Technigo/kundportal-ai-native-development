@@ -3,6 +3,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { TicketList } from "@/components/TicketList";
+import { TicketNotice } from "@/components/TicketNotice";
 import { getDb } from "@/db/client";
 import { listTickets } from "@/tickets/ticketRepository";
 
@@ -15,7 +16,16 @@ async function AllTickets() {
   return <TicketList tickets={tickets} />;
 }
 
-export default function TicketsPage() {
+async function Notice({ searchParams }: { searchParams: Promise<{ notice?: string | string[] }> }) {
+  const { notice } = await searchParams;
+  return <TicketNotice notice={typeof notice === "string" ? notice : undefined} />;
+}
+
+export default function TicketsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ notice?: string | string[] }>;
+}) {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -27,6 +37,9 @@ export default function TicketsPage() {
           New ticket
         </Link>
       </div>
+      <Suspense>
+        <Notice searchParams={searchParams} />
+      </Suspense>
       <Suspense fallback={<p className="text-slate-600">Loading tickets…</p>}>
         <AllTickets />
       </Suspense>

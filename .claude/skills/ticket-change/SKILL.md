@@ -15,5 +15,5 @@ Turn one acceptance criterion into a small, reviewable change. Follow [CLAUDE.md
 4. **Red.** Write one failing test (Vitest for logic and components, Playwright for flows and async Server Components). Run it and show it failing for the right reason.
 5. **Green.** Write the least code that passes. Do not edit `drizzle/`; change `src/db/schema.ts` and ask the owners to run `npm run db:generate`.
 6. **Check.** Run `npm test`, `npm run lint` and `npm run typecheck`. Run `npm run test:e2e` when a flow changed. Report failures; do not fix them unasked.
-7. **Record.** Propose an update to the criterion's row in `docs/verification.md` and a new row in the table in `docs/team.md` (task, AI tool used, what was verified by hand).
+7. **Record.** Propose an update to the criterion's row in `docs/verification.md`.
 8. **Hand over.** Leave everything uncommitted. Tell the owners to review with `git status` and `git diff`. Say plainly what was checked and what was not.
