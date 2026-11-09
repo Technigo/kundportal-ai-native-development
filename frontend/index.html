@@ -454,7 +454,8 @@
         flex-direction: column;
         gap: 0.25rem;
       }
-      .detail-status-form select {
+      .detail-status-form select,
+      .detail-edit-form select {
         appearance: none;
         -webkit-appearance: none;
         width: 100%;
@@ -478,7 +479,9 @@
       .detail-footer {
         flex: 0 0 auto;
         display: flex;
+        flex-wrap: wrap;
         justify-content: flex-end;
+        gap: 0.75rem;
         margin-top: 1rem;
         padding-top: 1rem;
         border-top: 1px solid var(--border);
@@ -500,6 +503,53 @@
         opacity: 0.5;
         cursor: not-allowed;
       }
+      .detail-edit-form {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        min-width: 0;
+        margin-top: 1.5rem;
+      }
+      .detail-edit-form h3 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 700;
+      }
+      .detail-edit-field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        min-width: 0;
+      }
+      .detail-edit-field label {
+        font-weight: 600;
+      }
+      .detail-edit-form input,
+      .detail-edit-form textarea {
+        width: 100%;
+        min-height: 2.75rem;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--surface);
+        color: var(--text);
+        font: inherit;
+        overflow-wrap: anywhere;
+      }
+      .detail-edit-submit {
+        min-height: 2.75rem;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--surface);
+        color: var(--text);
+        font: inherit;
+        cursor: pointer;
+      }
+      .detail-edit-submit:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
       @media (max-width: 40rem) {
         #view-detail:not([hidden]) {
           padding: 0.5rem;
@@ -514,7 +564,11 @@
         .detail-fields dd {
           margin-bottom: 0.75rem;
         }
-        .detail-footer .detail-status-submit {
+        .detail-footer {
+          flex-direction: column;
+        }
+        .detail-footer .detail-status-submit,
+        .detail-footer .detail-edit-submit {
           width: 100%;
         }
       }
@@ -1004,6 +1058,130 @@
         return form;
       }
 
+      /* ---------- Detalj: övriga fält ---------- */
+
+      function showSavedFields(arende) {
+        updateListRow(arende);
+        const host = document.getElementById('case-detail');
+        host.replaceChildren();
+        renderCaseDetail(host, arende);
+        clearGlobalMessage();
+        clearDetailMessage();
+      }
+
+      function createEditForm(arende) {
+        const requestId = detailRequest;
+        const saved = {
+          rubrik: arende.rubrik == null ? '' : String(arende.rubrik),
+          beskrivning: arende.beskrivning == null ? '' : String(arende.beskrivning),
+          kategori: arende.kategori == null ? '' : String(arende.kategori),
+          prioritet: Number(arende.prioritet),
+        };
+
+        const form = document.createElement('form');
+        form.id = 'detail-edit-form';
+        form.className = 'detail-edit-form';
+
+        const heading = document.createElement('h3');
+        heading.textContent = 'Redigera ärende';
+        form.append(heading);
+
+        function addField(name, control) {
+          const wrap = document.createElement('div');
+          wrap.className = 'detail-edit-field';
+          const label = document.createElement('label');
+          label.htmlFor = `detail-edit-${name}`;
+          label.textContent = LIST_FIELD_LABELS[name] || name;
+          control.id = `detail-edit-${name}`;
+          control.name = name;
+          const fieldError = document.createElement('span');
+          fieldError.className = 'field-error';
+          fieldError.dataset.errorFor = name;
+          wrap.append(label, control, fieldError);
+          form.append(wrap);
+          return control;
+        }
+
+        const rubrik = addField('rubrik', document.createElement('input'));
+        rubrik.type = 'text';
+        rubrik.value = saved.rubrik;
+
+        const beskrivning = addField('beskrivning', document.createElement('textarea'));
+        beskrivning.rows = 5;
+        beskrivning.value = saved.beskrivning;
+
+        const kategori = addField('kategori', document.createElement('select'));
+        for (const value of PORTAL_CONFIG.KATEGORIER) {
+          kategori.append(new Option(value, value));
+        }
+        kategori.value = saved.kategori;
+
+        const prioritet = addField('prioritet', document.createElement('select'));
+        for (const value of PORTAL_CONFIG.PRIORITETER) {
+          prioritet.append(new Option(String(value), String(value)));
+        }
+        prioritet.value = String(saved.prioritet);
+
+        const button = document.createElement('button');
+        button.type = 'submit';
+        button.className = 'detail-edit-submit';
+        button.textContent = 'Spara ändringar';
+        button.setAttribute('form', form.id);
+        document
+          .getElementById('detail-footer')
+          .insertBefore(button, document.getElementById('detail-footer').firstChild);
+
+        let pending = false;
+
+        function setEditBusy(busy) {
+          button.disabled = busy;
+          button.textContent = busy ? 'Sparar…' : 'Spara ändringar';
+        }
+
+        function showEditProblem(text) {
+          showDetailMessage(text);
+        }
+
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          if (pending) return;
+
+          const changes = {};
+          if (rubrik.value !== saved.rubrik) changes.rubrik = rubrik.value;
+          if (beskrivning.value !== saved.beskrivning) changes.beskrivning = beskrivning.value;
+          if (kategori.value !== saved.kategori) changes.kategori = kategori.value;
+          const nextPrioritet = Number(prioritet.value);
+          if (nextPrioritet !== saved.prioritet) changes.prioritet = nextPrioritet;
+          if (Object.keys(changes).length === 0) return;
+
+          pending = true;
+          setEditBusy(true);
+          clearFieldErrors(form);
+          clearDetailMessage();
+
+          const res = await api(
+            'PATCH',
+            `/api/arenden/${encodeURIComponent(arende.arendenummer)}`,
+            changes,
+          );
+          if (requestId !== detailRequest) return;
+
+          if (res.ok && isCaseObject(res.data)) {
+            showSavedFields(res.data);
+            return;
+          }
+
+          pending = false;
+          setEditBusy(false);
+          if (res.data?.faltfel && typeof res.data.faltfel === 'object') {
+            showFieldErrors(form, res.data.faltfel);
+          }
+          showEditProblem(res.data?.fel || 'Ärendet kunde inte sparas.');
+        });
+
+        return form;
+      }
+
       /* ---------- Detalj: visning ---------- */
 
       function renderCaseDetail(container, arende) {
@@ -1023,7 +1201,7 @@
           }
           dl.append(dt, dd);
         }
-        container.append(dl);
+        container.append(dl, createEditForm(arende));
       }
 
       async function onShowDetailView(arendenummer) {
