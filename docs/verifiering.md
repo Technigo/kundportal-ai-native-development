@@ -120,7 +120,7 @@ avsnitt 4 med "för hand" i kolumnen Typ.
 - [ ] Ärendet syns överst i listan (CORE-03).
 - [ ] Detaljvyn visar samma uppgifter som skrevs in (CORE-04).
 - [ ] Byt status. Den nya statusen syns direkt (HIST-02).
-- [ ] Historiken visar skapandet och statusbytet, äldst först (HIST-03, HIST-05).
+- [ ] Historiken visar skapandet och statusbytet, med den senaste posten överst (HIST-05, KSP-37 AC2, teamets beslut 2026-11-09). API:t ger fortfarande äldst först (HIST-03).
 
 **Felmeddelanden i gränssnittet**
 
@@ -201,8 +201,10 @@ resultatet: vilket test som föll, eller att inget föll och vad som ändrades i
 | 2026-11-07 | 1 | TL2: ingen ny hämtning efter statusbyte | KSP-37 AC4 | 4 av 18, bland annat `KSP-37: a saved status shows the new entry without reload` | Claude Code i Amalias session |
 | 2026-11-07 | 1 | TL3: skelettet visas vid varje hämtning | KSP-37 AC4 | 1 av 18: `KSP-37: the old list stays while the history is fetched again` | Claude Code i Amalias session |
 | 2026-11-07 | 1 | TL4: den gamla listan står kvar vid fel | HIST-14 | 5 av 18, bland annat `HIST-14: a failed refetch replaces the old list with the error` | Claude Code i Amalias session |
-| 2026-11-07 | 1 | TL5: UI:t sorterar på tid | HIST-03 | 1 av 18: `HIST-03: entries keep the API order, also when a sort would change it` | Claude Code i Amalias session |
+| 2026-11-07 | 1 | TL5: UI:t sorterar på tid | HIST-03 | 1 av 18: `HIST-03: entries keep the API order, also when a sort would change it` (heter sedan 2026-11-09 `HIST-03: entries are the API order turned round, also when a sort would change it`) | Claude Code i Amalias session |
 | 2026-11-07 | 1 | TL6: rollen `list` borttagen | KSP-38 AC3 | 13 av 18 | Claude Code i Amalias session |
+| 2026-11-09 | 1 | TL7: ingen vändning, alltså äldst först igen (efter beslutet om senaste posten överst) | KSP-37 AC2 | 5 av 21, bland annat `HIST-05: entries are shown newest first with Swedish labels` | Claude Code i Amalias session |
+| 2026-11-09 | 1 | TL5 igen: UI:t sorterar på tid före vändningen | HIST-03 | 1 av 21: `HIST-03: entries are the API order turned round, also when a sort would change it` | Claude Code i Amalias session |
 
 *Steg 1 kördes för hand på `335fe45` (main efter PR #61), en mutation i taget i en egen arbetskopia. Nollpunkt: 166 passed. Underlag: Azaleas loggbok och jämförelsetabell (lokalt).*
 
