@@ -17,11 +17,10 @@ const mockCase = {
 
 vi.mock("./caseService", () => ({
   getCaseById: vi.fn(),
-  updateCase: vi.fn(),
   CaseApiError: class CaseApiError extends Error {},
 }));
 
-import { getCaseById, updateCase } from "./caseService";
+import { getCaseById } from "./caseService";
 
 describe("CaseDetail", () => {
   it("loads and displays case details", async () => {
@@ -38,43 +37,7 @@ describe("CaseDetail", () => {
     expect(screen.getByText("High")).toBeInTheDocument();
   });
 
-  it("edits and saves a description and status change", async () => {
-    (getCaseById as ReturnType<typeof vi.fn>).mockResolvedValue(mockCase);
-    (updateCase as ReturnType<typeof vi.fn>).mockResolvedValue({
-      ...mockCase,
-      description: "Updated description",
-      status: "in_progress",
-    });
-
-    const user = userEvent.setup();
-    render(<CaseDetail caseId="case-1" onBack={() => {}} />);
-
-    await waitFor(() => {
-      expect(screen.getByRole("button", { name: /edit case/i })).toBeInTheDocument();
-    });
-
-    await user.click(screen.getByRole("button", { name: /edit case/i }));
-
-    const descriptionField = screen.getByLabelText(/description/i);
-    await user.clear(descriptionField);
-    await user.type(descriptionField, "Updated description");
-    await user.selectOptions(screen.getByLabelText(/status/i), "in_progress");
-
-    await user.click(screen.getByRole("button", { name: /save changes/i }));
-
-    await waitFor(() => {
-      expect(updateCase).toHaveBeenCalledWith("case-1", {
-        description: "Updated description",
-        status: "in_progress",
-      });
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText("Updated description")).toBeInTheDocument();
-    });
-  });
-
-  it("cancels editing and reverts unsaved changes", async () => {
+  it("navigates to the edit form when Edit case is clicked", async () => {
     (getCaseById as ReturnType<typeof vi.fn>).mockResolvedValue(mockCase);
     const user = userEvent.setup();
     render(<CaseDetail caseId="case-1" onBack={() => {}} />);
@@ -84,33 +47,8 @@ describe("CaseDetail", () => {
     });
 
     await user.click(screen.getByRole("button", { name: /edit case/i }));
-    const descriptionField = screen.getByLabelText(/description/i);
-    await user.clear(descriptionField);
-    await user.type(descriptionField, "Unsaved change");
 
-    await user.click(screen.getByRole("button", { name: /cancel/i }));
-
-    expect(screen.getByText("Cannot log in")).toBeInTheDocument();
-    expect(screen.queryByRole("textbox", { name: /description/i })).not.toBeInTheDocument();
-  });
-
-  it("validates an empty description before saving", async () => {
-    (getCaseById as ReturnType<typeof vi.fn>).mockResolvedValue(mockCase);
-    const user = userEvent.setup();
-    render(<CaseDetail caseId="case-1" onBack={() => {}} />);
-
-    await waitFor(() => {
-      expect(screen.getByRole("button", { name: /edit case/i })).toBeInTheDocument();
-    });
-
-    await user.click(screen.getByRole("button", { name: /edit case/i }));
-    const descriptionField = screen.getByLabelText(/description/i);
-    await user.clear(descriptionField);
-
-    await user.click(screen.getByRole("button", { name: /save changes/i }));
-
-    expect(screen.getByText(/description is required/i)).toBeInTheDocument();
-    expect(updateCase).not.toHaveBeenCalled();
+    expect(window.location.hash).toBe("#/cases/case-1/edit");
   });
 
   it("shows an error state when loading fails", async () => {

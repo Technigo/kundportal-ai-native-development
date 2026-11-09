@@ -24,7 +24,6 @@ def get_cases(
     limit: int = 100,
     search: Optional[str] = None,
     status: Optional[str] = None,
-    category: Optional[str] = None,
     priority: Optional[str] = None,
 ) -> List[Case]:
     """Get cases, optionally filtered by search text and exact (case-insensitive) field values."""
@@ -34,14 +33,11 @@ def get_cases(
         term = f"%{search.strip().lower()}%"
         query = query.filter(
             func.lower(Case.title).like(term)
-            | func.lower(Case.description).like(term)
             | func.lower(Case.customer_email).like(term)
         )
 
     if status and status.strip():
         query = query.filter(func.lower(Case.status) == status.strip().lower())
-    if category and category.strip():
-        query = query.filter(func.lower(Case.category) == category.strip().lower())
     if priority and priority.strip():
         query = query.filter(func.lower(Case.priority) == priority.strip().lower())
 

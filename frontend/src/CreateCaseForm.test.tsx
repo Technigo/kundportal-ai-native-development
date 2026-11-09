@@ -5,10 +5,12 @@ import CreateCaseForm from "./CreateCaseForm";
 
 vi.mock("./caseService", () => ({
   createCase: vi.fn(),
+  getCaseById: vi.fn(),
+  updateCase: vi.fn(),
   CaseApiError: class CaseApiError extends Error {},
 }));
 
-import { createCase } from "./caseService";
+import { createCase, getCaseById, updateCase } from "./caseService";
 
 describe("CreateCaseForm", () => {
   it("shows required-field errors when submitting an empty form", async () => {
@@ -92,5 +94,57 @@ describe("CreateCaseForm", () => {
     await waitFor(() => {
       expect(screen.getByText(/the case could not be saved/i)).toBeInTheDocument();
     });
+  });
+
+  it("loads an existing case and saves all edited fields", async () => {
+    (getCaseById as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: "case-1",
+      title: "Login issue",
+      description: "Cannot log in",
+      category: "Technical support",
+      priority: "High",
+      status: "new",
+      customer_email: "customer@example.com",
+      created_at: "2026-01-01T00:00:00.000Z",
+      updated_at: "2026-01-01T00:00:00.000Z",
+    });
+    (updateCase as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: "case-1",
+      title: "Updated title",
+      description: "Updated description",
+      category: "Billing",
+      priority: "Low",
+      status: "closed",
+      customer_email: "updated@example.com",
+      created_at: "2026-01-01T00:00:00.000Z",
+      updated_at: "2026-01-01T00:00:00.000Z",
+    });
+
+    const onBack = vi.fn();
+    const user = userEvent.setup();
+    render(<CreateCaseForm mode="edit" caseId="case-1" onBack={onBack} />);
+
+    await waitFor(() => {
+      expect(screen.getByDisplayValue("Login issue")).toBeInTheDocument();
+    });
+
+    const titleField = screen.getByLabelText(/issue title/i);
+    await user.clear(titleField);
+    await user.type(titleField, "Updated title");
+
+    await user.click(screen.getByRole("button", { name: /save changes/i }));
+
+    await waitFor(() => {
+      expect(updateCase).toHaveBeenCalledWith("case-1", {
+        title: "Updated title",
+        description: "Cannot log in",
+        category: "Technical support",
+        priority: "High",
+        status: "new",
+        customer_email: "customer@example.com",
+      });
+    });
+
+    expect(onBack).toHaveBeenCalled();
   });
 });

@@ -22,7 +22,9 @@ export default function App() {
   }
 
   const detailMatch = route.match(/^#\/cases\/([^/]+)$/);
+  const editMatch = route.match(/^#\/cases\/([^/]+)\/edit$/);
   const caseId = detailMatch ? decodeURIComponent(detailMatch[1]) : null;
+  const editCaseId = editMatch ? decodeURIComponent(editMatch[1]) : null;
 
   return (
     <div className="app-shell">
@@ -39,6 +41,8 @@ export default function App() {
 
       {route === "#/new" ? (
         <CreateCaseForm onBack={navigateToOverview} />
+      ) : editCaseId ? (
+        <CreateCaseForm mode="edit" caseId={editCaseId} onBack={() => { window.location.hash = `#/cases/${encodeURIComponent(editCaseId)}`; }} />
       ) : caseId ? (
         <CaseDetail caseId={caseId} onBack={navigateToOverview} />
       ) : (

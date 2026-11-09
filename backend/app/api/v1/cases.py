@@ -29,7 +29,6 @@ def read_cases(
     limit: int = 100,
     search: Optional[str] = Query(default=None),
     status: Optional[str] = Query(default=None),
-    category: Optional[str] = Query(default=None),
     priority: Optional[str] = Query(default=None),
     db: Session = Depends(get_db),
 ):
@@ -40,7 +39,6 @@ def read_cases(
         limit=limit,
         search=search,
         status=status,
-        category=category,
         priority=priority,
     )
 

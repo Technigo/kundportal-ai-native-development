@@ -22,7 +22,9 @@ export type CaseRecord = {
 };
 
 export type CreatedCase = CaseRecord;
-export type UpdateCaseInput = Partial<Pick<CaseRecord, "description" | "status">>;
+export type UpdateCaseInput = Partial<
+  Pick<CaseRecord, "title" | "description" | "category" | "priority" | "status" | "customer_email">
+>;
 
 export class CaseApiError extends Error {
   constructor(message: string) {
@@ -71,6 +73,12 @@ export function updateCase(caseId: string, input: UpdateCaseInput): Promise<Case
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
+  });
+}
+
+export function deleteCase(caseId: string): Promise<void> {
+  return requestJson<void>(`/cases/${encodeURIComponent(caseId)}`, {
+    method: "DELETE",
   });
 }
 
