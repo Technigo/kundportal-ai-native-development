@@ -2,16 +2,16 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { cache, Suspense } from "react";
-import { z } from "zod";
 import { TicketDetails } from "@/components/TicketDetails";
 import { getDb } from "@/db/client";
+import { parseTicketId } from "@/tickets/parseTicketId";
 import { getTicket } from "@/tickets/ticketRepository";
 
 const loadTicket = cache(async (rawId: string) => {
   // Ticket data is per request: render it at request time, never at build time.
   await connection();
-  const parsed = z.coerce.number().int().positive().safeParse(rawId);
-  return parsed.success ? await getTicket(getDb(), parsed.data) : undefined;
+  const id = parseTicketId(rawId);
+  return id === undefined ? undefined : await getTicket(getDb(), id);
 });
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {

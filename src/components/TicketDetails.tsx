@@ -31,7 +31,7 @@ export function TicketDetails({ ticket }: { ticket: Ticket }) {
       >
         Back to tickets
       </Link>
-      <h1 className="text-2xl font-semibold">{ticket.subject}</h1>
+      <h1 className="wrap-break-word text-2xl font-semibold">{ticket.subject}</h1>
       <dl className="grid grid-cols-[max-content_1fr] gap-x-6 gap-y-2 text-sm">
         <dt className="font-medium text-slate-600">Status</dt>
         <dd>
@@ -52,7 +52,7 @@ export function TicketDetails({ ticket }: { ticket: Ticket }) {
       </dl>
       <section aria-label="Description" className="space-y-2">
         <h2 className="text-lg font-semibold">Description</h2>
-        <p className="whitespace-pre-wrap rounded-lg border border-slate-200 bg-white p-4 text-slate-800">
+        <p className="wrap-break-word whitespace-pre-wrap rounded-lg border border-slate-200 bg-white p-4 text-slate-800">
           {ticket.description}
         </p>
       </section>

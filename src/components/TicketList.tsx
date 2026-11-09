@@ -46,7 +46,7 @@ export function TicketList({ tickets }: { tickets: Ticket[] }) {
         <tbody className="divide-y divide-slate-200">
           {tickets.map((ticket) => (
             <tr key={ticket.id}>
-              <td className="px-4 py-3 font-medium text-slate-900">
+              <td className="wrap-break-word px-4 py-3 font-medium text-slate-900">
                 <Link
                   href={`/tickets/${ticket.id}`}
                   className="underline hover:text-slate-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"

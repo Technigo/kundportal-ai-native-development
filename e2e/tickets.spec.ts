@@ -32,7 +32,7 @@ test("sets the page title from the ticket subject", async ({ page }) => {
   await expect(page).toHaveTitle("Invoice shows the wrong VAT rate · Kundserviceportalen");
 });
 
-for (const id of ["99999", "abc"]) {
+for (const id of ["99999", "abc", "01", "1e0", "0x1"]) {
   test(`redirects from /tickets/${id} to the list with a message`, async ({ page }) => {
     await page.goto(`/tickets/${id}`);
 
@@ -45,6 +45,7 @@ for (const id of ["99999", "abc"]) {
 test("shows no message for an unknown notice code", async ({ page }) => {
   await page.goto("/tickets?notice=something-else");
 
+  await expect(page.getByRole("table")).toBeVisible();
   await expect(page.getByRole("status")).toHaveCount(0);
 });
 
@@ -91,4 +92,23 @@ test("shows an error for an invalid requester email and keeps the input", async 
   await expect(page.getByText("Please enter a valid email address.")).toBeVisible();
   await expect(page).toHaveURL("/tickets/new");
   await expect(page.getByLabel("Requester name")).toHaveValue("Ada Lovelace");
+});
+
+test("long words in subject and description do not overflow the page", async ({ page }) => {
+  const subject = `${"S".repeat(100)}${Date.now()}`;
+  const description = `https://example.com/${"a".repeat(300)}`;
+
+  await page.goto("/tickets/new");
+  await page.getByLabel("Requester name").fill("Ada Lovelace");
+  await page.getByLabel("Subject").fill(subject);
+  await page.getByLabel("Description").fill(description);
+  await page.getByRole("button", { name: "Register ticket" }).click();
+  await expect(page).toHaveURL("/tickets");
+
+  const overflows = () => page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+  expect(await overflows()).toBe(false);
+
+  await page.getByRole("link", { name: subject }).click();
+  await expect(page.getByRole("article")).toBeVisible();
+  expect(await overflows()).toBe(false);
 });
