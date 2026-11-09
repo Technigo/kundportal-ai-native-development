@@ -47,8 +47,8 @@ pnpm test:run             # vitest, en gång (pnpm test är watch-läge)
 
 **Hela stacken:** starta backenden först (port 8010), sedan frontenden i en annan terminal.
 Öppna http://localhost:5173. Startsidan är ärendelistan. Frontenden anropar backenden via `/api/...`, som Vite skickar vidare till
-port 8010 (se `frontend/vite.config.ts`). Visas "Kunde inte nå backenden" är backenden inte
-igång.
+port 8010 (se `frontend/vite.config.ts`). Visas "Kundserviceportalen svarar inte just nu. Försök
+igen om en stund." är backenden inte igång.
 
 ## Kom igång
 

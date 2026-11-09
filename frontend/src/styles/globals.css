@@ -129,7 +129,7 @@
 
   /* Destructive */
   --destructive: 0 84% 60%;
-  --destructive-foreground: 0 0% 100%;
+  --destructive-foreground: 0 0% 0%; /* KSP-38 (error messages in the UI): black text on the Purple preset red, contrast 5.55 (WCAG AA needs 4.5). White gave 3.78. */
 
   /* Success */
   --success: 152 69% 69%;
@@ -207,7 +207,7 @@
 
   /* Destructive */
   --destructive: 0 84% 60%;
-  --destructive-foreground: 0 0% 100%;
+  --destructive-foreground: 0 0% 0%; /* KSP-38 (error messages in the UI): black text on the Purple preset red, contrast 5.55 (WCAG AA needs 4.5). White gave 3.78. */
 
   --success: 152 69% 69%;
   --success-foreground: 240 10% 10%;

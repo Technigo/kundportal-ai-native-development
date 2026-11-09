@@ -1,10 +1,12 @@
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
+import { axe } from "jest-axe"
 import { createMemoryRouter, RouterProvider } from "react-router"
 import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest"
 
 import type { Ticket, TicketStatus } from "@/api/types"
 import { BACKEND_UNREACHABLE } from "@/api/errors"
+import { expectNoTechnicalWords } from "@/test/technical-words"
 import { TicketDetailPage } from "./ticket-detail-page"
 
 // Status change in the detail view (KSP-32). HIST-02, 06, 07 and 13 are the rules in the API;
@@ -278,9 +280,61 @@ describe("Status change in the detail view", () => {
     await user.selectOptions(select, "Avslutat")
     await user.click(saveButton())
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(BACKEND_UNREACHABLE)
+    const alert = await screen.findByRole("alert")
+    expect(alert).toHaveTextContent(BACKEND_UNREACHABLE)
     expect(document.body).not.toHaveTextContent(/Failed to fetch/)
+    expectNoTechnicalWords(alert)
     expect(select).toBeInTheDocument()
     expect(select).toHaveDisplayValue("Pågående")
+  })
+
+  // KSP-38 AC2 (network errors and 500 give a Swedish message): an unexpected 500 shows the
+  // message and keeps the saved status.
+  it("KSP-38: status server error shows the message and keeps the status", async () => {
+    const user = userEvent.setup()
+    patchAnswer.current = async () => jsonResponse({ detail: "Något gick fel. Försök igen." }, 500)
+    renderAt("/tickets/5")
+    const select = await openEditor(user)
+
+    await user.selectOptions(select, "Avslutat")
+    await user.click(saveButton())
+
+    const alert = await screen.findByRole("alert")
+    expect(alert).toHaveTextContent("Något gick fel. Försök igen.")
+    expectNoTechnicalWords(alert)
+    expect(select).toHaveDisplayValue("Pågående")
+  })
+
+  // KSP-38 AC3 (accessible error messages): the status editor with an error message has no
+  // accessibility errors, and the select keeps its label.
+  it("KSP-38: status error has no accessibility errors", async () => {
+    const user = userEvent.setup()
+    patchAnswer.current = async () => jsonResponse({ detail: "Ärendet har redan den statusen." }, 409)
+    renderAt("/tickets/5")
+    const select = await openEditor(user)
+
+    await user.selectOptions(select, "Avslutat")
+    await user.click(saveButton())
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Ärendet har redan den statusen.")
+    expect(screen.getByRole("combobox", { name: "Status" })).toBeInTheDocument()
+    expect(await axe(document.body)).toHaveNoViolations()
+  })
+
+  // HIST-14 (errors in Swedish without technical details): the message from the API is shown
+  // without the status code.
+  it("HIST-14: status error shows no status code", async () => {
+    const user = userEvent.setup()
+    patchAnswer.current = async () =>
+      jsonResponse({ detail: "Statusen kunde inte ändras. Försök igen." }, 503)
+    renderAt("/tickets/5")
+    const select = await openEditor(user)
+
+    await user.selectOptions(select, "Avslutat")
+    await user.click(saveButton())
+
+    const alert = await screen.findByRole("alert")
+    expect(alert).toHaveTextContent("Statusen kunde inte ändras. Försök igen.")
+    expectNoTechnicalWords(alert)
   })
 })

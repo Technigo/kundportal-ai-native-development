@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { useParams } from "react-router"
+import { Link, useParams } from "react-router"
 
 import { fetchTicket, type TicketResult } from "@/api/tickets"
 import { TicketDetails } from "@/components/ticket-details"
@@ -42,10 +42,19 @@ export function TicketDetailPage() {
         />
       )}
       {/* The detail from the API as it is (KSP-31 AC7), in the same alert as the ticket list.
-          A link back to the list comes with KSP-38 (error messages in the UI). */}
+          KSP-38 AC4 (link back when the ticket does not exist): a ticket that does not exist
+          (404 by CORE-10, also "abc" by B8, a non-integer id gives 404) gets a
+          link back to the list in the same alert. The status code decides, not the text. */}
       {result?.state === "error" && (
         <Alert variant="destructive">
-          <AlertDescription>{result.message}</AlertDescription>
+          <AlertDescription className="flex flex-col gap-2">
+            <p>{result.message}</p>
+            {result.httpStatus === 404 && (
+              <Link to="/" className="self-start font-bold underline underline-offset-4 hover:no-underline">
+                Tillbaka till ärendelistan
+              </Link>
+            )}
+          </AlertDescription>
         </Alert>
       )}
     </TicketPageLayout>
