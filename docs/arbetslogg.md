@@ -66,3 +66,50 @@ Punkt 1–4 gäller uppgiftens egen checklista. Punkt 5–31 gäller produktbete
 | 37 | Q3 · Resultat och begränsningar är spårbara | Delvis uppfyllt | Historiska körningar saknar commit. README anger 26 backendtester och verifieringsplanen 27 utan versionskoppling mellan uppgifterna. |
 
 Se [verifieringsplanens sammanfattning](verifieringsplan.md#verifiering-issue-2) för en kort översikt över körresultaten.
+
+<a name="verifiering-issue-12"></a>
+
+## Issue #12 – Detaljpanel med kunduppgifter och bevarad listnavigation
+
+**2026-11-09 · Verifierare: Daniel · Uppgiftsstatus: Inte Done.** Daniel bekräftade punktstatusarna nedan för [issue #12](https://github.com/danielleven/kundportal-ai-native-development-grupp-1/issues/12). Alla acceptanskriterier i issuet bedöms uppfyllda. Uppgiften är ändå inte klar enligt Q6: [PR #26](https://github.com/danielleven/kundportal-ai-native-development-grupp-1/pull/26) saknar oberoende granskning och grön CI.
+
+**Version och granskning.** Claude Code granskade branchen `feature/ticket-detail` på [`8f3aafa`](https://github.com/danielleven/kundportal-ai-native-development-grupp-1/commit/8f3aafa), där `main` (`8aac679`) är inmergad. Under avstämningen lades ändringar till efter Daniels beslut: fokushantering i `TicketDetail.tsx` och `TicketList.tsx` samt fyra nya tester i `TicketDetail.test.tsx` och `App.test.tsx`. De committades sedan oförändrade som [`8c13d6a`](https://github.com/danielleven/kundportal-ai-native-development-grupp-1/commit/8c13d6ab749d3bfff4f5368e6d9cb7cd6c23b6f1). Alla körningar nedan gäller den versionen. Oberoende granskning av PR #26 saknas.
+
+**Automatiserade kontroller den 9 november.** Körda av Claude Code i Windows med Python 3.12.10, Node 24.15.0 och Docker-tjänsten `mysql-test`, som startades frisk för körningen. `TEST_DATABASE_URL` pekade på den isolerade databasen `kundportal_test` på port 3307.
+
+| Mapp | Kommando | Godkända | Misslyckade | Överhoppade | Ej körda |
+| --- | --- | --- | --- | --- | --- |
+| `backend` | `.\.venv\Scripts\python.exe -m pytest -q -rs` | 27, bland annat T07 och T09 | 0 | 0 | 0 |
+| `frontend` | `npm test` | 17 | 0 | 0 | 0 |
+| `frontend` | `npm run build` | `tsc -b` och Vite-bygget | 0 | 0 | 0 |
+
+Pytest rapporterade en deprecationsvarning för Starlettes användning av `httpx`. Frontendtesterna använder simulerade API-svar och körs i jsdom.
+
+Två nya tester riskprovades. När skyddet mot sena svar i `useTicket.ts` togs bort tillfälligt, fallerade testet för byte av ärende. När återlämningen av fokus i `TicketList.tsx` togs bort, fallerade fokustestet. Koden återställdes och hela sviten kördes igen med 17 godkända tester.
+
+**CI.** GitHub Actions startade på `8f3aafa` men körde inga jobb: *"The job was not started because your account is locked due to a billing issue."* CI-status för PR #26 är därför ej verifierad.
+
+**Manuella kontroller.**
+- Den 5 november gav `GET /api/tickets/999` svaret `404 not_found` mot riktig backend och MySQL. Kontrollen gjordes med curl, inte i gränssnittet.
+- Den 9 november rapporterade Daniel två kontroller i webbläsaren mot riktig backend med tre påhittade ärenden.
+  - Tangentbord: Tab till en ärenderubrik, Enter, Tab till "Stäng" och Enter fungerade. Fokusramen syntes och fokus återvände till raden.
+  - Detaljdelen av M01: panelen visade rätt fält för ärende #2, och det gick att återgå till listan.
+- Registreringsdelen av M01 ingår inte. M07 kan inte nås i gränssnittet, eftersom bara ärenden som finns i listan kan öppnas.
+
+### Bekräftade punkter
+
+Punkt 1–6b är issuets acceptanskriterier.
+
+| Punkt | Kriterium | Bekräftad status | Underlag och kvarvarande luckor |
+| --- | --- | --- | --- |
+| 1 | K5 · Valt ärendes ID, kund-ID, kundnamn, rubrik, beskrivning, kategori, prioritet, status och skapandetid visas med lagrade värden | Uppfyllt | Vitest kontrollerar samtliga fält och att rätt ID hämtas. Daniel kontrollerade ärende #2 manuellt. T07 kontrollerar API-datan. |
+| 2 | Radbrytningar bevaras, med svenska etiketter och läsbar lokal tid | Uppfyllt | Vitest kontrollerar radbrytningar och etiketter. Formatet för detaljdatum testas i `formatDate.test.ts`. |
+| 3 | K5 · Okänt ID ger ett begripligt besked och en väg tillbaka till listan | Uppfyllt | Vitest kontrollerar "Ärendet kunde inte hittas" och att "Stäng" fungerar i det läget. T09 kontrollerar `404 not_found`. M07 går inte att nå i gränssnittet, se ovan. |
+| 4 | Hämtningsfel hanteras begripligt, och fel ärendes detaljer visas inte som det valda | Uppfyllt | Vitest kontrollerar felbesked med nytt försök och att ett sent svar för ett tidigare valt ärende inte visas. Testet är riskprovat. |
+| 5 | K8 · Återgång till listan med samma statusfilter | Uppfyllt | Vitest öppnar ett ärende med filtret Pågående, stänger panelen och kontrollerar att Pågående fortfarande är valt. Filterkriterierna i K8 hör till #14. |
+| 6a | Panel och navigation fungerar med tangentbord och synlig fokus | Uppfyllt | Vitest kontrollerar att fokus flyttas till panelen och tillbaka till raden. Testet är riskprovat. Daniel kontrollerade det manuellt i webbläsaren. |
+| 6b | Ingen radering, och ingen redigering av andra fält än status | Uppfyllt | Granskat i koden. Panelen saknar sådana kontroller. |
+| – | Statusväljare i panelen (K6, ui-design) | Utanför uppgiftens del | Hör till #13. |
+| – | Q2 · Happy path, fel och gränsfall för K5 | Uppfyllt för K5 | Happy path, okänt ID, hämtningsfel, sent svar och navigation täcks av Vitest. |
+| – | Q3 · Spårbara resultat | Uppfyllt för uppgiften | Denna post skiljer automatiserade, manuella och rapporterade kontroller åt och anger testad commit. |
+| – | Q6 · Grön CI och granskning före merge | Ej verifierat | CI startade inte på grund av kontospärr. Oberoende granskning saknas. |

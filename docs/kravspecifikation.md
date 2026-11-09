@@ -173,3 +173,5 @@ Varje utvecklingsuppgift bör ange krav-ID, ansvarig, acceptanskriterier och hur
 ## Verifieringsstatus per uppgift
 
 **2026-11-06 · Issue #2 (G1) · Verifierare: Lukas · Done.** Teknikvalet och API-kontraktet för K1–K8 är godtagna som arbetsunderlag. Se [arbetsloggen](arbetslogg.md#verifiering-issue-2) för bedömningen av K1–K8 och Q1–Q3.
+
+**2026-11-09 · Issue #12 · Verifierare: Daniel · Inte Done.** K5 är uppfyllt i gränssnittet: alla fält visas för valt ärende, okänt ID ger ett begripligt besked och användaren kan återgå till listan. Detaljpanelen bevarar valt statusfilter enligt K8, och filterkriterierna i övrigt hör till #14. Statusväljaren (K6) hör till #13. Kvar enligt Q6 är grön CI och oberoende granskning av PR #26. Se [arbetsloggen](arbetslogg.md#verifiering-issue-12).
