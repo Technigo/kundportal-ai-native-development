@@ -132,6 +132,7 @@ test("long words in subject and description do not overflow the page", async ({ 
   await page.getByLabel("Requester name").fill("Ada Lovelace");
   await page.getByLabel("Subject").fill(subject);
   await page.getByLabel("Description").fill(description);
+  await page.getByLabel("Category").fill("Other");
   await page.getByRole("button", { name: "Register ticket" }).click();
   await expect(page).toHaveURL("/tickets");
 

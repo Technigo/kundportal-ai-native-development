@@ -3,7 +3,8 @@ import type { Db } from "@/db/client";
 import { tickets, type Ticket } from "@/db/schema";
 import type { NewTicket } from "./ticketSchema";
 
-export async function createTicket(db: Db, input: NewTicket): Promise<Ticket> {
+// category may be left out: the database default General is used (decision 06).
+export async function createTicket(db: Db, input: Omit<NewTicket, "category"> & { category?: string }): Promise<Ticket> {
   const [ticket] = await db.insert(tickets).values(input).returning();
   return ticket!;
 }
