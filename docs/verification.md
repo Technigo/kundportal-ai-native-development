@@ -7,9 +7,9 @@ How we check that the acceptance criteria in [project-brief.md](project-brief.md
 | Level | Tool | Used for | Why |
 |---|---|---|---|
 | Unit | Vitest | zod schema, navigation data | Fast, no UI or database needed |
-| Data | Vitest + in-memory SQLite per test | `createTicket`, `listTickets` | Real queries against a real schema, isolated and fast |
+| Data | Vitest + in-memory SQLite per test | `createTicket`, `getTicket`, `listTickets` | Real queries against a real schema, isolated and fast |
 | Server action | Vitest | `submitTicket` | Checks validation, saving, revalidation and redirect without a browser |
-| Component | Vitest + React Testing Library | `TicketForm`, `TicketList`, `PortalShell` | Checks labels, errors and states the user sees |
+| Component | Vitest + React Testing Library | `TicketForm`, `TicketList`, `TicketDetails`, `TicketNotice`, `PortalShell` | Checks labels, errors and states the user sees |
 | End-to-end | Playwright (Chrome) against a production build and `data/e2e.db` | Full flows, keyboard navigation, async Server Components | Async Server Components cannot be unit-tested with Vitest |
 
 ## Criterion to test mapping
@@ -80,10 +80,12 @@ Script: [scripts/mutation-check.mjs](../scripts/mutation-check.mjs).
 ## Latest run results
 
 Run on 2026-11-07 on branch `Alexandra/register-ticket`.
+Run on 2026-11-09 on branch `marie/ticket-list-details`.
 
 | Command | Result |
 |---|---|
 | `npm test` | 7 files, 50 tests passed |
+| `npm test` | 10 files, 59 tests passed |
 | `npm run lint` | No errors |
 | `npm run typecheck` | No errors |
 | `npm run test:e2e` | 8 tests passed |
@@ -91,11 +93,23 @@ Run on 2026-11-07 on branch `Alexandra/register-ticket`.
 
 Update this table when you rerun the checks.
 
+## Manual checks
+
+Automated tests cannot see layout or real browser behaviour. These checks are done by hand in Chrome with `npm run dev` and fresh seed data.
+
+| Check | Criterion | Expected | Last result |
+|---|---|---|---|
+| Long URL without spaces in the description | AC4.2 | Text wraps inside the box, no horizontal scroll | Failed on 2026-11-08 (Alexandra), fixed on 2026-11-09, to be re-checked |
+| `/tickets/01`, `/tickets/1e0`, `/tickets/0x1` | AC4.4 | Redirect to the list with the message | Failed on 2026-11-08 (Alexandra), fixed on 2026-11-09, to be re-checked |
+| `?notice=hej`, `?notice=`, `?notice=<b>x</b>`, `?notice=toString` | AC4.5 | No message, no tags rendered | Passed (Alexandra, 2026-11-08) |
+| Keyboard only: list, ticket, Back to tickets | AC4.6, AC3.2 | All reachable, focus visible | Passed (Alexandra, 2026-11-08) |
+| Screen reader | All | Pages are announced in a sensible order | Not done |
+
 ## Limitations of the verification
 
-- No tests for AC4.x and AC5.x because the features are not built.
+- No tests for AC5.x because the feature is not built.
 - End-to-end tests cover Chrome only.
-- No accessibility audit beyond the keyboard navigation test and labelled form fields.
+- No accessibility audit beyond the keyboard navigation test and labelled form fields. No screen reader test.
 - e2e tests share one seeded database, so they depend on the seed data order.
 - The AC1 tests added after the code (blank fields, limits, email, priority, `maxlength`, missing name) passed on their first run, because the behaviour already existed. They were not seen failing first; the mutation check covers `submitTicket` only.
 - The ticket list does not show the category, so e2e cannot show that it is saved. The action test covers it, and mutation 3 shows that the test catches it.
