@@ -1,9 +1,10 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Db } from "@/db/client";
-import { tickets } from "@/db/schema";
+import { ticketStatusChanges, tickets } from "@/db/schema";
 import { createTestDb } from "@/test-utils/testDb";
-import { submitTicket } from "./actions";
+import { createTicket, getTicket } from "@/tickets/ticketRepository";
+import { changeStatus, submitTicket } from "./actions";
 
 const mocks = vi.hoisted(() => ({
   db: undefined as unknown,
@@ -99,5 +100,45 @@ describe("submitTicket", () => {
 
     const [saved] = await db.select().from(tickets);
     expect(saved).toMatchObject({ status: "open" });
+  });
+});
+
+describe("changeStatus", () => {
+  const notFound = "NEXT_REDIRECT:/tickets?notice=ticket-not-found";
+  let existingId: number;
+
+  beforeEach(async () => {
+    const ticket = await createTicket(db, { requesterName: "Ada Lovelace", subject: "Login fails", description: "d", priority: "normal" });
+    existingId = ticket.id;
+  });
+
+  it("redirects to the list with a notice and changes nothing when the ticket does not exist", async () => {
+    await expect(changeStatus(undefined, formData({ ticketId: "999", status: "closed" }))).rejects.toThrow(notFound);
+
+    expect((await getTicket(db, existingId))?.status).toBe("open");
+    expect(await db.select().from(ticketStatusChanges)).toEqual([]);
+    expect(mocks.revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it.each(["abc", "0", "01", ""])("treats the malformed ticket id %j as a missing ticket", async (ticketId) => {
+    await expect(changeStatus(undefined, formData({ ticketId, status: "closed" }))).rejects.toThrow(notFound);
+
+    expect((await getTicket(db, existingId))?.status).toBe("open");
+    expect(await db.select().from(ticketStatusChanges)).toEqual([]);
+  });
+
+  it("redirects for a missing ticket even when the status is also invalid", async () => {
+    await expect(changeStatus(undefined, formData({ ticketId: "999", status: "resolved" }))).rejects.toThrow(notFound);
+    expect(mocks.redirect).toHaveBeenCalledWith("/tickets?notice=ticket-not-found");
+  });
+
+  it.each(["resolved", ""])('returns "Invalid status." for the status %j and changes nothing', async (status) => {
+    const state = await changeStatus(undefined, formData({ ticketId: String(existingId), status }));
+
+    expect(state).toEqual({ error: "Invalid status." });
+    expect((await getTicket(db, existingId))?.status).toBe("open");
+    expect(await db.select().from(ticketStatusChanges)).toEqual([]);
+    expect(mocks.redirect).not.toHaveBeenCalled();
+    expect(mocks.revalidatePath).not.toHaveBeenCalled();
   });
 });
