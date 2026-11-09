@@ -118,6 +118,38 @@ Svara med 2–3 konkreta exempel, gärna med länk till en PR, ett test eller et
 
 ## Mustafa
 
+**1. Var hjälpte AI?**
+
+- **Frågor före implementation.** Jag samlade fyra skills för teamet, bland annat `grill-me` från [skills.sh](https://www.skills.sh/), som får AI att undersöka kraven och koden och ställa frågor innan den bygger. Vid planeringen av ärendelistan satte jag gränser så att AI inte tog över andras arbete eller ändrade API:t. [PR #47](https://github.com/desiboli/kundportal-ai-native-development/pull/47), [PR #59](https://github.com/desiboli/kundportal-ai-native-development/pull/59)
+
+- **En typkontroll som inte kontrollerade något.** Alla 40 tester var gröna, men bygget stoppades av ett typfel. AI hjälpte mig hitta att typkontrollen var felinställd och inte läste några filer. Jag rättade kommandot och lade in automatiska kontroller (CI) som körs på varje ändring innan den får läggas in i huvudgrenen. Det gav resultat redan dagen efter: när en AI-agent byggde sök och filter upptäckte CI ett typfel i agentens kod. Felet rättades innan ändringen kom in i huvudgrenen. [PR #64](https://github.com/desiboli/kundportal-ai-native-development/pull/64) · [PR #84](https://github.com/desiboli/kundportal-ai-native-development/pull/84) · [PR #102](https://github.com/desiboli/kundportal-ai-native-development/pull/102)
+
+- **Kodgranskning med belägg.** Vid granskningen av felmeddelandena använde jag AI för att köra tester och hitta fel. Bland sju konkreta fynd fanns en testhjälpare som felaktigt flaggade "Välj en giltig status." och ett missvisande felmeddelande om att backenden inte svarade. [PR #107](https://github.com/desiboli/kundportal-ai-native-development/pull/107)
+
+**2. När skapade AI extra arbete eller fel?**
+
+- **AI beskrev projektet som det hade varit, inte som det var.** Teamets dokument om kända begränsningar skrevs med hjälp av AI utifrån specar, beslut och veckostatus. När jag granskade det använde jag AI som stöd för att jämföra påståendena med koden i huvudgrenen. Jag hittade tio påståenden som inte längre stämde. Några gällde problem som redan hade rättats, andra beskrev ändringar som ännu inte var klara. Dokumentet lät trovärdigt, men speglade inte projektets faktiska läge. Därför godkände jag det inte förrän uppgifterna hade kontrollerats mot koden och rättats. [PR #98](https://github.com/desiboli/kundportal-ai-native-development/pull/98)
+
+- **Kontraktet användes bara i testerna.** AI skapade typer från backendens API-kontrakt men använde dem inte i koden som skickade ärenden. Jag hittade också att ett sparat ärende kunde saknas i listan om formuläret stängdes under sparningen. Jag rättade båda problemen. [PR #64](https://github.com/desiboli/kundportal-ai-native-development/pull/64)
+
+- **Fungerande kod med otydligt resultat.** När ett ärende skapades inifrån ett annat stängdes bara formuläret, utan tydlig bekräftelse. Jag skrev ett test som visade problemet och ändrade koden så att det nya ärendet öppnas direkt. [PR #103](https://github.com/desiboli/kundportal-ai-native-development/pull/103)
+
+**3. Vilka beslut fick jag fatta själv, och varför?**
+
+- **Arbetsordning och ansvar.** Jag planerade milstolpar och beroenden i Linear. Datatyperna (KSP-28) behövdes före flera frontenddelar, och vi delade upp arbetet med en ägare och granskare per del. AI kunde föreslå en plan, men inte avgöra teamets ansvar och prioriteringar.
+
+- **Vad som hör hemma i portalen.** Jag tog bort en sida för backendstatus, bytte den röda huvudfärgen och bestämde omfattningen för sök och filter utan backendändringar. Det var beslut utifrån projektets syfte, inte bara vad AI kunde bygga. [PR #92](https://github.com/desiboli/kundportal-ai-native-development/pull/92), [PR #91](https://github.com/desiboli/kundportal-ai-native-development/pull/91), [PR #102](https://github.com/desiboli/kundportal-ai-native-development/pull/102)
+
+- **Gränser och kvalitetskrav.** Jag organiserade teamets skills och införde CI för lint, bygge och tester. AI föreslog både separat typkontroll och bygge, men jag såg att bygget redan typkontrollerade och valde bort dubbelarbetet. AI kunde föreslå kontroller, men jag behövde avgöra vilka som var nödvändiga. [PR #47](https://github.com/desiboli/kundportal-ai-native-development/pull/47), [PR #84](https://github.com/desiboli/kundportal-ai-native-development/pull/84)
+
+**4. Vad skulle jag förbättra?**
+
+- **Kontrollera API-kontraktet i CI.** Frontendens typer genereras manuellt från backendens kontrakt. Jag skulle automatisera genereringen och kontrollera att implementationen använder typerna, så att kontraktsfel upptäcks tidigare.
+
+- **Testa hela flödet.** Mina frontendtester använder simulerade backend-svar. Jag skulle komplettera med tester mot den riktiga backenden, från att skapa ett ärende till att hitta det och ändra status.
+
+- **Göra AI-granskning till en skill.** I PR #107 hjälpte AI mig hitta konkreta fel, men fynden behövde bedömas. Jag skulle dokumentera arbetssättet som en skill där AI undersöker och redovisar belägg, medan granskaren avgör vad som behöver rättas. [PR #107](https://github.com/desiboli/kundportal-ai-native-development/pull/107)
+
 ## Nicklas
 
 **1. Var hjälpte AI?**
