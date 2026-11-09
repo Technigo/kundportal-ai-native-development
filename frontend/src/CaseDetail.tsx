@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { CaseStatus } from "./caseOptions";
 import { CaseApiError, CaseRecord, deleteCase, getCaseById } from "./caseService";
 
@@ -22,7 +22,17 @@ export default function CaseDetail({ caseId, onBack }: { caseId: string; onBack:
   const [loadError, setLoadError] = useState("");
   const [deleteError, setDeleteError] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  const deleteButtonRef = useRef<HTMLButtonElement>(null);
+  const cancelDeleteButtonRef = useRef<HTMLButtonElement>(null);
+  const confirmDeleteButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!isDeleteDialogOpen) return;
+    cancelDeleteButtonRef.current?.focus();
+    return () => deleteButtonRef.current?.focus();
+  }, [isDeleteDialogOpen]);
 
   useEffect(() => {
     let isCurrent = true;
@@ -52,11 +62,32 @@ export default function CaseDetail({ caseId, onBack }: { caseId: string; onBack:
     setDeleteError("");
     try {
       await deleteCase(caseRecord.id);
+      setIsDeleteDialogOpen(false);
       onBack();
     } catch (error) {
       setDeleteError(error instanceof CaseApiError ? error.message : "The case could not be deleted. Please try again.");
     } finally {
       setIsDeleting(false);
+    }
+  }
+
+  function handleDeleteDialogKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key === "Escape" && !isDeleting) {
+      event.preventDefault();
+      setIsDeleteDialogOpen(false);
+      return;
+    }
+    if (event.key === "Tab") {
+      const firstButton = cancelDeleteButtonRef.current;
+      const lastButton = confirmDeleteButtonRef.current;
+      if (!firstButton || !lastButton) return;
+      if (event.shiftKey && document.activeElement === firstButton) {
+        event.preventDefault();
+        lastButton.focus();
+      } else if (!event.shiftKey && document.activeElement === lastButton) {
+        event.preventDefault();
+        firstButton.focus();
+      }
     }
   }
 
@@ -84,14 +115,14 @@ export default function CaseDetail({ caseId, onBack }: { caseId: string; onBack:
                 <button className="primary-button" type="button" onClick={() => { window.location.hash = `#/cases/${encodeURIComponent(caseRecord.id)}/edit`; }}>
                   Edit case
                 </button>
-                <button className="danger-button" type="button" onClick={handleDelete} disabled={isDeleting}>
-                  {isDeleting ? "Deleting." : "Delete case"}
+                <button ref={deleteButtonRef} className="danger-button" type="button" onClick={() => { setDeleteError(""); setIsDeleteDialogOpen(true); }} disabled={isDeleting}>
+                  Delete case
                 </button>
               </div>
             </div>
           </div>
 
-          {deleteError && <p className="error-message" role="alert">{deleteError}</p>}
+          {deleteError && !isDeleteDialogOpen && <p className="error-message" role="alert">{deleteError}</p>}
 
           <section className="case-detail-card description-card" aria-labelledby="case-description-title">
             <div className="detail-card-heading">
@@ -114,6 +145,50 @@ export default function CaseDetail({ caseId, onBack }: { caseId: string; onBack:
           </section>
         </>
       ) : null}
+
+      {isDeleteDialogOpen && (
+        <div
+          className="delete-dialog-backdrop"
+          onClick={(event) => {
+            if (event.target === event.currentTarget && !isDeleting) {
+              setIsDeleteDialogOpen(false);
+            }
+          }}
+          onKeyDown={handleDeleteDialogKeyDown}
+        >
+          <section
+            className="delete-dialog-card"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="delete-dialog-title"
+            aria-describedby="delete-dialog-description"
+          >
+            <h2 id="delete-dialog-title">Delete this case?</h2>
+            <p id="delete-dialog-description">Are you sure you want to delete this case?</p>
+            {deleteError && <p className="error-message" role="alert">{deleteError}</p>}
+            <div className="delete-dialog-actions">
+              <button
+                ref={cancelDeleteButtonRef}
+                className="secondary-button"
+                type="button"
+                onClick={() => setIsDeleteDialogOpen(false)}
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+              <button
+                ref={confirmDeleteButtonRef}
+                className="danger-button"
+                type="button"
+                onClick={handleDelete}
+                disabled={isDeleting}
+              >
+                {isDeleting ? "Deleting…" : "Delete case"}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </main>
   );
 }
