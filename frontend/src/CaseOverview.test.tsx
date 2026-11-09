@@ -126,6 +126,52 @@ describe("CaseOverview", () => {
     expect(onCreateCase).toHaveBeenCalled();
   });
 
+  it("filters cases by priority", async () => {
+    (getCases as ReturnType<typeof vi.fn>).mockResolvedValue(mockCases);
+    const user = userEvent.setup();
+    render(<CaseOverview onCreateCase={() => {}} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Login issue")).toBeInTheDocument();
+    });
+
+    await user.selectOptions(screen.getByLabelText(/priority/i), "Low");
+
+    expect(screen.getByText("Billing question")).toBeInTheDocument();
+    expect(screen.queryByText("Login issue")).not.toBeInTheDocument();
+  });
+
+  it("search returns exactly the matching cases and hides non-matches", async () => {
+    (getCases as ReturnType<typeof vi.fn>).mockResolvedValue(mockCases);
+    const user = userEvent.setup();
+    render(<CaseOverview onCreateCase={() => {}} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Login issue")).toBeInTheDocument();
+    });
+
+    await user.type(screen.getByLabelText(/search cases/i), "example.com");
+
+    // both cases have example.com emails, so both should show
+    expect(screen.getByText("Login issue")).toBeInTheDocument();
+    expect(screen.getByText("Billing question")).toBeInTheDocument();
+  });
+
+  it("search by a unique term shows only the matching case", async () => {
+    (getCases as ReturnType<typeof vi.fn>).mockResolvedValue(mockCases);
+    const user = userEvent.setup();
+    render(<CaseOverview onCreateCase={() => {}} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Login issue")).toBeInTheDocument();
+    });
+
+    await user.type(screen.getByLabelText(/search cases/i), "Billing question");
+
+    expect(screen.getByText("Billing question")).toBeInTheDocument();
+    expect(screen.queryByText("Login issue")).not.toBeInTheDocument();
+  });
+
   it("shows an error and retries loading", async () => {
     (getCases as ReturnType<typeof vi.fn>)
       .mockRejectedValueOnce(new Error("network"))

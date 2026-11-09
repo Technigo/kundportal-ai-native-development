@@ -13,6 +13,7 @@ VALID_CASE = {
     "description": "Customer cannot log in to the portal.",
     "category": "Technical support",
     "priority": "High",
+    "status": "new",
     "customer_email": "customer@example.com",
 }
 
@@ -39,15 +40,6 @@ def test_create_case_returns_201_and_persists_all_fields(client):
     assert isinstance(data["id"], str) and data["id"]
     assert "created_at" in data and data["created_at"]
     assert "updated_at" in data and data["updated_at"]
-
-
-def test_create_case_defaults_status_to_new(client):
-    """Status defaults to 'new' when it is omitted from the request."""
-    payload = {k: v for k, v in VALID_CASE.items()}
-    response = client.post("/cases/", json=payload)
-
-    assert response.status_code == status.HTTP_201_CREATED
-    assert response.json()["status"] == "new"
 
 
 @pytest.mark.parametrize("status_value", ALLOWED_STATUSES)
@@ -273,3 +265,49 @@ def test_delete_case_removes_case_from_list(client):
     assert len(data) == 1
     assert data[0]["id"] == keep_id
     assert all(item["id"] != delete_id for item in data)
+
+
+def test_update_case_reflects_in_list_and_detail(client):
+    """After an update, both the list and the detail show the new values (TV-25, F4)."""
+    created = _create_case(client)
+    case_id = created.json()["id"]
+
+    update = client.put(
+        "/cases/" + case_id,
+        json={"title": "Updated title", "description": "Updated description", "status": "closed"},
+    )
+    assert update.status_code == status.HTTP_200_OK
+
+    list_response = client.get("/cases/")
+    assert list_response.status_code == status.HTTP_200_OK
+    data = list_response.json()
+    assert len(data) == 1
+    assert data[0]["id"] == case_id
+    assert data[0]["title"] == "Updated title"
+    assert data[0]["status"] == "closed"
+
+    detail_response = client.get("/cases/" + case_id)
+    assert detail_response.status_code == status.HTTP_200_OK
+    detail = detail_response.json()
+    assert detail["id"] == case_id
+    assert detail["title"] == "Updated title"
+    assert detail["description"] == "Updated description"
+    assert detail["status"] == "closed"
+    assert detail["created_at"] == created.json()["created_at"]
+
+
+def test_update_case_status_persists_across_fetch(client):
+    """A changed status is retained when the case is fetched again (TV-26)."""
+    created = _create_case(client, status="new")
+    case_id = created.json()["id"]
+
+    update = client.put("/cases/" + case_id, json={"status": "waiting_for_customer"})
+    assert update.status_code == status.HTTP_200_OK
+
+    fetched = client.get("/cases/" + case_id)
+    assert fetched.status_code == status.HTTP_200_OK
+    assert fetched.json()["status"] == "waiting_for_customer"
+
+    listed = client.get("/cases/")
+    assert listed.status_code == status.HTTP_200_OK
+    assert listed.json()[0]["status"] == "waiting_for_customer"

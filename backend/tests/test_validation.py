@@ -13,10 +13,11 @@ VALID_CASE = {
     "description": "Customer cannot log in to the portal.",
     "category": "Technical support",
     "priority": "High",
+    "status": "new",
     "customer_email": "customer@example.com",
 }
 
-REQUIRED_FIELDS = ["title", "description", "category", "priority", "customer_email"]
+REQUIRED_FIELDS = ["title", "description", "category", "priority", "status", "customer_email"]
 
 
 @pytest.mark.parametrize("missing_field", REQUIRED_FIELDS)
@@ -123,3 +124,17 @@ def test_update_case_invalid_status_does_not_change_other_fields(client):
     assert fetched.status_code == status.HTTP_200_OK
     assert fetched.json()["title"] == VALID_CASE["title"]
     assert fetched.json()["status"] == "new"
+
+
+def test_validation_error_identifies_missing_field(client):
+    """A 422 response names the field that failed validation (TV-10, TV-11, F3)."""
+    payload = {k: v for k, v in VALID_CASE.items() if k != "title"}
+    response = client.post("/cases/", json=payload)
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+    detail = response.json()["detail"]
+    assert isinstance(detail, list) and detail
+    locations = [str(item.get("loc", "")) for item in detail]
+    assert any("title" in loc for loc in locations)
+
+
+# Note: whitespace-only handling is not defined by the requirements (B3).

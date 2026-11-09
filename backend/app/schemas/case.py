@@ -5,7 +5,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
 class CaseStatus(str, Enum):
@@ -38,8 +38,24 @@ class CaseBase(BaseModel):
     description: str = Field(..., min_length=1)
     category: CaseCategory
     priority: CasePriority
-    status: CaseStatus = CaseStatus.NEW
+    status: CaseStatus
     customer_email: EmailStr
+
+    @field_validator("title", "description", mode="before")
+    @classmethod
+    def _strip_and_require_text(cls, value):
+        if isinstance(value, str):
+            value = value.strip()
+        if value == "" or value is None:
+            raise ValueError("This field is required.")
+        return value
+
+    @field_validator("customer_email", mode="before")
+    @classmethod
+    def _strip_email(cls, value):
+        if isinstance(value, str):
+            return value.strip()
+        return value
 
 
 class CaseCreate(CaseBase):
@@ -55,6 +71,24 @@ class CaseUpdate(BaseModel):
     priority: Optional[CasePriority] = None
     status: Optional[CaseStatus] = None
     customer_email: Optional[EmailStr] = None
+
+    @field_validator("title", "description", mode="before")
+    @classmethod
+    def _strip_and_require_text(cls, value):
+        if value is None:
+            return value
+        if isinstance(value, str):
+            value = value.strip()
+        if value == "":
+            raise ValueError("This field is required.")
+        return value
+
+    @field_validator("customer_email", mode="before")
+    @classmethod
+    def _strip_email(cls, value):
+        if isinstance(value, str):
+            return value.strip()
+        return value
 
 
 class Case(BaseModel):

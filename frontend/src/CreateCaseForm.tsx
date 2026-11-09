@@ -1,6 +1,13 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { caseOptions, CaseStatus } from "./caseOptions";
-import { CaseApiError, createCase, CreatedCase } from "./caseService";
+import {
+  CaseApiError,
+  CaseRecord,
+  createCase,
+  CreatedCase,
+  getCaseById,
+  updateCase,
+} from "./caseService";
 
 type CaseFormValues = {
   customerEmail: string;
@@ -29,7 +36,26 @@ const fieldLabels: Record<keyof CaseFormValues, string> = {
   status: "Status",
 };
 
-export default function CreateCaseForm({ onBack }: { onBack: () => void }) {
+function recordToValues(record: CaseRecord): CaseFormValues {
+  return {
+    customerEmail: record.customer_email,
+    issueTitle: record.title,
+    description: record.description,
+    category: record.category ?? "",
+    priority: record.priority ?? "",
+    status: record.status,
+  };
+}
+
+export default function CreateCaseForm({
+  mode = "create",
+  caseId,
+  onBack,
+}: {
+  mode?: "create" | "edit";
+  caseId?: string;
+  onBack: () => void;
+}) {
   const [values, setValues] = useState(initialValues);
   const [errors, setErrors] = useState<
     Partial<Record<keyof CaseFormValues, string>>
@@ -37,6 +63,37 @@ export default function CreateCaseForm({ onBack }: { onBack: () => void }) {
   const [submittedCase, setSubmittedCase] = useState<CreatedCase | null>(null);
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(mode === "edit");
+  const [loadError, setLoadError] = useState("");
+
+  useEffect(() => {
+    if (mode !== "edit" || !caseId) return;
+    let isCurrent = true;
+    setIsLoading(true);
+    setLoadError("");
+
+    getCaseById(caseId)
+      .then((result) => {
+        if (!isCurrent) return;
+        setValues(recordToValues(result));
+      })
+      .catch((error: unknown) => {
+        if (isCurrent) {
+          setLoadError(
+            error instanceof CaseApiError
+              ? error.message
+              : "Could not load this case. Please try again.",
+          );
+        }
+      })
+      .finally(() => {
+        if (isCurrent) setIsLoading(false);
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [caseId, mode]);
 
   function updateField(field: keyof CaseFormValues, value: string) {
     setValues((current) => ({ ...current, [field]: value }));
@@ -68,20 +125,29 @@ export default function CreateCaseForm({ onBack }: { onBack: () => void }) {
     setErrors(nextErrors);
     setSubmittedCase(null);
     setSubmitError("");
-    if (Object.keys(nextErrors).length > 0 || !values.status) return;
+    if (Object.keys(nextErrors).length > 0) return;
 
     setIsSubmitting(true);
     try {
-      const created = await createCase({
+      const payload = {
         title: values.issueTitle.trim(),
         description: values.description.trim(),
         category: values.category,
         priority: values.priority,
-        status: values.status,
+        status: values.status as CaseStatus,
         customer_email: values.customerEmail.trim(),
-      });
-      setSubmittedCase(created);
-      setValues(initialValues);
+      };
+
+      if (mode === "edit" && caseId) {
+        const updated = await updateCase(caseId, payload);
+        setSubmittedCase(updated);
+        onBack();
+      } else {
+        const created = await createCase(payload);
+        setSubmittedCase(created);
+        setValues(initialValues);
+        onBack();
+      }
     } catch (error) {
       setSubmitError(
         error instanceof CaseApiError
@@ -93,31 +159,45 @@ export default function CreateCaseForm({ onBack }: { onBack: () => void }) {
     }
   }
 
+  if (isLoading) {
+    return (
+      <main className="page-content">
+        <p role="status">Loading case.</p>
+      </main>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <main className="page-content">
+        <p role="alert">{loadError}</p>
+        <button type="button" onClick={onBack}>
+          Back
+        </button>
+      </main>
+    );
+  }
+
   return (
     <main className="page-content">
       <div className="page-heading">
         <button type="button" className="back-link" onClick={onBack}>
-          ← Back to cases
+          Back to cases
         </button>
         <div>
-          <p className="eyebrow">Cases / New case</p>
-          <h1>New case</h1>
-          <p className="intro">
-            Capture the customer’s request so your team can follow up quickly.
+          <p className="eyebrow">
+            Cases / {mode === "edit" ? "Edit case" : "New case"}
           </p>
+          <h1>{mode === "edit" ? "Edit case" : "New case"}</h1>
         </div>
       </div>
 
       <form className="case-form" onSubmit={handleSubmit} noValidate>
-        <section
-          className="form-section"
-          aria-labelledby="customer-section-title"
-        >
+        <section className="form-section" aria-labelledby="customer-section-title">
           <div className="section-heading">
             <div className="section-number">01</div>
             <div>
               <h2 id="customer-section-title">Customer details</h2>
-              <p>What email address can your team use to follow up?</p>
             </div>
           </div>
           <div className="field-grid">
@@ -137,7 +217,6 @@ export default function CreateCaseForm({ onBack }: { onBack: () => void }) {
             <div className="section-number">02</div>
             <div>
               <h2 id="issue-section-title">Issue details</h2>
-              <p>Describe what the customer needs help with.</p>
             </div>
           </div>
           <div className="field-grid">
@@ -156,19 +235,11 @@ export default function CreateCaseForm({ onBack }: { onBack: () => void }) {
                 rows={5}
                 value={values.description}
                 aria-invalid={Boolean(errors.description)}
-                aria-describedby={
-                  errors.description ? "description-error" : undefined
-                }
-                onChange={(event) =>
-                  updateField("description", event.target.value)
-                }
+                aria-describedby={errors.description ? "description-error" : undefined}
+                onChange={(event) => updateField("description", event.target.value)}
               />
               {errors.description && (
-                <p
-                  className="error-message"
-                  id="description-error"
-                  role="alert"
-                >
+                <p className="error-message" id="description-error" role="alert">
                   {errors.description}
                 </p>
               )}
@@ -176,15 +247,11 @@ export default function CreateCaseForm({ onBack }: { onBack: () => void }) {
           </div>
         </section>
 
-        <section
-          className="form-section"
-          aria-labelledby="classification-section-title"
-        >
+        <section className="form-section" aria-labelledby="classification-section-title">
           <div className="section-heading">
             <div className="section-number">03</div>
             <div>
               <h2 id="classification-section-title">Classification</h2>
-              <p>Set the initial routing and follow-up information.</p>
             </div>
           </div>
           <div className="field-grid three-columns">
@@ -216,51 +283,23 @@ export default function CreateCaseForm({ onBack }: { onBack: () => void }) {
         </section>
 
         <div className="form-actions">
-          <button
-            className="primary-button"
-            type="submit"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Saving case…" : "Create case"}
+          <button className="primary-button" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Saving." : mode === "edit" ? "Save changes" : "Create case"}
           </button>
         </div>
       </form>
 
-      {submitError && (
-        <div className="submit-error" role="alert">
-          {submitError}
-        </div>
-      )}
+      {submitError && <div className="submit-error" role="alert">{submitError}</div>}
       {submittedCase && (
         <div className="success-message" role="status" tabIndex={-1}>
-          <div className="success-icon" aria-hidden="true">
-            ✓
-          </div>
-          <div>
-            <h2>Case created and saved</h2>
-            <p>Your case was saved to the shared case database.</p>
-            <p className="timestamp">
-              Case #{submittedCase.id.slice(0, 8)} · Created{" "}
-              {new Date(submittedCase.created_at).toLocaleString()}
-            </p>
-            <button className="secondary-button" type="button" onClick={onBack}>
-              View Cases Overview
-            </button>
-          </div>
+          <h2>{mode === "edit" ? "Case updated" : "Case created and saved"}</h2>
         </div>
       )}
     </main>
   );
 }
 
-function Field({
-  label,
-  name,
-  type = "text",
-  value,
-  error,
-  onChange,
-}: {
+function Field({ label, name, type = "text", value, error, onChange }: {
   label: string;
   name: keyof CaseFormValues;
   type?: string;
@@ -290,19 +329,10 @@ function Field({
   );
 }
 
-function SelectField({
-  label,
-  name,
-  options,
-  value,
-  error,
-  onChange,
-}: {
+function SelectField({ label, name, options, value, error, onChange }: {
   label: string;
   name: keyof CaseFormValues;
-  options:
-    | ReadonlyArray<string>
-    | ReadonlyArray<{ value: CaseStatus; label: string }>;
+  options: ReadonlyArray<string> | ReadonlyArray<{ value: CaseStatus; label: string }>;
   value: string;
   error?: string;
   onChange: (value: string) => void;
@@ -322,13 +352,9 @@ function SelectField({
         <option value="">Select {label.toLowerCase()}</option>
         {options.map((option) =>
           typeof option === "string" ? (
-            <option key={option} value={option}>
-              {option}
-            </option>
+            <option key={option} value={option}>{option}</option>
           ) : (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
+            <option key={option.value} value={option.value}>{option.label}</option>
           ),
         )}
       </select>
