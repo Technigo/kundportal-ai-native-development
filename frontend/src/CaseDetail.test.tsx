@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import CaseDetail from "./CaseDetail";
@@ -54,7 +54,6 @@ describe("CaseDetail", () => {
 
   it("does not delete the case when the confirmation is cancelled", async () => {
     (getCaseById as ReturnType<typeof vi.fn>).mockResolvedValue(mockCase);
-    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
     const onBack = vi.fn();
     const user = userEvent.setup();
     render(<CaseDetail caseId="case-1" onBack={onBack} />);
@@ -63,17 +62,18 @@ describe("CaseDetail", () => {
       expect(screen.getByRole("button", { name: /delete case/i })).toBeInTheDocument();
     });
     await user.click(screen.getByRole("button", { name: /delete case/i }));
+    const dialog = screen.getByRole("alertdialog", { name: /delete this case/i });
+    expect(dialog).toHaveTextContent("Are you sure you want to delete this case?");
+    await user.click(screen.getByRole("button", { name: /cancel/i }));
 
-    expect(confirmSpy).toHaveBeenCalledWith("Are you sure you want to delete this case?");
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
     expect(deleteCase).not.toHaveBeenCalled();
     expect(onBack).not.toHaveBeenCalled();
-    confirmSpy.mockRestore();
   });
 
   it("deletes the case after the confirmation is accepted", async () => {
     (getCaseById as ReturnType<typeof vi.fn>).mockResolvedValue(mockCase);
     (deleteCase as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
-    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
     const onBack = vi.fn();
     const user = userEvent.setup();
     render(<CaseDetail caseId="case-1" onBack={onBack} />);
@@ -82,12 +82,27 @@ describe("CaseDetail", () => {
       expect(screen.getByRole("button", { name: /delete case/i })).toBeInTheDocument();
     });
     await user.click(screen.getByRole("button", { name: /delete case/i }));
+    await user.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: /delete case/i }));
 
     await waitFor(() => {
       expect(deleteCase).toHaveBeenCalledWith("case-1");
       expect(onBack).toHaveBeenCalled();
     });
-    confirmSpy.mockRestore();
+  });
+
+  it("closes the delete confirmation with Escape", async () => {
+    (getCaseById as ReturnType<typeof vi.fn>).mockResolvedValue(mockCase);
+    const user = userEvent.setup();
+    render(<CaseDetail caseId="case-1" onBack={() => {}} />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /delete case/i })).toBeInTheDocument();
+    });
+    await user.click(screen.getByRole("button", { name: /delete case/i }));
+    await user.keyboard("{Escape}");
+
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    expect(deleteCase).not.toHaveBeenCalled();
   });
 
   it("shows an error state when loading fails", async () => {
