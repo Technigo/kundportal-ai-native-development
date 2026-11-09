@@ -1,6 +1,6 @@
 # Spec: Felmeddelanden i UI och tidslinjen i detaljvyn
 
-> Status: **v1** · Ansvarig: Amalia (amaliaa-91) · Granskare: Mustafa (desiboli), Azalea (Azaalea) · Vecka 7
+> Status: **v1.1** · Ansvarig: Amalia (amaliaa-91) · Granskare: Mustafa (desiboli), Azalea (Azaalea) · Vecka 7
 > Detta dokument är teamets underlag för besluten i KSP-38 (felmeddelanden i UI) och KSP-37
 > (tidslinjen i detaljvyn). Det har inga egna krav-id. Det hänvisar till kraven som redan finns:
 > **HIST-xx** i [SPEC-arendehistorik.md](SPEC-arendehistorik.md), **CORE-xx** i
@@ -79,7 +79,8 @@ hur tidslinjen visar, hämtar och uppdaterar historiken.
 | Historiken hämtas först när ärendet har kommit med 200. Ger ärendet 404 hämtas ingen historik, och bara detaljvyns felmeddelande visas | HIST-08 |
 | Efter ett lyckat statusbyte och efter en 409 hämtas historiken igen, och den nya posten syns utan att sidan laddas om. Efter 422 eller 503 har inget ändrats, och historiken hämtas inte igen | KSP-37 AC4, HIST-07 |
 | Vid första laddningen visas ett skelett, som läses som "Laddar historiken …" | HIST-05 |
-| Vid en ny hämtning står den gamla listan kvar tills den nya har kommit, så att inget blinkar. Under den korta stunden stämmer den senaste posten inte med ärendets status, och det godtas | KSP-37 AC4 |
+| Vid en ny hämtning står den gamla listan kvar tills den nya har kommit, så att inget blinkar | KSP-37 AC4 |
+| Det är ett **medvetet undantag** från HIST-05 (senaste posten stämmer med ärendets status): under den korta stunden visar statusmärket redan den nya statusen, medan tidslinjens senaste post är den gamla. Undantaget gäller bara visningen. Det sparade är alltid i takt, eftersom status och historikpost sparas i samma transaktion (ADR-001) | HIST-05, ADR-001 |
 
 **Fel**
 
@@ -102,6 +103,7 @@ Besluten är Amalias, om inget annat står. Varför de togs:
 | Tidslinjens eget felmeddelande med en knapp | Ärendet syns och fungerar, bara historiken saknas. Knappen säger vad handläggaren kan göra, så texten behöver inte upprepa "Försök igen" | `detail` som det är, eller omladdning av sidan |
 | Historiken hämtas efter ärendet, inte samtidigt | Vid 404 blir det bara ett felmeddelande och inget onödigt anrop | båda samtidigt, och historikens fel döljs |
 | Historiken hämtas igen från API:t efter ett byte | Rätt tid och id från databasen, och vid en 409 syns också den andras post | bygga posten i webbläsaren |
+| Den gamla listan står kvar under en ny hämtning, ett medvetet undantag från HIST-05 | Mot en lokal backend tar hämtningen några millisekunder, och en lista som blinkar bort är störande. Undantaget gäller bara visningen, inte det som är sparat (ADR-001), så HIST-specen behöver inte ändras. Azalea godtog undantaget i granskningen av PR #112 | skelettet vid varje hämtning, eller att ta bort pricken "aktuell" under hämtningen |
 | Rubriken "Nytt" för `created`, med "Ärendet skapades" under | Samma form som de andra posterna, och "Ärendet skapades" som rubrik kunde förvirra (efter kontroll i webbläsaren 2026-11-07) | rubriken "Ärendet skapades" med "Status: Nytt" |
 | Överstruken gammal status, mindre tidigare prickar och mindre skugga | Den aktuella posten stack inte ut tillräckligt, och skuggan tog över (efter kontroll i webbläsaren 2026-11-07) | samma storlek på alla prickar |
 
@@ -129,3 +131,4 @@ Besluten är Amalias, om inget annat står. Varför de togs:
 | Version | Datum | Ändring |
 | --- | --- | --- |
 | v1 | 2026-11-08 | Första versionen. Besluten från KSP-37 och KSP-38 (PR #107 och PR #109) samlade på ett ställe |
+| v1.1 | 2026-11-09 | Den gamla listan under en ny hämtning är skriven som ett medvetet undantag från HIST-05, i avsnitt 5 och i beslutstabellen. Efter Azaleas granskning |
