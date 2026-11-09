@@ -1,6 +1,6 @@
 # Spec: Felmeddelanden i UI och tidslinjen i detaljvyn
 
-> Status: **v1.1** · Ansvarig: Amalia (amaliaa-91) · Granskare: Mustafa (desiboli), Azalea (Azaalea) · Vecka 7
+> Status: **v1.2** · Ansvarig: Amalia (amaliaa-91) · Granskare: Mustafa (desiboli), Azalea (Azaalea) · Vecka 7
 > Detta dokument är teamets underlag för besluten i KSP-38 (felmeddelanden i UI) och KSP-37
 > (tidslinjen i detaljvyn). Det har inga egna krav-id. Det hänvisar till kraven som redan finns:
 > **HIST-xx** i [SPEC-arendehistorik.md](SPEC-arendehistorik.md), **CORE-xx** i
@@ -65,11 +65,11 @@ hur tidslinjen visar, hämtar och uppdaterar historiken.
 | Regel | Krav |
 | --- | --- |
 | Avsnittet "Historik" (`<h2>`) ligger under ärendet | KSP-37 AC5 |
-| Posterna visas i den ordning API:t ger dem. UI:t sorterar aldrig om | KSP-37 AC2, HIST-03, HIST-11 |
+| Posterna visas med den **senaste överst**, så att den aktuella statusen hamnar bredvid statusmärket. API:t ger dem äldst först, och UI:t vänder bara ordningen. Det sorterar aldrig själv | KSP-37 AC2, HIST-03, HIST-11 |
 | Ett statusbyte visas som "~~Nytt~~ → Pågående", med svenska etiketter. Den gamla statusen är överstruken (`<s>`, inte längre gällande). Pilen är dold för skärmläsare, som läser "Nytt till Pågående" | KSP-37 AC1, HIST-05 |
 | Posten `created` har ingen gammal status. Rubriken är statusen, "Nytt", och raden "Ärendet skapades" står under | HIST-05 |
 | Varje post visar tiden i lokal tid, `ÅÅÅÅ-MM-DD TT:MM`, som "Skapad" i detaljvyn (KSP-31 AC6), i ett `<time>`-element | KSP-37 AC1 |
-| Den senaste posten har en större lila prick (24 px) och den dolda texten "(aktuell status)", så att den inte bara syns i färg och storlek. Tidigare poster har mindre prickar (16 px). Skuggan på prickarna är 2 px i stället för BOLDkits 4 px | KSP-37 AC3, HIST-05 |
+| Den senaste posten, den översta, har en större lila prick (24 px) och den dolda texten "(aktuell status)", så att den inte bara syns i färg och storlek. Tidigare poster har mindre prickar (16 px). Skuggan på prickarna är 2 px i stället för BOLDkits 4 px | KSP-37 AC3, HIST-05 |
 | Tidslinjen är en lista för skärmläsare (`role="list"` och `role="listitem"`), eftersom BOLDkits `timeline` bara består av `div`-element | KSP-38 AC3 |
 
 **Hämtning**
@@ -103,6 +103,7 @@ Besluten är Amalias, om inget annat står. Varför de togs:
 | Tidslinjens eget felmeddelande med en knapp | Ärendet syns och fungerar, bara historiken saknas. Knappen säger vad handläggaren kan göra, så texten behöver inte upprepa "Försök igen" | `detail` som det är, eller omladdning av sidan |
 | Historiken hämtas efter ärendet, inte samtidigt | Vid 404 blir det bara ett felmeddelande och inget onödigt anrop | båda samtidigt, och historikens fel döljs |
 | Historiken hämtas igen från API:t efter ett byte | Rätt tid och id från databasen, och vid en 409 syns också den andras post | bygga posten i webbläsaren |
+| Senaste posten överst (teamets beslut 2026-11-09) | Den aktuella statusen hamnar bredvid statusmärket, och resultatet av ett statusbyte syns direkt, också när ärendet har många poster. Mustafas förslag i granskningen av PR #109. KSP-37 AC2 ändrades från "äldst först" | äldst först, som API:t ger dem |
 | Den gamla listan står kvar under en ny hämtning, ett medvetet undantag från HIST-05 | Mot en lokal backend tar hämtningen några millisekunder, och en lista som blinkar bort är störande. Undantaget gäller bara visningen, inte det som är sparat (ADR-001), så HIST-specen behöver inte ändras. Azalea godtog undantaget i granskningen av PR #112 | skelettet vid varje hämtning, eller att ta bort pricken "aktuell" under hämtningen |
 | Rubriken "Nytt" för `created`, med "Ärendet skapades" under | Samma form som de andra posterna, och "Ärendet skapades" som rubrik kunde förvirra (efter kontroll i webbläsaren 2026-11-07) | rubriken "Ärendet skapades" med "Status: Nytt" |
 | Överstruken gammal status, mindre tidigare prickar och mindre skugga | Den aktuella posten stack inte ut tillräckligt, och skuggan tog över (efter kontroll i webbläsaren 2026-11-07) | samma storlek på alla prickar |
@@ -132,3 +133,4 @@ Besluten är Amalias, om inget annat står. Varför de togs:
 | --- | --- | --- |
 | v1 | 2026-11-08 | Första versionen. Besluten från KSP-37 och KSP-38 (PR #107 och PR #109) samlade på ett ställe |
 | v1.1 | 2026-11-09 | Den gamla listan under en ny hämtning är skriven som ett medvetet undantag från HIST-05, i avsnitt 5 och i beslutstabellen. Efter Azaleas granskning |
+| v1.2 | 2026-11-09 | Senaste posten överst i tidslinjen, efter teamets beslut. Avsnitt 5 (Visning) och beslutstabellen. KSP-37 AC2 ändrad |
