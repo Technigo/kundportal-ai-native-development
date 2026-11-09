@@ -151,7 +151,8 @@ describe("Timeline in the detail view", () => {
     await saveStatus(user, "Pågående")
 
     await vi.waitFor(async () => expect(await entryTexts()).toHaveLength(2))
-    expect((await entryTexts())[1]).toMatch(/Nytt.*Pågående/)
+    // The new entry is first, next to the status badge (KSP-37 AC2, the latest entry first).
+    expect((await entryTexts())[0]).toMatch(/Nytt.*Pågående/)
     expect(calls(backend.fetchMock, "/api/tickets/5/history")).toBe(2)
   })
 
@@ -176,7 +177,7 @@ describe("Timeline in the detail view", () => {
     await saveStatus(user, "Avslutat")
 
     await vi.waitFor(async () => expect(await entryTexts()).toHaveLength(2))
-    expect((await entryTexts())[1]).toMatch(/Nytt.*Avslutat/)
+    expect((await entryTexts())[0]).toMatch(/Nytt.*Avslutat/)
   })
 
   // KSP-37 AC4: when the change is rejected nothing has changed, so the history is not

@@ -52,15 +52,17 @@ describe("TicketTimeline", () => {
     expect(entry).not.toHaveTextContent("→")
   })
 
-  // HIST-03 (oldest first) and TC1 in KSP-45: Swedish labels, never the codes.
-  it("HIST-05: entries are shown oldest first with Swedish labels", () => {
+  // KSP-37 AC2 (the latest entry first, the team's decision 2026-11-09 after Mustafa's review
+  // of PR #109) and TC1 in KSP-45: Swedish labels, never the codes. The API still gives the
+  // entries oldest first (HIST-03), and the UI turns the order round.
+  it("HIST-05: entries are shown newest first with Swedish labels", () => {
     render(<TicketTimeline entries={threeEntries} />)
 
     const [first, second, third] = entries()
     expect(entries()).toHaveLength(3)
-    expect(first).toHaveTextContent("Ärendet skapades")
+    expect(first.textContent).toMatch(/Pågående.*→.*Väntar på kund/)
     expect(second.textContent).toMatch(/Nytt.*→.*Pågående/)
-    expect(third.textContent).toMatch(/Pågående.*→.*Väntar på kund/)
+    expect(third).toHaveTextContent("Ärendet skapades")
     expect(screen.getByRole("list")).not.toHaveTextContent(/\b(new|in_progress|waiting_on_customer)\b/)
   })
 
@@ -69,10 +71,11 @@ describe("TicketTimeline", () => {
   it("HIST-05: the latest entry is marked as the current status", () => {
     render(<TicketTimeline entries={threeEntries} />)
 
+    // The latest entry is the first one, next to the status badge.
     const [first, second, third] = entries()
-    expect(third).toHaveAttribute("data-status", "current")
-    expect(third).toHaveTextContent("(aktuell status)")
-    for (const earlier of [first, second]) {
+    expect(first).toHaveAttribute("data-status", "current")
+    expect(first).toHaveTextContent("(aktuell status)")
+    for (const earlier of [second, third]) {
       expect(earlier).toHaveAttribute("data-status", "completed")
       expect(earlier).not.toHaveTextContent("(aktuell status)")
     }
@@ -97,14 +100,14 @@ describe("TicketTimeline", () => {
     const second = entries()[1]
     expect(within(second).getByText("Nytt").tagName).toBe("S")
     expect(within(second).getByText("Pågående").tagName).not.toBe("S")
-    expect(within(entries()[0]).queryByRole("deletion")).not.toBeInTheDocument()
-    expect(entries()[0].querySelector("s")).toBeNull()
+    // created, last in the list, has no old status to strike through.
+    expect(entries()[2].querySelector("s")).toBeNull()
   })
 
-  // T2 in the timeline spec: the UI keeps the order from the API (HIST-03, HIST-11) and does
-  // not sort. The data has a later time before an earlier one, which the backend never sends,
-  // so that any sort would change the order.
-  it("HIST-03: entries keep the API order, also when a sort would change it", () => {
+  // The UI only turns the API's order round (HIST-03 oldest first, HIST-11 same time by id) and
+  // never sorts by itself. The data has a later time before an earlier one, which the backend
+  // never sends, so that any sort would give another order.
+  it("HIST-03: entries are the API order turned round, also when a sort would change it", () => {
     render(
       <TicketTimeline
         entries={[
@@ -116,8 +119,8 @@ describe("TicketTimeline", () => {
     )
 
     const [first, second, third] = entries()
-    expect(first).toHaveTextContent("Ärendet skapades")
+    expect(first.textContent).toMatch(/Pågående.*Väntar på kund/)
     expect(second.textContent).toMatch(/Nytt.*Pågående/)
-    expect(third.textContent).toMatch(/Pågående.*Väntar på kund/)
+    expect(third).toHaveTextContent("Ärendet skapades")
   })
 })
