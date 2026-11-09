@@ -79,7 +79,7 @@ Täcker också kravet "Handle at least one invalid use case with a clear message
 | Fråga | Beslut | Motivering |
 |---|---|---|
 | Är detta en ny funktion? | Delvis. Registreringen finns redan och dokumenteras här. Kategori är ny | AC1 var markerat Done, men inget utanför koden beskrev meddelandena, kantfallen eller gränserna. Kategori krävs i uppgiftens ärendemodell |
-| Hur ser kategorin ut? | Obligatorisk fritext, 1–50 tecken | Uppgiften kräver kategori i ärendemodellen. Fritext går att bygga och testa utan att teamet först måste enas om en fast lista. Nackdelen är att samma kategori kan stavas på olika sätt |
+| Hur ser kategorin ut? | Obligatorisk fritext, 1–50 tecken. Se [beslut 06](../decisions/06-category-free-text.md) | Uppgiften kräver kategori i ärendemodellen. Fritext går att bygga och testa utan att teamet först måste enas om en fast lista. Nackdelen är att samma kategori kan stavas på olika sätt |
 | Vilken kategori får befintliga ärenden? | `General` | Kategori är obligatorisk, så ärenden som redan finns behöver ett värde. Vyer och specar som inte tar med kategori, till exempel ärendelistan (AC2), detaljvyn (AC4) och statusändring (AC5), undantas och påverkas inte |
 | Var valideras inmatningen? | På servern, med zod | Webbläsarens kontroller kan kringgås. Formuläret använder `noValidate`, så det är serverns meddelanden som handläggaren ser |
 | Behövs ett eget meddelande för okänd prioritet? | Nej, zods standardmeddelande behålls | `normal` är förvalt i listan, så en okänd prioritet kan inte väljas i gränssnittet. Den kan bara komma via en direkt förfrågan, och då avvisar servern den |
