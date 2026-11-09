@@ -26,7 +26,8 @@ How we check that the acceptance criteria in [project-brief.md](project-brief.md
 | AC2.2 | `listTickets` newest first; e2e newest first |
 | AC2.3 | `TicketList` empty state |
 | AC3.1, AC3.2 | `PortalShell`, `navItems`; e2e redirect and keyboard navigation |
-| AC4.x, AC5.x | Not built, no tests yet |
+| AC5.3 (AC-S3) | `statusChangeSchema` accepts open, in_progress and closed; rejects "resolved" and "" with "Invalid status." (schema only; server action not built) |
+| AC4.x, AC5.1, AC5.2 | Not built, no tests yet |
 
 ## Latest run results
 
