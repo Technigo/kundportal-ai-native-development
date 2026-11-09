@@ -410,10 +410,18 @@
         overscroll-behavior: contain;
       }
       .detail-fields {
-        display: grid;
-        grid-template-columns: minmax(7.5rem, 11rem) minmax(0, 1fr);
-        gap: 0.65rem 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
         margin: 0;
+        min-width: 0;
+      }
+      .detail-text,
+      .detail-status-block {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        min-width: 0;
       }
       .detail-fields dt {
         margin: 0;
@@ -508,12 +516,7 @@
         flex-direction: column;
         gap: 0.75rem;
         min-width: 0;
-        margin-top: 1.5rem;
-      }
-      .detail-edit-form h3 {
         margin: 0;
-        font-size: 1rem;
-        font-weight: 700;
       }
       .detail-edit-field {
         display: flex;
@@ -522,6 +525,7 @@
         min-width: 0;
       }
       .detail-edit-field label {
+        color: var(--muted);
         font-weight: 600;
       }
       .detail-edit-form input,
@@ -556,13 +560,6 @@
         }
         .detail-dialog {
           padding: 1rem;
-        }
-        .detail-fields {
-          grid-template-columns: 1fr;
-          gap: 0.15rem 0;
-        }
-        .detail-fields dd {
-          margin-bottom: 0.75rem;
         }
         .detail-footer {
           flex-direction: column;
@@ -984,19 +981,23 @@
         showDetailMessage(res.data?.fel || 'Statusen kunde inte ändras.');
       }
 
-      // Körs när servern har bekräftat ändringen: lista och detalj visar bara serverns svar.
-      function showUpdatedCase(arende) {
-        updateListRow(arende);
-        const host = document.getElementById('case-detail');
-        host.replaceChildren();
-        renderCaseDetail(host, arende);
-        showDetailMessage('Statusen är ändrad.', 'ok');
-        document.getElementById('detail-status')?.focus(); // detaljen ritades om, så fokus måste sättas tillbaka
+      function updateListStatus(arendenummer, status) {
+        if (arendenummer == null) return;
+        const wanted = String(arendenummer);
+        const row = [...document.querySelectorAll('#case-list tr[data-arendenummer]')].find(
+          (tr) => tr.dataset.arendenummer === wanted,
+        );
+        const clip = row?.querySelector('td[data-field="status"] .case-clip');
+        if (!clip) return;
+        const text = status == null ? '' : String(status);
+        clip.textContent = text;
+        if (text) clip.title = text;
+        else clip.removeAttribute('title');
       }
 
-      function createStatusForm(arende, onSaved) {
+      function createStatusForm(saved) {
         const requestId = detailRequest; // ignorera svar om detaljvyn hunnit stängas eller bytas
-        const confirmedStatus = arende.status ?? '';
+        let confirmedStatus = saved.status ?? '';
 
         const form = document.createElement('form');
         form.id = 'detail-status-form';
@@ -1023,7 +1024,7 @@
         button.type = 'submit';
         button.className = 'detail-status-submit';
         button.setAttribute('form', form.id);
-        document.getElementById('detail-footer').replaceChildren(button);
+        document.getElementById('detail-footer').append(button);
 
         const controls = { select, button, confirmedStatus };
         let pending = false;
@@ -1041,11 +1042,23 @@
           clearFieldErrors(form);
           clearDetailMessage();
 
-          const res = await changeStatus(arende.arendenummer, nextStatus);
+          const res = await changeStatus(saved.arendenummer, nextStatus);
           if (requestId !== detailRequest) return;
 
           if (res.ok && isCaseObject(res.data)) {
-            onSaved(res.data);
+            const confirmed =
+              res.data.status == null || res.data.status === ''
+                ? nextStatus
+                : String(res.data.status);
+            pending = false;
+            saved.status = confirmed;
+            confirmedStatus = confirmed;
+            controls.confirmedStatus = confirmed;
+            select.value = confirmed;
+            updateStatusControls(controls, false);
+            updateListStatus(saved.arendenummer, confirmed);
+            showDetailMessage('Statusen är ändrad.', 'ok');
+            select.focus();
             return;
           }
           pending = false;
@@ -1069,22 +1082,12 @@
         clearDetailMessage();
       }
 
-      function createEditForm(arende) {
+      function createEditForm(saved) {
         const requestId = detailRequest;
-        const saved = {
-          rubrik: arende.rubrik == null ? '' : String(arende.rubrik),
-          beskrivning: arende.beskrivning == null ? '' : String(arende.beskrivning),
-          kategori: arende.kategori == null ? '' : String(arende.kategori),
-          prioritet: Number(arende.prioritet),
-        };
 
         const form = document.createElement('form');
         form.id = 'detail-edit-form';
         form.className = 'detail-edit-form';
-
-        const heading = document.createElement('h3');
-        heading.textContent = 'Redigera ärende';
-        form.append(heading);
 
         function addField(name, control) {
           const wrap = document.createElement('div');
@@ -1122,21 +1125,40 @@
         }
         prioritet.value = String(saved.prioritet);
 
+        const footer = document.getElementById('detail-footer');
+        const reset = document.createElement('button');
+        reset.type = 'button';
+        reset.className = 'detail-edit-submit';
+        reset.textContent = 'Återställ';
         const button = document.createElement('button');
         button.type = 'submit';
         button.className = 'detail-edit-submit';
         button.textContent = 'Spara ändringar';
         button.setAttribute('form', form.id);
-        document
-          .getElementById('detail-footer')
-          .insertBefore(button, document.getElementById('detail-footer').firstChild);
+        footer.insertBefore(button, footer.firstChild);
+        footer.insertBefore(reset, footer.firstChild);
 
         let pending = false;
 
         function setEditBusy(busy) {
           button.disabled = busy;
+          reset.disabled = busy;
           button.textContent = busy ? 'Sparar…' : 'Spara ändringar';
         }
+
+        function resetFields() {
+          rubrik.value = saved.rubrik;
+          beskrivning.value = saved.beskrivning;
+          kategori.value = saved.kategori;
+          prioritet.value = String(saved.prioritet);
+          clearFieldErrors(form);
+          clearDetailMessage();
+        }
+
+        reset.addEventListener('click', () => {
+          if (pending) return;
+          resetFields();
+        });
 
         function showEditProblem(text) {
           showDetailMessage(text);
@@ -1161,7 +1183,7 @@
 
           const res = await api(
             'PATCH',
-            `/api/arenden/${encodeURIComponent(arende.arendenummer)}`,
+            `/api/arenden/${encodeURIComponent(saved.arendenummer)}`,
             changes,
           );
           if (requestId !== detailRequest) return;
@@ -1184,24 +1206,50 @@
 
       /* ---------- Detalj: visning ---------- */
 
+      function caseSnapshot(arende) {
+        return {
+          arendenummer: arende.arendenummer == null ? '' : String(arende.arendenummer),
+          rubrik: arende.rubrik == null ? '' : String(arende.rubrik),
+          beskrivning: arende.beskrivning == null ? '' : String(arende.beskrivning),
+          kategori: arende.kategori == null ? '' : String(arende.kategori),
+          prioritet: Number(arende.prioritet),
+          status: arende.status == null ? '' : String(arende.status),
+          deadline: arende.deadline == null ? '' : String(arende.deadline),
+        };
+      }
+
+      function createTextField(name, value) {
+        const wrap = document.createElement('div');
+        wrap.className = 'detail-text';
+        const dt = document.createElement('dt');
+        dt.textContent = LIST_FIELD_LABELS[name] || name;
+        const dd = document.createElement('dd');
+        dd.textContent = value == null ? '' : String(value);
+        wrap.append(dt, dd);
+        return wrap;
+      }
+
       function renderCaseDetail(container, arende) {
-        const dl = document.createElement('dl');
-        dl.className = 'detail-fields';
-        for (const field of DETAIL_FIELDS) {
-          const dt = document.createElement('dt');
-          dt.textContent = LIST_FIELD_LABELS[field] || field;
-          const dd = document.createElement('dd');
-          if (field === 'status') {
-            dt.id = 'detail-status-label';
-            dd.append(createStatusForm(arende, showUpdatedCase));
-          } else {
-            const value = arende[field];
-            dd.textContent =
-              field === 'skapad' ? formatCreatedAt(value) : value == null ? '' : String(value);
-          }
-          dl.append(dt, dd);
-        }
-        container.append(dl, createEditForm(arende));
+        const saved = caseSnapshot(arende);
+        document.getElementById('detail-footer').replaceChildren();
+
+        const stack = document.createElement('div');
+        stack.className = 'detail-fields';
+        const statusBlock = document.createElement('div');
+        statusBlock.className = 'detail-status-block';
+        const statusLabel = document.createElement('dt');
+        statusLabel.id = 'detail-status-label';
+        statusLabel.textContent = LIST_FIELD_LABELS.status;
+        statusBlock.append(statusLabel, createStatusForm(saved));
+
+        stack.append(
+          createTextField('arendenummer', saved.arendenummer),
+          createEditForm(saved),
+          statusBlock,
+          createTextField('skapad', formatCreatedAt(arende.skapad)),
+          createTextField('deadline', saved.deadline),
+        );
+        container.append(stack);
       }
 
       async function onShowDetailView(arendenummer) {
