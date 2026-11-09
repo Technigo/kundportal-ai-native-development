@@ -169,3 +169,7 @@ Motivering: filtret hjälper handläggaren att hitta ärenden som behöver hante
 7. Genomför manuella kontroller, verifiera körning från en ren klon och dokumentera resultaten.
 
 Varje utvecklingsuppgift bör ange krav-ID, ansvarig, acceptanskriterier och hur ändringen ska verifieras. Uppdatera dokumentationen när ett beslut ändras.
+
+## Verifieringsstatus per uppgift
+
+**2026-11-06 · Issue #2 (G1) · Verifierare: Lukas · Done.** Teknikvalet och API-kontraktet för K1–K8 är godtagna som arbetsunderlag. Se [arbetsloggen](arbetslogg.md#verifiering-issue-2) för bedömningen av K1–K8 och Q1–Q3.
