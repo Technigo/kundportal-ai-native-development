@@ -15,7 +15,7 @@ const mutations = [
   {
     name: "Saving is disconnected (AC1.1)",
     file: ACTIONS,
-    from: "  await createTicket(getDb(), parsed.data);\n",
+    from: "  await createTicket(getDb(), parsed.data);",
     to: "",
     vitest: { files: [ACTIONS_TEST], mustFail: ["saves a valid ticket with its requester, revalidates the list and redirects to it"] },
     e2e: { files: [TICKETS_E2E], mustFail: ["submitting a valid ticket shows it at the top of the list"] },
@@ -60,8 +60,11 @@ process.on("SIGINT", () => {
   process.exit(130);
 });
 
+const BINS = { vitest: "node_modules/vitest/vitest.mjs", playwright: "node_modules/@playwright/test/cli.js" };
+
+// Run the CLI with node directly: spawning npx needs a shell on Windows (npx.cmd).
 function run(command, args, env = {}) {
-  return spawnSync("npx", [command, ...args], { encoding: "utf8", env: { ...process.env, ...env } });
+  return spawnSync(process.execPath, [BINS[command], ...args], { encoding: "utf8", env: { ...process.env, ...env } });
 }
 
 function readReport(path, result) {
