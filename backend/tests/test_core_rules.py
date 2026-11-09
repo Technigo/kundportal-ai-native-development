@@ -25,7 +25,7 @@ INVALID_INPUT = "Ogiltig indata."
 ZERO_WIDTH_SPACE = "\u200b"
 # B10: all five zero-width characters that are trimmed, not only U+200B (found in KSP-44, N3).
 ZERO_WIDTH_CHARS = ["\u200b", "\u200c", "\u200d", "\u2060", "\ufeff"]
-CATEGORY_INVALID = "V\u00e4lj en giltig kategori."
+CATEGORY_INVALID = "Välj en giltig kategori."
 
 # A valid body (made-up data), so that only the field under test changes.
 VALID_TICKET = {

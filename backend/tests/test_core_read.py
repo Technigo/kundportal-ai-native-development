@@ -6,8 +6,8 @@ was saved), CORE-10 (an unknown id gives 404 "Ärendet finns inte.") and CORE-15
 list is 200 with [], not an error). Part of KSP-25 (CORE tests: create, list, show and restart).
 
 Written before KSP-23 (list and show tickets), when GET answered 501, and now run against
-it. An id that is not an integer (B8) is already
-tested in test_error_format.py (KSP-21). Test proposals reviewed by Nicklas 2026-10-28.
+it. An id that is not an integer (B8) is already tested in test_error_format.py (KSP-21).
+Test proposals reviewed by Nicklas 2026-10-28.
 """
 
 from datetime import UTC, datetime
