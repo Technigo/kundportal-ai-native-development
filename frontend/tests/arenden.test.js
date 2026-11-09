@@ -129,15 +129,30 @@ function createFetch(handle) {
   return { calls, stub };
 }
 
-function detailSlot(document, label) {
-  const dt = [...document.querySelectorAll('#view-detail dt')].find(
-    (el) => el.textContent === label && !el.closest('#detail-edit-form'),
+function detailLabels(document, label) {
+  return [...document.querySelectorAll('#view-detail dt, #view-detail label')].filter(
+    (el) => el.textContent === label,
   );
-  return dt?.nextElementSibling ?? null;
+}
+
+function controlForLabel(document, label) {
+  const labels = detailLabels(document, label);
+  const labelEl = labels.find((el) => el.tagName === 'LABEL');
+  if (labelEl?.htmlFor) {
+    const control = document.getElementById(labelEl.htmlFor);
+    if (control) return control;
+  }
+  const dt = labels.find((el) => el.tagName === 'DT');
+  return dt?.nextElementSibling?.querySelector('input, textarea, select') ?? null;
 }
 
 function detailValue(document, label) {
-  return detailSlot(document, label)?.textContent;
+  const control = controlForLabel(document, label);
+  if (control) return control.value;
+  const dt = [...document.querySelectorAll('#view-detail dt')].find(
+    (el) => el.textContent === label,
+  );
+  return dt?.nextElementSibling?.textContent;
 }
 
 function listField(document, arendenummer, field) {
@@ -173,6 +188,18 @@ function setControl(control, value) {
   const view = control.ownerDocument.defaultView;
   const eventName = control.tagName === 'SELECT' ? 'change' : 'input';
   control.dispatchEvent(new view.Event(eventName, { bubbles: true }));
+}
+
+function resetButton(document) {
+  return [...document.querySelectorAll('#view-detail button')].find(
+    (button) => button.textContent === 'Återställ',
+  );
+}
+
+function clickReset(document) {
+  const button = resetButton(document);
+  expect(button, 'knapp Återställ').toBeTruthy();
+  button.click();
 }
 
 function editForm(document) {
@@ -370,45 +397,32 @@ describe('Ärendelistan och detaljvyn', () => {
     expect(listText(document)).toContain(CASE_A.arendenummer);
     expect(listText(document)).toContain(CASE_B.arendenummer);
 
-    const row = [...document.querySelectorAll('#case-list tbody tr')].find((tr) =>
-      tr.textContent.includes(CASE_B.arendenummer),
-    );
-    expect(row, 'raden för valt ärende').toBeTruthy();
-    (row.querySelector('button, a') ?? row).click();
-    await flushView();
+    await openDetail(document, CASE_B.arendenummer);
 
     const detail = document.getElementById('view-detail');
     expect(detail.hidden, 'detaljvyn ska visas').toBe(false);
-    const text = detail.textContent;
-    expect(text).toContain(CASE_B.arendenummer);
-    expect(text).toContain(CASE_B.rubrik);
-    expect(text).toContain(CASE_B.beskrivning);
-    expect(text).toContain(CASE_B.kategori);
-    expect(text).toContain(CASE_B.status);
-    // 2026-11-03T10:00:00.000Z är 11:00 i Stockholm (CET, UTC+1).
-    expect(text).toContain('2026-11-03 11:00');
-    expect(text).not.toContain(CASE_B.skapad);
-    expect(text).toContain(CASE_B.deadline);
-    expect(text).not.toContain(CASE_A.rubrik);
-    expect(text).not.toContain(CASE_A.beskrivning);
+    for (const label of ['Rubrik', 'Beskrivning', 'Kategori', 'Prioritet']) {
+      const found = detailLabels(document, label);
+      expect(found, label).toHaveLength(1);
+      expect(found[0].tagName, label).toBe('LABEL');
+    }
 
-    const withoutOtherFields = [
-      CASE_B.arendenummer,
-      CASE_B.rubrik,
-      CASE_B.beskrivning,
-      CASE_B.kategori,
-      CASE_B.status,
-      '2026-11-03 11:00',
-      CASE_B.deadline,
-    ].reduce((acc, value) => acc.replaceAll(String(value), ''), text);
-    expect(withoutOtherFields).toContain(String(CASE_B.prioritet));
+    const edit = editForm(document);
+    expect(edit.rubrik.value).toBe(CASE_B.rubrik);
+    expect(edit.beskrivning.value).toBe(CASE_B.beskrivning);
+    expect(edit.kategori.value).toBe(CASE_B.kategori);
+    expect(edit.prioritet.value).toBe(String(CASE_B.prioritet));
+    expect(statusForm(document).select.value).toBe(CASE_B.status);
+    expect(detailValue(document, 'Ärendenummer')).toBe(CASE_B.arendenummer);
+    // 2026-11-03T10:00:00.000Z är 11:00 i Stockholm (CET, UTC+1).
+    expect(detailValue(document, 'Skapad')).toBe('2026-11-03 11:00');
+    expect(detailValue(document, 'Deadline')).toBe(CASE_B.deadline);
+    expect(detail.textContent).not.toContain(CASE_B.skapad);
+    expect(detail.textContent).not.toContain(CASE_A.rubrik);
+    expect(detail.textContent).not.toContain(CASE_A.beskrivning);
   });
   it('AK12: statusbyte skickas till servern och ny status visas', async () => {
-    const updated = {
-      ...CASE_A,
-      status: 'Pågående',
-      rubrik: 'Rubrik <em>från servern</em>',
-    };
+    const updated = { ...CASE_A, status: 'Pågående' };
     const { calls, stub } = createFetch(async ({ method, path, body }) => {
       if (method === 'PATCH' && path === statusPath(CASE_A.arendenummer)) {
         expect(body).toEqual({ status: 'Pågående' });
@@ -439,9 +453,12 @@ describe('Ärendelistan och detaljvyn', () => {
     expect(patches[0].path).toBe(statusPath(CASE_A.arendenummer));
     expect(patches[0].body).toEqual({ status: 'Pågående' });
     expect(statusForm(document).select.value).toBe('Pågående');
-    expect(detailValue(document, 'Rubrik')).toBe(updated.rubrik);
-    expect(detailValue(document, 'Beskrivning')).toBe(CASE_A.beskrivning);
-    expect(listField(document, CASE_A.arendenummer, 'rubrik')).toBe(updated.rubrik);
+    const edit = editForm(document);
+    expect(edit.rubrik.value).toBe(CASE_A.rubrik);
+    expect(edit.beskrivning.value).toBe(CASE_A.beskrivning);
+    expect(edit.kategori.value).toBe(CASE_A.kategori);
+    expect(edit.prioritet.value).toBe(String(CASE_A.prioritet));
+    expect(listField(document, CASE_A.arendenummer, 'rubrik')).toBe(CASE_A.rubrik);
     expect(listStatus(document, CASE_A.arendenummer)).toBe('Pågående');
 
     const message = document.getElementById('detail-message');
@@ -543,10 +560,11 @@ describe('Ärendelistan och detaljvyn', () => {
     expect(patches).toHaveLength(1);
     expect(patches[0].body).toEqual({ kategori: 'Ersättning och stöd', prioritet: 4 });
 
-    expect(detailValue(document, 'Kategori')).toBe('Ersättning och stöd');
-    expect(detailValue(document, 'Prioritet')).toBe('4');
-    expect(detailValue(document, 'Rubrik')).toBe(CASE_EDIT.rubrik);
-    expect(detailValue(document, 'Beskrivning')).toBe(CASE_EDIT.beskrivning);
+    const after = editForm(document);
+    expect(after.kategori.value).toBe('Ersättning och stöd');
+    expect(after.prioritet.value).toBe('4');
+    expect(after.rubrik.value).toBe(CASE_EDIT.rubrik);
+    expect(after.beskrivning.value).toBe(CASE_EDIT.beskrivning);
     expect(detailValue(document, 'Ärendenummer')).toBe(CASE_EDIT.arendenummer);
     expect(detailValue(document, 'Skapad')).toBe(SKAPAD_VISNING);
     expect(detailValue(document, 'Deadline')).toBe(CASE_EDIT.deadline);
@@ -555,13 +573,12 @@ describe('Ärendelistan och detaljvyn', () => {
     expect(listField(document, CASE_EDIT.arendenummer, 'rubrik')).toBe(CASE_EDIT.rubrik);
     expect(listField(document, CASE_EDIT.arendenummer, 'deadline')).toBe(CASE_EDIT.deadline);
     expect(listStatus(document, CASE_EDIT.arendenummer)).toBe(CASE_EDIT.status);
-
-    const after = editForm(document);
-    expect(after.kategori.value).toBe('Ersättning och stöd');
-    expect(after.prioritet.value).toBe('4');
-    expect(after.rubrik.value).toBe(CASE_EDIT.rubrik);
-    expect(after.beskrivning.value).toBe(CASE_EDIT.beskrivning);
     expect(document.getElementById('global-message').hidden).toBe(true);
+
+    setControl(after.kategori, 'Jobb och sökning');
+    clickReset(document);
+    expect(editForm(document).kategori.value).toBe('Ersättning och stöd');
+    expect(patchesTo(calls, casePath(CASE_EDIT.arendenummer))).toHaveLength(1);
   });
 
   it('AK14: rubrik och beskrivning med taggar visas som text', async () => {
@@ -580,18 +597,12 @@ describe('Ärendelistan och detaljvyn', () => {
     setControl(edit.prioritet, '4');
     await saveEdit(edit);
 
-    for (const [label, value] of [
-      ['Rubrik', CASE_EDIT.rubrik],
-      ['Beskrivning', CASE_EDIT.beskrivning],
-    ]) {
-      const slot = detailSlot(document, label);
-      expect(slot, label).toBeTruthy();
-      expect(slot.querySelector('b')).toBeNull();
-      expect(slot.textContent).toBe(value);
-    }
+    const after = editForm(document);
+    expect(after.rubrik.value).toBe(CASE_EDIT.rubrik);
+    expect(after.beskrivning.value).toBe(CASE_EDIT.beskrivning);
+    expect(document.querySelector('#view-detail b')).toBeNull();
+    expect(caseRow(document, CASE_EDIT.arendenummer).querySelector('b')).toBeNull();
     expect(listField(document, CASE_EDIT.arendenummer, 'rubrik')).toBe(CASE_EDIT.rubrik);
-    expect(editForm(document).rubrik.value).toBe(CASE_EDIT.rubrik);
-    expect(editForm(document).beskrivning.value).toBe(CASE_EDIT.beskrivning);
   });
 
   it('AK15: tom rubrik avvisas, inmatningen står kvar och sparade värden är oförändrade', async () => {
@@ -612,9 +623,6 @@ describe('Ärendelistan och detaljvyn', () => {
     expectFieldState(again, 'rubrik', { value: '', message: RUBRIK_FEL });
     expectFieldState(again, 'kategori', { value: CASE_EDIT.kategori, message: '' });
     expectFieldState(again, 'prioritet', { value: String(CASE_EDIT.prioritet), message: '' });
-    expect(detailValue(document, 'Rubrik')).toBe(CASE_EDIT.rubrik);
-    expect(detailValue(document, 'Kategori')).toBe(CASE_EDIT.kategori);
-    expect(detailValue(document, 'Prioritet')).toBe(String(CASE_EDIT.prioritet));
     expect(listField(document, CASE_EDIT.arendenummer, 'rubrik')).toBe(CASE_EDIT.rubrik);
     expect(listField(document, CASE_EDIT.arendenummer, 'prioritet')).toBe(
       String(CASE_EDIT.prioritet),
@@ -649,9 +657,6 @@ describe('Ärendelistan och detaljvyn', () => {
       value: String(typed.prioritet),
       message: PRIORITET_FEL,
     });
-    expect(detailValue(document, 'Rubrik')).toBe(CASE_EDIT.rubrik);
-    expect(detailValue(document, 'Kategori')).toBe(CASE_EDIT.kategori);
-    expect(detailValue(document, 'Prioritet')).toBe(String(CASE_EDIT.prioritet));
     expect(listField(document, CASE_EDIT.arendenummer, 'rubrik')).toBe(CASE_EDIT.rubrik);
     expect(listField(document, CASE_EDIT.arendenummer, 'prioritet')).toBe(
       String(CASE_EDIT.prioritet),
@@ -703,6 +708,7 @@ describe('Ärendelistan och detaljvyn', () => {
   });
 
   it('nätverksfel (status 0) visas och inget visas som sparat', async () => {
+    const typed = { beskrivning: 'Ny beskrivning', kategori: 'Ersättning och stöd' };
     const { document, calls } = await loadEdit(async ({ method, path }) => {
       if (method === 'PATCH' && path === casePath(CASE_EDIT.arendenummer)) {
         throw new Error('nätverk');
@@ -710,22 +716,133 @@ describe('Ärendelistan och detaljvyn', () => {
       return null;
     });
     const edit = requireEditForm(document);
-    setControl(edit.kategori, 'Ersättning och stöd');
-    setControl(edit.prioritet, '4');
+    setControl(edit.beskrivning, typed.beskrivning);
+    setControl(edit.kategori, typed.kategori);
     await saveEdit(edit);
 
     expect(patchesTo(calls, casePath(CASE_EDIT.arendenummer))).toHaveLength(1);
     expectDetailError(document, NETWORK_FEL);
     const again = editForm(document);
-    expect(again.kategori.value).toBe('Ersättning och stöd');
-    expect(again.prioritet.value).toBe('4');
+    expect(again.beskrivning.value).toBe(typed.beskrivning);
+    expect(again.kategori.value).toBe(typed.kategori);
+    expect(again.rubrik.value).toBe(CASE_EDIT.rubrik);
+    expect(again.prioritet.value).toBe(String(CASE_EDIT.prioritet));
     expect(again.button.disabled).toBe(false);
-    expect(detailValue(document, 'Kategori')).toBe(CASE_EDIT.kategori);
-    expect(detailValue(document, 'Prioritet')).toBe(String(CASE_EDIT.prioritet));
+    expect(listField(document, CASE_EDIT.arendenummer, 'rubrik')).toBe(CASE_EDIT.rubrik);
     expect(listField(document, CASE_EDIT.arendenummer, 'prioritet')).toBe(
       String(CASE_EDIT.prioritet),
     );
+    expect(listStatus(document, CASE_EDIT.arendenummer)).toBe(CASE_EDIT.status);
+
+    clickReset(document);
+    const restored = editForm(document);
+    expect(restored.rubrik.value).toBe(CASE_EDIT.rubrik);
+    expect(restored.beskrivning.value).toBe(CASE_EDIT.beskrivning);
+    expect(restored.kategori.value).toBe(CASE_EDIT.kategori);
+    expect(restored.prioritet.value).toBe(String(CASE_EDIT.prioritet));
+    expect(document.getElementById('detail-message').hidden).toBe(true);
+    expect(patchesTo(calls, casePath(CASE_EDIT.arendenummer))).toHaveLength(1);
+  });
+
+  it('Återställ efter 400 återställer alla fyra fälten och rör inte status eller lista', async () => {
+    const typed = { beskrivning: 'Ny beskrivning', kategori: 'Ersättning och stöd' };
+    const { document, calls } = await loadEdit(async ({ method, path }) => {
+      if (method === 'PATCH' && path === casePath(CASE_EDIT.arendenummer)) {
+        return jsonResponse(400, { fel: STATUS_ERROR, faltfel: { kategori: KATEGORI_FEL } });
+      }
+      return null;
+    });
+    const edit = requireEditForm(document);
+    setControl(edit.beskrivning, typed.beskrivning);
+    setControl(edit.kategori, typed.kategori);
+    await saveEdit(edit);
+
+    const draft = editForm(document);
+    expect(draft.beskrivning.value).toBe(typed.beskrivning);
+    expect(draft.kategori.value).toBe(typed.kategori);
+
+    clickReset(document);
+
+    const restored = editForm(document);
+    expect(restored.rubrik.value).toBe(CASE_EDIT.rubrik);
+    expect(restored.beskrivning.value).toBe(CASE_EDIT.beskrivning);
+    expect(restored.kategori.value).toBe(CASE_EDIT.kategori);
+    expect(restored.prioritet.value).toBe(String(CASE_EDIT.prioritet));
+    expect(patchesTo(calls, casePath(CASE_EDIT.arendenummer))).toEqual([
+      { method: 'PATCH', path: casePath(CASE_EDIT.arendenummer), body: typed },
+    ]);
+    expect(statusForm(document).select.value).toBe(CASE_EDIT.status);
     expect(listField(document, CASE_EDIT.arendenummer, 'rubrik')).toBe(CASE_EDIT.rubrik);
+    expect(listField(document, CASE_EDIT.arendenummer, 'prioritet')).toBe(
+      String(CASE_EDIT.prioritet),
+    );
+    expect(listField(document, CASE_EDIT.arendenummer, 'deadline')).toBe(CASE_EDIT.deadline);
+    expect(listStatus(document, CASE_EDIT.arendenummer)).toBe(CASE_EDIT.status);
+  });
+
+  it('Återställ efter 400 rensar rubrikens fältfel och detaljmeddelandet', async () => {
+    const { document } = await loadEdit(async ({ method, path }) => {
+      if (method === 'PATCH' && path === casePath(CASE_EDIT.arendenummer)) {
+        return jsonResponse(400, { fel: STATUS_ERROR, faltfel: { rubrik: RUBRIK_FEL } });
+      }
+      return null;
+    });
+    const edit = requireEditForm(document);
+    setControl(edit.rubrik, '');
+    await saveEdit(edit);
+
+    expectFieldState(editForm(document), 'rubrik', { value: '', message: RUBRIK_FEL });
+    expectDetailError(document, STATUS_ERROR);
+
+    clickReset(document);
+
+    const restored = editForm(document);
+    expectFieldState(restored, 'rubrik', { value: CASE_EDIT.rubrik, message: '' });
+    expect(document.getElementById('detail-message').hidden).toBe(true);
+    expect(document.getElementById('detail-message').textContent).toBe('');
+  });
+
+  it('Återställ rensar meddelandet Statusen är ändrad.', async () => {
+    const { document } = await loadEdit(async ({ method, path }) => {
+      if (method === 'PATCH' && path === statusPath(CASE_EDIT.arendenummer)) {
+        return jsonResponse(200, { ...CASE_EDIT, status: 'Pågående' });
+      }
+      return null;
+    });
+    const status = statusForm(document);
+    chooseStatus(status.select, 'Pågående');
+    status.button.click();
+    await flushView();
+
+    const message = document.getElementById('detail-message');
+    expect(message.hidden).toBe(false);
+    expect(message.textContent).toBe('Statusen är ändrad.');
+    clickReset(document);
+    expect(document.getElementById('detail-message').hidden).toBe(true);
+  });
+
+  it('Återställ är inaktiv medan en sparning pågår', async () => {
+    let release;
+    const gate = new Promise((resolve) => {
+      release = resolve;
+    });
+    try {
+      const pending = await loadEdit(async ({ method, path }) => {
+        if (method !== 'PATCH' || path !== casePath(CASE_EDIT.arendenummer)) return null;
+        await gate;
+        return jsonResponse(200, { ...CASE_EDIT, kategori: 'Jobb och sökning' });
+      });
+      const edit = requireEditForm(pending.document);
+      const reset = resetButton(pending.document);
+      expect(reset, 'knapp Återställ').toBeTruthy();
+      setControl(edit.kategori, 'Jobb och sökning');
+      edit.button.click();
+      expect(reset.disabled).toBe(true);
+      release();
+      await flushView();
+    } finally {
+      release();
+    }
   });
 
   it('Robusthet: ett pågående sparande skickas bara en gång och knappen är aktiv efter 400 och status 0', async () => {
