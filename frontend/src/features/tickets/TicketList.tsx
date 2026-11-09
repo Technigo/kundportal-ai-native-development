@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import {
   CATEGORY_LABELS,
   PRIORITY_LABELS,
@@ -23,6 +24,17 @@ export function TicketList({
   onSelectTicket,
 }: TicketListProps) {
   const { data: tickets, error, isLoading, reload } = useTickets(statusFilter)
+  const openButtons = useRef(new Map<number, HTMLButtonElement>())
+  const previousSelectedId = useRef(selectedTicketId)
+
+  useEffect(() => {
+    const previous = previousSelectedId.current
+    previousSelectedId.current = selectedTicketId
+    // Panelen stängdes: lämna tillbaka fokus till raden användaren kom från
+    if (previous !== null && selectedTicketId === null) {
+      openButtons.current.get(previous)?.focus()
+    }
+  }, [selectedTicketId])
 
   return (
     <section className={styles.card} aria-label="Ärendelista">
@@ -85,6 +97,12 @@ export function TicketList({
                   <td className={styles.title}>
                     {/* Knappen gör raden nåbar med tangentbord */}
                     <button
+                      ref={(element) => {
+                        if (element) openButtons.current.set(ticket.id, element)
+                        return () => {
+                          openButtons.current.delete(ticket.id)
+                        }
+                      }}
                       type="button"
                       className={styles.open}
                       onClick={(event) => {

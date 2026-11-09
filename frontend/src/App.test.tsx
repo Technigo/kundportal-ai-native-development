@@ -75,3 +75,47 @@ it('keeps the status filter after opening a ticket and going back (K8)', async (
     undefined,
   )
 })
+
+it('returns focus to the ticket the user came from when the panel closes', async () => {
+  vi.stubEnv('VITE_API_BASE_URL', 'http://localhost:8000')
+  const { default: App } = await import('./App')
+  const ticket = {
+    id: 3,
+    customer_id: 'K-3',
+    customer_name: 'Exempelkund',
+    title: 'Påhittat ärende',
+    description: 'Påhittad beskrivning.',
+    category: 'technical',
+    priority: 'low',
+    status: 'new',
+    created_at: '2026-10-31T22:08:34.123456Z',
+  }
+  vi.stubGlobal(
+    'fetch',
+    vi.fn((input: RequestInfo | URL) => {
+      const url = String(input)
+      const body = url.endsWith('/api/tickets/3')
+        ? ticket
+        : url.includes('/api/tickets')
+          ? [ticket]
+          : {}
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(body),
+      } as Response)
+    }),
+  )
+  render(<App />)
+
+  const openButton = await screen.findByRole('button', {
+    name: 'Påhittat ärende',
+  })
+  fireEvent.click(openButton)
+  expect(
+    await screen.findByRole('region', { name: 'Ärendedetaljer' }),
+  ).toHaveFocus()
+
+  fireEvent.click(screen.getByRole('button', { name: 'Stäng' }))
+
+  expect(openButton).toHaveFocus()
+})

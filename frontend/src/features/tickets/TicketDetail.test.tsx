@@ -1,4 +1,11 @@
-import { cleanup, render, screen, within } from '@testing-library/react'
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 import { ApiError } from '../../api/client'
 import { getTicket } from '../../api/tickets'
@@ -8,7 +15,10 @@ import { TicketDetail } from './TicketDetail'
 vi.mock('../../api/tickets', () => ({ getTicket: vi.fn() }))
 const getTicketMock = vi.mocked(getTicket)
 
-afterEach(cleanup)
+afterEach(() => {
+  cleanup()
+  getTicketMock.mockReset()
+})
 
 const TICKET: Ticket = {
   id: 42,
@@ -20,6 +30,15 @@ const TICKET: Ticket = {
   priority: 'high',
   status: 'waiting_for_customer',
   created_at: '2026-10-31T22:08:34.123456Z',
+}
+
+// Ett svar som testet själv bestämmer när det kommer
+function deferredTicket() {
+  let resolve: (ticket: Ticket) => void = () => {}
+  const promise = new Promise<Ticket>((done) => {
+    resolve = done
+  })
+  return { promise, resolve }
 }
 
 it('shows every field of the chosen ticket', async () => {
@@ -81,6 +100,51 @@ it('shows an error and fetches again when the user retries', async () => {
   expect(
     await screen.findByRole('heading', { name: 'Fråga om faktura' }),
   ).toBeInTheDocument()
+})
+
+it('moves focus to the panel when it opens', async () => {
+  getTicketMock.mockResolvedValue(TICKET)
+
+  render(<TicketDetail ticketId={42} onClose={() => {}} />)
+
+  expect(screen.getByRole('region', { name: 'Ärendedetaljer' })).toHaveFocus()
+  await screen.findByRole('heading', { name: 'Fråga om faktura' })
+})
+
+it('lets the user go back to the list when the ticket does not exist', async () => {
+  getTicketMock.mockRejectedValue(
+    new ApiError(404, 'not_found', 'Ärendet kunde inte hittas.'),
+  )
+  const onClose = vi.fn()
+  render(<TicketDetail ticketId={999} onClose={onClose} />)
+  await screen.findByRole('alert')
+
+  fireEvent.click(screen.getByRole('button', { name: 'Stäng' }))
+
+  expect(onClose).toHaveBeenCalledOnce()
+})
+
+it('never shows a previously chosen ticket after the user picks another', async () => {
+  const first = deferredTicket()
+  const second = deferredTicket()
+  getTicketMock
+    .mockReturnValueOnce(first.promise)
+    .mockReturnValueOnce(second.promise)
+  const { rerender } = render(<TicketDetail ticketId={1} onClose={() => {}} />)
+
+  rerender(<TicketDetail ticketId={2} onClose={() => {}} />)
+  // Det nya ärendet svarar först, det gamla svaret kommer sent
+  await act(async () => {
+    second.resolve({ ...TICKET, id: 2, title: 'Det senast valda ärendet' })
+    first.resolve({ ...TICKET, id: 1, title: 'Det först valda ärendet' })
+  })
+
+  expect(
+    screen.getByRole('heading', { name: 'Det senast valda ärendet' }),
+  ).toBeInTheDocument()
+  expect(screen.queryByText('Det först valda ärendet')).not.toBeInTheDocument()
+  expect(getTicketMock).toHaveBeenNthCalledWith(1, 1)
+  expect(getTicketMock).toHaveBeenNthCalledWith(2, 2)
 })
 
 it('lets the user go back to the list', async () => {

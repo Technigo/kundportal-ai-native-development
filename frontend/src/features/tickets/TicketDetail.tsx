@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { ApiError } from '../../api/client'
 import { CATEGORY_LABELS, PRIORITY_LABELS } from '../../domain/ticket'
 import { formatDetailDate } from '../../domain/formatDate'
@@ -13,9 +14,21 @@ type TicketDetailProps = {
 export function TicketDetail({ ticketId, onClose }: TicketDetailProps) {
   const { data: ticket, error, isLoading, reload } = useTicket(ticketId)
   const isNotFound = error instanceof ApiError && error.code === 'not_found'
+  const panelRef = useRef<HTMLElement>(null)
+
+  // Flytta fokus till panelen när den öppnas, så att tangentbordsanvändare
+  // inte behöver tabba igenom resten av listan för att nå den
+  useEffect(() => {
+    panelRef.current?.focus()
+  }, [])
 
   return (
-    <section className={styles.panel} aria-label="Ärendedetaljer">
+    <section
+      ref={panelRef}
+      className={styles.panel}
+      aria-label="Ärendedetaljer"
+      tabIndex={-1}
+    >
       <div className={styles.toolbar}>
         <button type="button" className={styles.close} onClick={onClose}>
           <span aria-hidden="true">✕ </span>Stäng
