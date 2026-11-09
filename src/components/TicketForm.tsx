@@ -98,25 +98,43 @@ export function TicketForm({ action }: TicketFormProps) {
         <FieldError id="description-error" messages={errors.description} />
       </div>
 
-      <div>
-        <label htmlFor="priority" className="block text-sm font-medium text-slate-800">
-          Priority
-        </label>
-        <select
-          id="priority"
-          name="priority"
-          defaultValue={values?.priority || "normal"}
-          aria-invalid={errors.priority ? true : undefined}
-          aria-describedby={errors.priority ? "priority-error" : undefined}
-          className={`${inputClass} sm:w-48`}
-        >
-          {ticketPriorities.map((priority) => (
-            <option key={priority} value={priority}>
-              {priority[0]!.toUpperCase() + priority.slice(1)}
-            </option>
-          ))}
-        </select>
-        <FieldError id="priority-error" messages={errors.priority} />
+      <div className="grid gap-5 sm:grid-cols-2">
+        <div>
+          <label htmlFor="category" className="block text-sm font-medium text-slate-800">
+            Category
+          </label>
+          <input
+            id="category"
+            name="category"
+            required
+            maxLength={50}
+            defaultValue={values?.category}
+            aria-invalid={errors.category ? true : undefined}
+            aria-describedby={errors.category ? "category-error" : undefined}
+            className={inputClass}
+          />
+          <FieldError id="category-error" messages={errors.category} />
+        </div>
+        <div>
+          <label htmlFor="priority" className="block text-sm font-medium text-slate-800">
+            Priority
+          </label>
+          <select
+            id="priority"
+            name="priority"
+            defaultValue={values?.priority || "normal"}
+            aria-invalid={errors.priority ? true : undefined}
+            aria-describedby={errors.priority ? "priority-error" : undefined}
+            className={`${inputClass} sm:w-48`}
+          >
+            {ticketPriorities.map((priority) => (
+              <option key={priority} value={priority}>
+                {priority[0]!.toUpperCase() + priority.slice(1)}
+              </option>
+            ))}
+          </select>
+          <FieldError id="priority-error" messages={errors.priority} />
+        </div>
       </div>
 
       <button

@@ -12,6 +12,7 @@ function ticket(overrides: Partial<Ticket>): Ticket {
     description: "I get a 500 error.",
     status: "open",
     priority: "normal",
+    category: "General",
     createdAt: new Date("2026-01-03T10:00:00Z"),
     ...overrides,
   };

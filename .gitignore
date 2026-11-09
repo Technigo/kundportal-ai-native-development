@@ -49,3 +49,6 @@ next-env.d.ts
 /data/*.db
 /data/*.db-*
 .idea
+
+# playwright mcp (agent browser logs and snapshots)
+/.playwright-mcp/

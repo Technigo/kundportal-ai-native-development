@@ -6,7 +6,7 @@ import { getDb } from "@/db/client";
 import { createTicket } from "@/tickets/ticketRepository";
 import { newTicketSchema } from "@/tickets/ticketSchema";
 
-type TicketFormValues = { requesterName: string; requesterEmail: string; subject: string; description: string; priority: string };
+type TicketFormValues = { requesterName: string; requesterEmail: string; subject: string; description: string; category: string; priority: string };
 
 export type SubmitTicketState =
   | {
@@ -21,6 +21,7 @@ export async function submitTicket(_prev: SubmitTicketState, formData: FormData)
     requesterEmail: String(formData.get("requesterEmail") ?? ""),
     subject: String(formData.get("subject") ?? ""),
     description: String(formData.get("description") ?? ""),
+    category: String(formData.get("category") ?? ""),
     priority: String(formData.get("priority") ?? ""),
   };
 

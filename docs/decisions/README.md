@@ -28,3 +28,4 @@ Each file has:
 | [03](03-vitest-playwright.md) | Vitest and Playwright, test-first | Accepted |
 | [04](04-status-change-and-history.md) | Status change rules and status history | Proposed |
 | [05](05-ticket-list-and-details.md) | Ticket list and ticket details | Accepted |
+| [06](06-category-free-text.md) | Category is free text | Accepted |
