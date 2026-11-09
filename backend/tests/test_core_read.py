@@ -5,9 +5,9 @@ newest first, then highest id first, B5), CORE-04 (reading a ticket gives exactl
 was saved), CORE-10 (an unknown id gives 404 "Ärendet finns inte.") and CORE-15 (an empty
 list is 200 with [], not an error). Part of KSP-25 (CORE tests: create, list, show and restart).
 
-GET /tickets and GET /tickets/{id} answer 501 until KSP-23 (list and show tickets) is
-built, so these tests fail until then. An id that is not an integer (B8) is already
-tested in test_error_format.py (KSP-21). Test proposals reviewed by Nicklas 2026-10-28.
+Written before KSP-23 (list and show tickets), when GET answered 501, and now run against
+it. An id that is not an integer (B8) is already tested in test_error_format.py (KSP-21).
+Test proposals reviewed by Nicklas 2026-10-28.
 """
 
 from datetime import UTC, datetime

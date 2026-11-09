@@ -16,6 +16,7 @@ from datetime import UTC, datetime, timedelta
 
 from app.schemas.tickets import Status, TicketCreate
 from app.services.tickets import TicketService
+from conftest import assert_invariant_via_api
 
 TICKET_NOT_FOUND = "Ärendet finns inte."
 
@@ -56,13 +57,6 @@ def read_history(client, ticket_id):
     response = client.get(f"/tickets/{ticket_id}/history")
     assert response.status_code == 200, response.text
     return response.json()
-
-
-def assert_invariant_via_api(client, ticket_id):
-    """ADR-001 invariant, read through the API: latest to_status equals the ticket's status."""
-    history = read_history(client, ticket_id)
-    assert history, "the ticket has no history at all"
-    assert history[-1]["to_status"] == client.get(f"/tickets/{ticket_id}").json()["status"]
 
 
 def ticking_clock(start=datetime(2026, 10, 28, 9, 0, 0, tzinfo=UTC)):
@@ -159,6 +153,7 @@ def test_history_entry_has_exactly_the_contract_fields(client):
 
     for entry in read_history(client, ticket["id"]):
         assert set(entry) == CONTRACT_FIELDS
+    assert_invariant_via_api(client, ticket["id"])
 
 
 # --- Unknown id (HIST-08) ---
