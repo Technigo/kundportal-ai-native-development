@@ -8,7 +8,7 @@ How we check that the acceptance criteria in [project-brief.md](project-brief.md
 |---|---|---|---|
 | Unit | Vitest | zod schema, navigation data | Fast, no UI or database needed |
 | Data | Vitest + in-memory SQLite per test | `createTicket`, `getTicket`, `listTickets`, `changeTicketStatus`, `listStatusChanges` | Real queries against a real schema, isolated and fast |
-| Server action | Vitest | `submitTicket` | Checks validation, saving, revalidation and redirect without a browser |
+| Server action | Vitest | `submitTicket`, `changeStatus` | Checks validation, saving, revalidation and redirect without a browser |
 | Component | Vitest + React Testing Library | `TicketForm`, `TicketList`, `TicketDetails`, `TicketNotice`, `PortalShell` | Checks labels, errors and states the user sees |
 | End-to-end | Playwright (Chrome) against a production build and `data/e2e.db` | Full flows, keyboard navigation, async Server Components | Async Server Components cannot be unit-tested with Vitest |
 
@@ -32,11 +32,11 @@ How we check that the acceptance criteria in [project-brief.md](project-brief.md
 | AC4.4 | `getTicket` returns undefined for an unknown id; `parseTicketId` accepts plain positive numbers only; `TicketNotice` shows the message for `ticket-not-found`; e2e redirects from `/tickets/99999`, `/tickets/abc`, `/tickets/01`, `/tickets/1e0` and `/tickets/0x1` |
 | AC4.5 | `TicketNotice` shows nothing for an unknown or missing code; e2e "shows no message for an unknown notice code" |
 | AC4.6 | `TicketList` "links each subject to the ticket details" |
-| AC5.3 (AC-S3) | `statusChangeSchema` accepts open, in_progress and closed; rejects "resolved" and "" with "Invalid status." (schema only; server action not built) |
-| AC5.2 (AC-S6) | `changeTicketStatus` stores previous status, new status and timestamp; `listStatusChanges` newest first, `id` as tie-break for the same timestamp, only the given ticket, empty for a new ticket (repository only; restart, server action and detail page not built) |
-| AC-S4 | `changeTicketStatus` returns `not_found` and saves nothing for an unknown ticket (repository only; message not built) |
-| AC-S5 | `changeTicketStatus` returns `unchanged` for the same status: status unchanged, no history entry (repository only) |
-| AC5.1 | Not built, no tests yet |
+| AC5.1 (AC-S1, AC-S2) | `changeStatus` saves the new status, revalidates `/tickets` and `/tickets/[id]` and does not redirect; open → closed, closed → in_progress, in_progress → open (server action only; detail page not built) |
+| AC5.2 (AC-S6) | `changeTicketStatus` stores previous status, new status and timestamp; `listStatusChanges` newest first, `id` as tie-break for the same timestamp, only the given ticket, empty for a new ticket; `changeStatus` saves one history entry per change (restart and detail page not built) |
+| AC5.3 (AC-S3) | `statusChangeSchema` accepts open, in_progress and closed; rejects "resolved" and "" with "Invalid status."; `changeStatus` returns "Invalid status." and changes nothing (message on the detail page not built) |
+| AC-S4 | `changeTicketStatus` returns `not_found` and saves nothing; `changeStatus` redirects to `/tickets?notice=ticket-not-found` for an unknown id, a malformed id ("abc", "0", "01", "") and an unknown id with an invalid status, and changes nothing. The redirect when the ticket disappears between the check and the change has no test |
+| AC-S5 | `changeTicketStatus` returns `unchanged`; `changeStatus` gives no error, no revalidation and no history entry for the same status |
 
 ## Latest run results
 
@@ -44,7 +44,7 @@ Run on 2026-11-09 on branch `jessica/status-change-backend`.
 
 | Command | Result |
 |---|---|
-| `npm test` | 10 files, 71 tests passed |
+| `npm test` | 10 files, 84 tests passed |
 | `npm run lint` | No errors |
 | `npm run typecheck` | No errors |
 | `npm run test:e2e` | Not run on this branch |
@@ -65,7 +65,7 @@ Automated tests cannot see layout or real browser behaviour. These checks are do
 
 ## Limitations of the verification
 
-- AC5.x is tested at the repository level only. The server action, the detail page and the "still there after a restart" part of AC-S6 are not built or tested yet.
+- AC5.x is tested at the repository and server action levels only. The detail page (status form and history), the "still there after a restart" part of AC-S6 and the end-to-end test for AC-S1 are not built yet.
 - End-to-end tests cover Chrome only.
 - No accessibility audit beyond the keyboard navigation test and labelled form fields. No screen reader test.
 - e2e tests share one seeded database, so they depend on the seed data order.

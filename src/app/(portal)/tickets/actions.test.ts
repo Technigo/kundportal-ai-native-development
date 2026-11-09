@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Db } from "@/db/client";
 import { ticketStatusChanges, tickets } from "@/db/schema";
 import { createTestDb } from "@/test-utils/testDb";
-import { createTicket, getTicket } from "@/tickets/ticketRepository";
+import { changeTicketStatus, createTicket, getTicket, listStatusChanges } from "@/tickets/ticketRepository";
 import { changeStatus, submitTicket } from "./actions";
 
 const mocks = vi.hoisted(() => ({
@@ -140,5 +140,41 @@ describe("changeStatus", () => {
     expect(await db.select().from(ticketStatusChanges)).toEqual([]);
     expect(mocks.redirect).not.toHaveBeenCalled();
     expect(mocks.revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it("saves the new status and revalidates the list and the detail page", async () => {
+    const state = await changeStatus(undefined, formData({ ticketId: String(existingId), status: "in_progress" }));
+
+    expect(state).toBeUndefined();
+    expect((await getTicket(db, existingId))?.status).toBe("in_progress");
+    expect(await listStatusChanges(db, existingId)).toHaveLength(1);
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/tickets");
+    expect(mocks.revalidatePath).toHaveBeenCalledWith(`/tickets/${existingId}`);
+    expect(mocks.redirect).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["open", "closed"],
+    ["closed", "in_progress"],
+    ["in_progress", "open"],
+  ] as const)("changes the status from %s to %s", async (from, to) => {
+    if (from !== "open") await changeTicketStatus(db, existingId, from);
+
+    await changeStatus(undefined, formData({ ticketId: String(existingId), status: to }));
+
+    expect((await getTicket(db, existingId))?.status).toBe(to);
+    expect(mocks.revalidatePath).toHaveBeenCalledWith(`/tickets/${existingId}`);
+  });
+
+  it("ignores a change to the same status without an error or a revalidation", async () => {
+    await changeTicketStatus(db, existingId, "in_progress");
+
+    const state = await changeStatus(undefined, formData({ ticketId: String(existingId), status: "in_progress" }));
+
+    expect(state).toBeUndefined();
+    expect((await getTicket(db, existingId))?.status).toBe("in_progress");
+    expect(await listStatusChanges(db, existingId)).toHaveLength(1);
+    expect(mocks.revalidatePath).not.toHaveBeenCalled();
+    expect(mocks.redirect).not.toHaveBeenCalled();
   });
 });

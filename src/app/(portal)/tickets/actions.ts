@@ -50,5 +50,9 @@ export async function changeStatus(_prev: ChangeStatusState, formData: FormData)
   const result = await changeTicketStatus(getDb(), id, parsed.data);
   // The ticket can disappear between the check and the change.
   if (result === "not_found") redirect("/tickets?notice=ticket-not-found");
+  if (result === "changed") {
+    revalidatePath("/tickets");
+    revalidatePath(`/tickets/${id}`);
+  }
   return undefined;
 }
