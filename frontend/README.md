@@ -1,5 +1,7 @@
 # React + TypeScript + Vite + shadcn/ui
 
+> **Köra frontenden:** se avsnittet [Köra lösningen och testerna](../README.md#köra-lösningen-och-testerna-grupp-6) i rot-README. Kortversion: starta backenden på port 8010, kör sedan `pnpm install` och `pnpm dev` här och öppna http://localhost:5173. Kräver Node.js 22.19 eller senare.
+
 This is a template for a new Vite project with React, TypeScript, and shadcn/ui.
 
 ## Adding components
