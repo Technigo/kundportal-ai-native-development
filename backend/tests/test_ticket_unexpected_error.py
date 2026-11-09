@@ -11,7 +11,10 @@ def test_unexpected_server_error_uses_generic_error_format_without_details():
 
     app.dependency_overrides[get_session] = broken_session
     try:
-        response = TestClient(app, raise_server_exceptions=False).get("/api/tickets")
+        response = TestClient(app, raise_server_exceptions=False).get(
+            "/api/tickets",
+            headers={"Origin": "http://localhost:5173"},
+        )
     finally:
         app.dependency_overrides.pop(get_session, None)
 
@@ -23,3 +26,5 @@ def test_unexpected_server_error_uses_generic_error_format_without_details():
         }
     }
     assert "secret" not in response.text
+    # Webbläsaren får bara läsa felsvaret om CORS-huvudet finns med
+    assert response.headers["access-control-allow-origin"] == "http://localhost:5173"

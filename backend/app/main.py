@@ -22,6 +22,25 @@ allowed_origins = [
     if origin.strip()
 ]
 
+# Registreras före CORS-middleware så att den hamnar innanför den. Ett
+# exception_handler för Exception körs utanför CORS, och då saknar felsvaret
+# Access-Control-Allow-Origin så att webbläsaren inte låter React läsa det.
+@app.middleware("http")
+async def unexpected_error_middleware(request: Request, call_next):
+    try:
+        return await call_next(request)
+    except Exception:
+        return JSONResponse(
+            status_code=500,
+            content={
+                "error": {
+                    "code": "internal_error",
+                    "message": "Ett oväntat fel inträffade.",
+                }
+            },
+        )
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
@@ -43,19 +62,6 @@ async def api_error_handler(request: Request, error: ApiError) -> JSONResponse:
     return JSONResponse(
         status_code=error.status_code,
         content={"error": details},
-    )
-
-
-@app.exception_handler(Exception)
-async def unexpected_error_handler(request: Request, error: Exception) -> JSONResponse:
-    return JSONResponse(
-        status_code=500,
-        content={
-            "error": {
-                "code": "internal_error",
-                "message": "Ett oväntat fel inträffade.",
-            }
-        },
     )
 
 
