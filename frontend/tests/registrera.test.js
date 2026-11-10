@@ -171,4 +171,49 @@ describe('Registreringsformuläret', () => {
     expect(form.querySelector('[name="rubrik"]').value).toBe('Kan inte logga in');
     expect(form.querySelector('button[type="submit"]').disabled).toBe(false);
   });
+
+  it('AK5: rubrik med bara mellanslag behandlas som tom (samma meddelande som AK2)', async () => {
+    const fetchStub = makeFetch(badRequest({ rubrik: 'Rubrik måste fyllas i' }));
+    const window = await loadPage(fetchStub);
+    const form = fillForm(window);
+    form.querySelector('[name="rubrik"]').value = '   ';
+
+    submit(window, form);
+
+    await vi.waitFor(() => expect(errorAt(form, 'rubrik')).toBe('Rubrik måste fyllas i'));
+    expect(isInvalid(form, 'rubrik')).toBe(true);
+    expect(isInvalid(form, 'beskrivning')).toBe(false);
+
+    // Frontend skickar rubriken som den skrevs; servern avgör att den räknas som tom.
+    const postCall = fetchStub.mock.calls.find(([, o]) => o?.method === 'POST');
+    expect(JSON.parse(postCall[1].body).rubrik).toBe('   ');
+
+    // Inget "registrerat"-besked, och det användaren skrivit finns kvar.
+    const msg = window.document.getElementById('global-message');
+    expect(msg.dataset.kind).toBe('error');
+    expect(form.querySelector('[name="beskrivning"]').value).toContain('Kunden får');
+  });
+
+  it('AK8: deadline med dagens datum accepteras', async () => {
+    // Dagens datum i lokal tid som YYYY-MM-DD (inte toISOString, som räknar i UTC).
+    const d = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    const today = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+    const fetchStub = makeFetch(created201());
+    const window = await loadPage(fetchStub);
+    const form = fillForm(window);
+    form.querySelector('[name="deadline"]').value = today;
+
+    submit(window, form);
+
+    const msg = window.document.getElementById('global-message');
+    await vi.waitFor(() => expect(msg.hidden).toBe(false));
+    expect(msg.dataset.kind).toBe('ok');
+    expect(msg.textContent).toContain('2026-3');
+    expect(errorAt(form, 'deadline')).toBe('');
+
+    const postCall = fetchStub.mock.calls.find(([, o]) => o?.method === 'POST');
+    expect(JSON.parse(postCall[1].body).deadline).toBe(today);
+  });
 });
