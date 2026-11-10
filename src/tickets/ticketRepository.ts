@@ -57,3 +57,19 @@ export async function listNotesWithComments(db: Db, ticketId: number): Promise<N
 
   return notes.map((note) => ({ ...note, comments: comments.filter((comment) => comment.noteId === note.id) }));
 }
+
+export async function deleteNote(db: Db, noteId: number): Promise<boolean> {
+  return db.transaction(async (tx) => {
+    await tx.delete(ticketNoteComments).where(eq(ticketNoteComments.noteId, noteId));
+    const deleted = await tx.delete(ticketNotes).where(eq(ticketNotes.id, noteId)).returning({ id: ticketNotes.id });
+    return deleted.length > 0;
+  });
+}
+
+export async function deleteNoteComment(db: Db, commentId: number): Promise<boolean> {
+  const deleted = await db
+    .delete(ticketNoteComments)
+    .where(eq(ticketNoteComments.id, commentId))
+    .returning({ id: ticketNoteComments.id });
+  return deleted.length > 0;
+}

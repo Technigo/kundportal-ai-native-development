@@ -7,6 +7,8 @@ import {
   addNote,
   addNoteComment,
   createTicket,
+  deleteNote,
+  deleteNoteComment,
   getTicket,
   listNotesWithComments,
   listTickets,
@@ -243,5 +245,112 @@ describe("listNotesWithComments", () => {
   it("returns an empty list for a ticket without notes", async () => {
     const ticket = await insertTicket();
     expect(await listNotesWithComments(db, ticket.id)).toEqual([]);
+  });
+});
+
+describe("deleteNote", () => {
+  it("removes the note and all its comments", async () => {
+    const ticket = await insertTicket();
+    const note = await addNote(db, ticket.id, "Note");
+    await addNoteComment(db, note!.id, "One");
+    await addNoteComment(db, note!.id, "Two");
+
+    expect(await deleteNote(db, note!.id)).toBe(true);
+
+    expect(await db.select().from(ticketNotes)).toEqual([]);
+    expect(await db.select().from(ticketNoteComments)).toEqual([]);
+  });
+
+  it("leaves other notes and their comments alone", async () => {
+    const ticket = await insertTicket();
+    const doomed = await addNote(db, ticket.id, "Doomed");
+    const kept = await addNote(db, ticket.id, "Kept");
+    await addNoteComment(db, doomed!.id, "Goes");
+    await addNoteComment(db, kept!.id, "Stays");
+
+    await deleteNote(db, doomed!.id);
+
+    const notes = await listNotesWithComments(db, ticket.id);
+    expect(notes.map((n) => n.body)).toEqual(["Kept"]);
+    expect(notes[0]!.comments.map((c) => c.body)).toEqual(["Stays"]);
+  });
+
+  it("removes a note without comments", async () => {
+    const ticket = await insertTicket();
+    const note = await addNote(db, ticket.id, "Alone");
+
+    expect(await deleteNote(db, note!.id)).toBe(true);
+    expect(await db.select().from(ticketNotes)).toEqual([]);
+  });
+
+  it("returns false and changes nothing when the note does not exist", async () => {
+    const ticket = await insertTicket();
+    const note = await addNote(db, ticket.id, "Stays");
+    await addNoteComment(db, note!.id, "Also stays");
+
+    expect(await deleteNote(db, 999)).toBe(false);
+
+    expect(await db.select().from(ticketNotes)).toHaveLength(1);
+    expect(await db.select().from(ticketNoteComments)).toHaveLength(1);
+  });
+
+  it("returns false the second time the same note is deleted", async () => {
+    const ticket = await insertTicket();
+    const note = await addNote(db, ticket.id, "Once");
+
+    expect(await deleteNote(db, note!.id)).toBe(true);
+    expect(await deleteNote(db, note!.id)).toBe(false);
+  });
+
+  it("does not bring the note back in the list", async () => {
+    const ticket = await insertTicket();
+    const note = await addNote(db, ticket.id, "Gone");
+    await deleteNote(db, note!.id);
+
+    expect(await listNotesWithComments(db, ticket.id)).toEqual([]);
+  });
+
+  it("does not give a new note the id of a deleted one", async () => {
+    const ticket = await insertTicket();
+    const old = await addNote(db, ticket.id, "Old");
+    await deleteNote(db, old!.id);
+
+    const fresh = await addNote(db, ticket.id, "Fresh");
+
+    expect(fresh!.id).not.toBe(old!.id);
+  });
+});
+
+describe("deleteNoteComment", () => {
+  it("removes only that comment", async () => {
+    const ticket = await insertTicket();
+    const note = await addNote(db, ticket.id, "Note");
+    const first = await addNoteComment(db, note!.id, "First");
+    await addNoteComment(db, note!.id, "Second");
+
+    expect(await deleteNoteComment(db, first!.id)).toBe(true);
+
+    const [result] = await listNotesWithComments(db, ticket.id);
+    expect(result!.body).toBe("Note");
+    expect(result!.comments.map((c) => c.body)).toEqual(["Second"]);
+  });
+
+  it("returns false and changes nothing when the comment does not exist", async () => {
+    const ticket = await insertTicket();
+    const note = await addNote(db, ticket.id, "Note");
+    await addNoteComment(db, note!.id, "Stays");
+
+    expect(await deleteNoteComment(db, 999)).toBe(false);
+
+    expect(await db.select().from(ticketNoteComments)).toHaveLength(1);
+  });
+
+  it("returns false the second time the same comment is deleted", async () => {
+    const ticket = await insertTicket();
+    const note = await addNote(db, ticket.id, "Note");
+    const comment = await addNoteComment(db, note!.id, "Once");
+
+    expect(await deleteNoteComment(db, comment!.id)).toBe(true);
+    expect(await deleteNoteComment(db, comment!.id)).toBe(false);
   });
 });
