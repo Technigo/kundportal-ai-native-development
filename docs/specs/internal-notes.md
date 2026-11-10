@@ -23,7 +23,7 @@ Based on section 6 of [project-brief.md](../project-brief.md).
 | Can notes and comments be edited? | No. | Owners' choice. |
 | How does deleting work? | Hard delete after a two-step button ("Delete", then "Confirm delete", with "Cancel"). Deleting a note also deletes its comments. A single comment can be deleted the same way. | Simple, and nothing hidden stays in the database. It cannot be undone. |
 | Does the note confirm step warn about comments? | Yes. A note with one comment shows "This also deletes 1 comment."; with two or more it shows "This also deletes N comments." A note without comments shows no extra text. | Hard delete cannot be undone, and the comments may be written by others. |
-| Maximum length? | 500 characters for a note and for a comment, counted as UTF-16 code units, because zod `.max` counts them that way (an emoji can count as 2). | Consistent with the ticket schemas. |
+| Maximum length? | 500 characters for a note and for a comment, counted in code points, because zod `.max` counts them that way (an emoji counts as 1; checked in `ticketSchema.test.ts`). The textarea `maxLength` counts UTF-16 code units, so the browser stops at 250 emoji while the server accepts 500. | Consistent with the ticket schemas. The server never rejects what the browser allows. |
 | What is stored after trimming? | Only the start and end are trimmed. The inside is stored as typed (blank lines, repeated spaces, `\r\n`). | Same as the ticket description. |
 | HTML or script in a note? | Stored raw and shown as plain text. No HTML, no Markdown, no clickable links, no `dangerouslySetInnerHTML`. | React escapes text, and stripping would change what the handler typed. |
 | Malformed ticket or note id? | Handled like a missing one, using the strict parsing of `parseTicketId`. | The handler cannot tell the cases apart, and the code is reused. |
@@ -93,8 +93,8 @@ Each criterion first goes through `test-cases`, and the owners pick the cases. E
    - New client components: the note form, a note item with the "Comments (N)" toggle and the comment form, and the two-step delete control. They use `useActionState`, disable the button while saving, and empty the form after a success. The alert state is lifted to a shared client parent, because four actions write to one alert area.
    - React Testing Library tests for AC6.1, AC6.2, AC6.4 and AC6.6–AC6.10.
    - The delete buttons have `aria-label` "Delete note" and "Delete comment". Tests scope them by note.
-  - Wrapping is tested in the component test by checking the class names `whitespace-pre-wrap wrap-break-word`, because jsdom cannot measure wrapping. No e2e test.
-  - Read `node_modules/next/dist/docs/` first.
+   - Wrapping is tested in the component test by checking the class names `whitespace-pre-wrap wrap-break-word`, because jsdom cannot measure wrapping. No e2e test.
+   - Read `node_modules/next/dist/docs/` first.
 6. **Route:** `src/app/(portal)/tickets/[id]/page.tsx` loads the notes and passes them to `TicketDetails`.
 7. **Seed data:** add a few fake notes and comments to `src/db/seed.mts`. Check that the existing e2e tests still pass.
 8. **End-to-end (Playwright):**
