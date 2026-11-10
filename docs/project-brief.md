@@ -80,6 +80,13 @@ Detailed specification: [docs/specs/ticket-list-and-details.md](specs/ticket-lis
 
 Detailed specification: [docs/specs/status-change.md](specs/status-change.md)
 
+### 7. Persist tickets (Done)
+
+- AC7.1: Given a saved ticket, when the application is stopped and started again, then the ticket is still in the list with the same details.
+- AC7.2: Tickets are stored in a local SQLite file (`DATABASE_URL`, default `data/dev.db`) that is not committed to git.
+
+Decision: [docs/decisions/07-ticket-persistence.md](decisions/07-ticket-persistence.md)
+
 ## Milestones
 
 1. Boilerplate: UI, server logic and storage connected (done).

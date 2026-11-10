@@ -8,6 +8,7 @@ How we check that the acceptance criteria in [project-brief.md](project-brief.md
 |---|---|---|---|
 | Unit | Vitest | zod schema, navigation data | Fast, no UI or database needed |
 | Data | Vitest + in-memory SQLite per test | `createTicket`, `getTicket`, `listTickets` | Real queries against a real schema, isolated and fast |
+| Persistence | Vitest + a temporary SQLite file per test | A ticket saved through one connection is read through a new one | A restart opens a new connection to the same file; an in-memory database cannot show that |
 | Server action | Vitest | `submitTicket` | Checks validation, saving, revalidation and redirect without a browser |
 | Component | Vitest + React Testing Library | `TicketForm`, `TicketList`, `TicketDetails`, `TicketNotice`, `PortalShell` | Checks labels, errors and states the user sees |
 | End-to-end | Playwright (Chrome) against a production build and `data/e2e.db` | Full flows, keyboard navigation, async Server Components | Async Server Components cannot be unit-tested with Vitest |
@@ -28,6 +29,8 @@ How we check that the acceptance criteria in [project-brief.md](project-brief.md
 | AC2.3 | `TicketList` empty state |
 | AC3.1, AC3.2 | `PortalShell`, `navItems`; e2e redirect and keyboard navigation |
 | AC4.x, AC5.x | Not built, no tests yet |
+| AC7.1 | [persistence.test.ts](../src/db/persistence.test.ts) "keeps a saved ticket when the app opens the database file again after a restart"; manual restart check (below) |
+| AC7.2 | `.gitignore` ignores `/data/*.db`; manual restart check uses `data/dev.db` (below) |
 
 ## Register a ticket (AC1): test cases by type
 
@@ -75,6 +78,8 @@ Script: [scripts/mutation-check.mjs](../scripts/mutation-check.mjs).
 | Check | Why manual | Status | Result |
 |---|---|---|---|
 | Existing tickets get the category `General` after `npm run db:migrate` (AC1.7) | Tests migrate an empty database, so they do not show existing rows | Done 2026-11-07 on `data/dev.db` | All 4 existing tickets had `General` |
+| A ticket is still there after the dev server restarts (AC7.1) | The test opens a new connection but does not restart a real server | Done 2026-11-10 on `data/dev.db` (Ariadna Villar, with an AI agent) | Ticket "Restart check 2026-11-10" saved with `createTicket`, shown on `/tickets`; dev server stopped and started with `npm run dev`; ticket still shown |
+| The persistence test fails when tickets are not kept in the file (AC7.1) | The test passed on its first run because persistence already worked, so it was never seen failing | Done 2026-11-10 (Ariadna Villar, with an AI agent) | `createDb` in `src/db/client.ts` changed by hand to always use `:memory:`: the test failed with "no such table: tickets" after the restart. File restored and identical (`shasum`) |
 | Error messages for registering a ticket are understandable | Judging clarity needs a person | Done 2026-11-07 by Alexandra Petersson with `npm run dev` | Invalid email (`Alex@hej`) and an empty category, with the other fields valid and priority `low`: both errors shown next to their fields, the other fields accepted. After correcting the email (`alec@hej.se`) and the category the ticket was saved. The messages were judged clear. Not judged by hand: an empty form, a name with only spaces and a too-short subject (covered by automated tests) |
 
 ## Latest run results

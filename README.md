@@ -35,6 +35,15 @@ Then open http://localhost:3000.
 
 There's no sign-in yet: anyone who opens the app is treated as a case handler and sees every ticket.
 
+### Troubleshooting
+
+**The Tickets page shows `Failed query: select ... from "tickets"`.** The local database has not been set up. If `npm run dev` starts before the database exists, it creates an empty `data/dev.db` file with no tables. Set the database up with one of these:
+
+- `npm run db:migrate` and then `npm run db:seed`: creates the tables and adds demo tickets, and deletes nothing. Run the seed only once, or the demo tickets are added again.
+- `npm run db:reset`: deletes `data/dev.db` first, so any tickets you created locally are lost.
+
+Then reload the page. The dev server does not need a restart.
+
 ### Commands
 
 | Command | What it does |
