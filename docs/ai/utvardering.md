@@ -103,9 +103,10 @@ Svara med 2–3 konkreta exempel, gärna med länk till en PR, ett test eller et
 - **Vad API:t svarar.** För KSP-66 valde jag 500 i stället för 503 när ett ärende inte kan skapas.
   503 hade ändrat kontraktet för `POST /tickets` och Nicklas CORE-spec. Det är ett beslut om ägarskap
   och kontrakt, inte om kod.
-- **Om ett test prövar rätt risk.** Ett rött test betyder inte att det fångar rätt fel. Jag lade
-  själv till tjänstetestet för HIST-09, eftersom ingen förslagskörning såg att en saknad rollback inte
-  syns över HTTP, och jag behöll omstartstestet för HIST-10 eftersom specen säger "ny engine".
+- **Om ett test prövar rätt risk.** Ett rött test betyder inte att det fångar rätt fel.
+  Tjänstetestet för HIST-09 rekommenderades av AI och valdes av mig. Ingen förslagskörning med v1
+  eller v2 föreslog det, eftersom en saknad rollback inte syns över HTTP. Jag behöll omstartstestet
+  för HIST-10, eftersom specen säger "ny engine".
 - **Begriplighet.** Om felmeddelandena går att förstå för en handläggare kan bara en människa bedöma.
   Jag gjorde kontrollen av HIST-14 för hand (sju felfall i `/docs`).
 
@@ -114,7 +115,8 @@ Svara med 2–3 konkreta exempel, gärna med länk till en PR, ett test eller et
 - **Kontrollera innan något påstås.** Lägg en kolumn "Kontrollerat?" i testinstruktionen, så att varje
   påstående om hur ett test faller är kört eller märkt som okontrollerat.
 - **Skriva ned gissningen före mutationen.** Då går det att visa att vi förutsåg resultatet.
-- **Krav på grön CI före merge.** Rulesetet kräver i dag ingen statuskontroll (KSP-17).
+- **Krav på grön CI före merge.** Infördes under projektet (KSP-17): rulesetet kräver nu backend och
+  frontend.
 
 ## Mustafa
 
@@ -205,7 +207,7 @@ Alla fyra har svarat på samma fyra frågor. Här är det som gick igen hos fler
 
 **AI hjälpte mest när den fick visa belägg.** De bästa exemplen är när AI körde något och visade
 resultatet, inte när den bara skrev. Den hittade motsägelser i en spec innan koden skrevs (Amalia,
-#109), körde mutationer och förklarade varför ett test föll (Azalea, Nicklas, #72, #73), hittade fel
+#109), körde mutationer och förklarade varför ett test föll (Azalea, #67, #113; Nicklas, #72, #73), hittade fel
 som redan fanns i koden när nya tester skrevs (Amalia, #107) och hjälpte till att hitta en
 typkontroll som inte läste några filer, vilket ledde till CI (Mustafa, #64, #84). Instruktioner och
 agentuppdrag med kontrollpunkter gjorde resultatet mätbart (Nicklas v2, #20; Azalea, #77).
@@ -213,7 +215,7 @@ agentuppdrag med kontrollpunkter gjorde resultatet mätbart (Nicklas v2, #20; Az
 **AI skapade extra arbete när påståenden inte var prövade.** Alla fyra har exempel på samma sak:
 AI sa att något höll utan att ha kontrollerat det. Ordgränserna skyddade inte "Välj en giltig
 status." (Amalia), två tester föll inte som testförslaget sa (Azalea, #96), dokumentet om kända
-begränsningar hade tio påståenden som inte längre stämde (Mustafa, #98), och en mutationsrad visade
+begränsningar hade flera påståenden som inte längre stämde (Mustafa, #98), och en mutationsrad visade
 inte alla tester som föll (Nicklas, #105). Ett annat mönster är att AI gick längre än vi bett om:
 den byggde mer än vi ville, föreslog commit och PR utan granskare, eller skickade text som vi inte
 hade sett. Felen hittades nästan alltid i granskningen av någon annan i teamet.
