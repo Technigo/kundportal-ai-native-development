@@ -6,7 +6,7 @@ import type {
   TicketPriority,
   TicketStatus,
 } from "@/api/types"
-import { BACKEND_UNREACHABLE, errorDetail, messageWithoutDetail } from "@/api/errors"
+import { toResult } from "@/api/result"
 
 // httpStatus is missing only when no answer came at all (fetch failed). An answer without a
 // readable detail, such as a 502 from the dev proxy when the backend is down, has httpStatus.
@@ -34,24 +34,21 @@ function requestBody(draft: TicketDraft): { [K in keyof TicketCreate]: TicketDra
 }
 
 // Ticket endpoints answer with the ticket, or with {"detail": "<Swedish message>"} on
-// errors (KSP-31 AC7). The detail is shown as it is. Without a readable detail, or when the
-// backend cannot be reached, the shared Swedish text is shown instead (KSP-38 AC2,
-// network errors and 500 give a Swedish message).
+// errors (KSP-31 AC7). toResult owns the error rules (KSP-79), so this only names the data.
 async function toTicketResult(request: Promise<Response>): Promise<TicketResult> {
-  try {
-    const response = await request
-    if (response.ok) {
-      return { state: "ok", ticket: (await response.json()) as Ticket }
-    }
-    const detail = await errorDetail(response)
-    return {
-      state: "error",
-      message: detail ?? messageWithoutDetail(response.status),
-      httpStatus: response.status,
-    }
-  } catch {
-    return { state: "error", message: BACKEND_UNREACHABLE }
-  }
+  const result = await toResult<Ticket>(request)
+  return result.state === "ok" ? { state: "ok", ticket: result.data } : result
+}
+
+// The list keeps the API order (CORE-03). Errors follow the same rules as the ticket
+// client, through toResult (KSP-79).
+export type TicketListResult =
+  | { state: "ok"; tickets: Ticket[] }
+  | { state: "error"; message: string; httpStatus?: number }
+
+export async function fetchTickets(): Promise<TicketListResult> {
+  const result = await toResult<Ticket[]>(fetch("/api/tickets"))
+  return result.state === "ok" ? { state: "ok", tickets: result.data } : result
 }
 
 export function createTicket(draft: TicketDraft): Promise<TicketResult> {
