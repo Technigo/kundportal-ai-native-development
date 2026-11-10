@@ -1,12 +1,7 @@
 import Link from "next/link";
 import type { Ticket } from "@/db/schema";
+import { statusLabels } from "@/tickets/statusLabels";
 import type { TicketPriority, TicketStatus } from "@/tickets/ticketSchema";
-
-const statusLabels: Record<TicketStatus, string> = {
-  open: "Open",
-  in_progress: "In progress",
-  closed: "Closed",
-};
 
 const statusStyles: Record<TicketStatus, string> = {
   open: "bg-blue-100 text-blue-800",
