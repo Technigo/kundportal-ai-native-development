@@ -143,7 +143,7 @@ describe("changeStatus", () => {
   let existingId: number;
 
   beforeEach(async () => {
-    const ticket = await createTicket(db, { requesterName: "Ada Lovelace", subject: "Login fails", description: "d", priority: "normal" });
+    const ticket = await createTicket(db, { requesterName: "Ada Lovelace", subject: "Login fails", description: "d", category: "General", priority: "normal" });
     existingId = ticket.id;
   });
 

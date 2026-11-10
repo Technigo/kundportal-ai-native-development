@@ -105,7 +105,7 @@ describe("listTickets", () => {
 
 describe("changeTicketStatus and listStatusChanges", () => {
   const newTicket = (subject: string) =>
-    createTicket(db, { requesterName: "Ada Lovelace", subject, description: "d", priority: "normal" });
+    createTicket(db, { requesterName: "Ada Lovelace", subject, description: "d", category: "General", priority: "normal" });
 
   it("stores the previous status, the new status and a timestamp for a change", async () => {
     const ticket = await newTicket("Login fails");
