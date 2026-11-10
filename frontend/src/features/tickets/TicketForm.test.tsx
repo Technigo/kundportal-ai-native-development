@@ -1,11 +1,11 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 import { ApiError } from '../../api/client'
-import { createTicket } from '../../api/createTicket'
+import { createTicket } from '../../api/tickets'
 import type { Ticket } from '../../domain/ticket'
 import { TicketForm } from './TicketForm'
 
-vi.mock('../../api/createTicket', () => ({ createTicket: vi.fn() }))
+vi.mock('../../api/tickets', () => ({ createTicket: vi.fn() }))
 const createTicketMock = vi.mocked(createTicket)
 
 afterEach(() => {
@@ -82,6 +82,27 @@ it('shows a field error at each empty required field and sends nothing', () => {
   expect(screen.getByText('Ange en beskrivning')).toBeInTheDocument()
   expect(screen.getByText('Välj en kategori')).toBeInTheDocument()
   expect(screen.getByText('Välj en prioritet')).toBeInTheDocument()
+})
+
+it('moves focus to the first field with an error when client validation fails', () => {
+  render(<TicketForm onCreated={vi.fn()} />)
+
+  type('Kund-ID', 'K-104')
+  submit()
+
+  expect(screen.getByLabelText('Kundnamn')).toHaveFocus()
+})
+
+it('moves focus to the field with the backend error on 422', async () => {
+  createTicketMock.mockRejectedValue(
+    apiError(422, 'validation_error', { title: ['Ogiltig rubrik.'] }),
+  )
+  render(<TicketForm onCreated={vi.fn()} />)
+  fillValid()
+  submit()
+
+  await screen.findByText('Ogiltig rubrik.')
+  await waitFor(() => expect(screen.getByLabelText('Rubrik')).toHaveFocus())
 })
 
 it('rejects a title of 101 characters but keeps what the user typed', () => {

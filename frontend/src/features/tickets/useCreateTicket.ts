@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
 import { ApiError } from '../../api/client'
-import { createTicket, type NewTicket } from '../../api/createTicket'
+import { createTicket, type NewTicket } from '../../api/tickets'
 import type { Ticket } from '../../domain/ticket'
 
 export type CreateTicketError =

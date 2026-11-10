@@ -1,4 +1,4 @@
-import { useState, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import {
   mergeBackendFieldErrors,
   validateTicketForm,
@@ -24,6 +24,21 @@ const EMPTY_VALUES: TicketFormValues = {
   description: '',
   category: '',
   priority: '',
+}
+
+// Samma ordning som fälten visas i formuläret
+const FIELD_ORDER: TicketField[] = [
+  'customer_id',
+  'customer_name',
+  'title',
+  'description',
+  'category',
+  'priority',
+]
+
+function focusFirstInvalidField(errors: FieldErrors) {
+  const first = FIELD_ORDER.find((name) => errors[name])
+  if (first) document.getElementById(`ticket-${first}`)?.focus()
 }
 
 type TicketFormProps = {
@@ -83,6 +98,13 @@ export function TicketForm({ onCreated, onCancel }: TicketFormProps) {
       : {}
   const errors: FieldErrors = { ...backendErrors, ...clientErrors }
 
+  // Vid 422 flyttas fokus till första fältet med backendens fel
+  const latestBackendErrors = useRef(backendErrors)
+  latestBackendErrors.current = backendErrors
+  useEffect(() => {
+    if (error?.kind === 'validation') focusFirstInvalidField(latestBackendErrors.current)
+  }, [error])
+
   function setField<K extends TicketField>(name: K, value: TicketFormValues[K]) {
     setValues((previous) => ({ ...previous, [name]: value }))
     setClientErrors((previous) => ({ ...previous, [name]: undefined }))
@@ -95,7 +117,10 @@ export function TicketForm({ onCreated, onCancel }: TicketFormProps) {
     const found = validateTicketForm(values)
     setClientErrors(found)
     setCreated(null)
-    if (Object.keys(found).length > 0) return
+    if (Object.keys(found).length > 0) {
+      focusFirstInvalidField(found)
+      return
+    }
 
     const ticket = await create({
       customer_id: trimText(values.customer_id),
