@@ -32,3 +32,4 @@
 6. A CI pipeline for lint, typecheck and tests.
 7. A clear message to the handler when a ticket cannot be saved.
 8. Show the category in the ticket list and on the ticket details page.
+9. A fourth status, "Waiting for customer". See the Decisions table in [specs/status-change.md](specs/status-change.md) for what it takes.

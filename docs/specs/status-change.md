@@ -74,10 +74,7 @@ Steps 1–4 do not depend on the detail page and can be built first.
 | What happens when the ticket does not exist? | `changeStatus` redirects to `/tickets?notice=ticket-not-found` | The detail page already does this (AC4.4), so the whole app shows the same message, and there is no status control to show an error next to |
 | Is a malformed ticket id treated as "does not exist"? | Yes, using `parseTicketId` | The same rule as the detail page (AC4.4) |
 | Trim or normalise the status value? | No, it must match exactly | The dropdown always sends fixed values, so other values only come from direct requests |
+| Which part of the detail page holds the status form and the history? | The "Status and history" section in `TicketDetails` | Marie reserved that section for status change and history when she built the detail page (AC4), so no new layout was needed |
+| Should "Waiting for customer" be added as a fourth status? | No, the app keeps three statuses: `open`, `in_progress` and `closed` | Three statuses cover the basic workflow, and time before the deadline is short. A fourth status is easy to add later: the statuses are defined once in `ticketStatuses`, the names in `statusLabels` and a colour in `statusStyles` (TypeScript reports any that are missing), the database stores the status as text so no migration is needed, tests that cover every status read `ticketStatuses`, and any status can change to any other, so no transition rules are needed |
 
 Earlier versions of this spec allowed only `open → in_progress → closed → open` and placed the status change in the ticket list. See the git history of this file for those versions.
-
-## Open questions
-
-- **Detail page:** confirm with Marie that the status form and the history are placed on her detail page (AC4.1), and when the page will be ready.
-- **"Waiting for customer":** should a fourth status be added? The assignment mentions it as an example. It affects the database schema, validation and the list, so it is a team decision.
