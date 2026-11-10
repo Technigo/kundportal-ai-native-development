@@ -29,6 +29,11 @@ export const newTicketSchema = z.object({
     .trim()
     .min(1, "Please describe the problem.")
     .max(5000, "Description must be at most 5000 characters."),
+  category: z
+    .string()
+    .trim()
+    .min(1, "Please enter a category.")
+    .max(50, "Category must be at most 50 characters."),
   priority: z.enum(ticketPriorities).default("normal"),
 });
 

@@ -1,0 +1,1 @@
+ALTER TABLE `tickets` ADD `category` text DEFAULT 'General' NOT NULL;

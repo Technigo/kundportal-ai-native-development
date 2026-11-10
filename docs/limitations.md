@@ -9,6 +9,8 @@
 - Data is stored in a local SQLite file. The app is meant to run locally only.
 - End-to-end tests run in Chrome only.
 - No pagination: the ticket list loads every ticket.
+- The category is only entered in the New ticket form. It is not shown in the ticket list or on the ticket details page yet.
+- If saving a ticket fails in the database, the handler sees the default error page instead of a clear message.
 
 ## Risks
 
@@ -22,8 +24,12 @@
 
 ## Proposed further development
 
+
 1. Status change with a stored history table.
 2. Sign-in and roles (handler, admin).
 3. Customer view of their own tickets.
 4. Email notification on status change.
 5. Pagination, search and filters in the list.
+6. A CI pipeline for lint, typecheck and tests.
+7. A clear message to the handler when a ticket cannot be saved.
+8. Show the category in the ticket list and on the ticket details page.

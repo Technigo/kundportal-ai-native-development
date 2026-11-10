@@ -10,6 +10,7 @@ function ticket(overrides: Partial<Ticket>): Ticket {
     requesterEmail: null,
     subject: "Subject",
     description: "Description",
+    category: "General",
     status: "open",
     priority: "normal",
     createdAt: new Date("2026-01-03T10:00:00Z"),

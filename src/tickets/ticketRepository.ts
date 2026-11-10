@@ -5,7 +5,8 @@ import type { NewTicket, TicketStatus } from "./ticketSchema";
 
 type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
 
-export async function createTicket(db: Db, input: NewTicket): Promise<Ticket> {
+// category may be left out: the database default General is used (decision 06).
+export async function createTicket(db: Db, input: Omit<NewTicket, "category"> & { category?: string }): Promise<Ticket> {
   const [ticket] = await db.insert(tickets).values(input).returning();
   return ticket!;
 }
