@@ -1,4 +1,6 @@
 import { expect, test } from "@playwright/test";
+import { statusLabels } from "../src/tickets/statusLabels";
+import { ticketStatuses } from "../src/tickets/ticketSchema";
 
 test("lists all tickets with their requester, newest first", async ({ page }) => {
   await page.goto("/tickets");
@@ -142,4 +144,36 @@ test("long words in subject and description do not overflow the page", async ({ 
   await page.getByRole("link", { name: subject }).click();
   await expect(page.getByRole("article")).toBeVisible();
   expect(await overflows()).toBe(false);
+});
+
+test("changing the status on the detail page shows it there, in the history and in the list", async ({ page }) => {
+  // A new ticket starts on the first status; AC-S1 changes it to the next one.
+  const [from, to] = ticketStatuses;
+  const subject = `Status change ${Date.now()}`;
+
+  await page.goto("/tickets/new");
+  await page.getByLabel("Requester name").fill("Ada Lovelace");
+  await page.getByLabel("Subject").fill(subject);
+  await page.getByLabel("Description").fill("Please update the status of this ticket.");
+  await page.getByLabel("Category").fill("General");
+  await page.getByRole("button", { name: "Register ticket" }).click();
+  await expect(page).toHaveURL("/tickets");
+
+  await page.getByRole("link", { name: subject }).click();
+  const section = page.getByRole("region", { name: "Status and history" });
+  await expect(section.getByLabel("Status")).toHaveValue(from);
+  await expect(section.getByText("No status changes yet.")).toBeVisible();
+
+  await section.getByLabel("Status").selectOption(to);
+  await section.getByRole("button", { name: "Save" }).click();
+
+  await expect(section.getByRole("listitem")).toHaveText(
+    new RegExp(`^${statusLabels[from]} → ${statusLabels[to]} · [A-Z][a-z]{2} \\d{1,2}, \\d{4}$`),
+  );
+  await expect(section.getByLabel("Status")).toHaveValue(to);
+  await expect(page.getByRole("definition").first()).toHaveText(statusLabels[to]);
+
+  await page.getByRole("link", { name: "Back to tickets" }).click();
+  await expect(page).toHaveURL("/tickets");
+  await expect(page.getByRole("row").filter({ hasText: subject })).toContainText(statusLabels[to]);
 });
