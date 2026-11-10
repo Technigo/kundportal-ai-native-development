@@ -45,12 +45,16 @@ Skelettet (`showFieldErrors`, `data-error-for` och kontraktet i `index.html`) va
 - **Kontrollexperiment**, 2026-11-10 10:41: jag kommenterade bort `showFieldErrors(form, res.data?.faltfel)`. Då blev AK2, AK3/AK4 och AK6/AK7 röda (3 misslyckade, 9 godkända, 5 väntande). När jag tog bort kommentaren blev alla gröna igen (10:43). Det visar att testerna märker om serverns fältfel inte visas vid rätt fält.
 - **Manuella prov mot riktiga servern**, 2026-11-05: korrekt ifyllt formulär registrerades. Tomt formulär gav röda meddelanden vid fälten. 101 tecken i rubriken gav "Rubrik får vara högst 100 tecken" vid rubrikfältet. Deadline före idag gav "Deadline kan inte ligga före dagens datum" vid deadline-fältet. Båda gav också "Ärendet kunde inte sparas. Rätta de markerade fälten." överst.
 - **Efter sammanslagning med `origin/main`**, 2026-11-10 11:18: backend 179 godkända/12 väntande, frontend 14 godkända/4 väntande, 0 misslyckade. Konflikten i `index.html` (platshållaren mot mitt formulär) löstes genom att behålla mitt formulär.
+- **Manuella prov efter sammanslagningen**, 2026-11-10 15:03–15:09, mot riktiga servern:
+  - AK5: enbart mellanslag i Rubrik gav "Rubrik måste fyllas i" vid rubrikfältet, och enbart mellanslag i Beskrivning gav "Beskrivning måste fyllas i" vid beskrivningsfältet.
+  - AK8: deadline = dagens datum (2026-11-10) godtogs och gav "Ärende 2026-2 är registrerat."
+  - AK4: 5001 tecken i Beskrivning gav "Beskrivning får vara högst 5000 tecken" vid beskrivningsfältet.
 
 ## Vad som inte är kontrollerat
 - Alternativ B och C har jag inte byggt eller mätt. Jämförelsen ovan är mina slutsatser från specifikationen och API:t, inte provade resultat.
-- Meddelandena i testerna är låtsassvar. Den riktiga serverns formuleringar har jag bara sett i de manuella proven, inte i automatiska tester.
-- Beskrivningen med över 5000 tecken har jag inte provat manuellt.
-- Jag har inte skrivit egna tester för AK5 och AK8.
+- Meddelandena i de automatiska testerna är låtsassvar. Den riktiga serverns formuleringar har jag bara sett i de manuella proven.
+- Den del av AK1 som säger att ärendet "visas i ärendelistan" kunde jag inte kontrollera. Backend för listan (Del 2, `GET /api/arenden`) är inte byggd än, och servern svarar "Inte byggt ännu: Del 2: GET /api/arenden (AK10)". Registreringen fungerar och ger ett ärendenummer.
+- AK5 och AK8 har jag bara kontrollerat manuellt. Jag har inga egna automatiska tester för dem, och reglerna avgörs av servern.
+- Gränsvärdena som ska godtas (exakt 100 tecken i rubrik och exakt 5000 i beskrivning) har jag inte provat manuellt via formuläret. Jag har provat 101 och 5001, som avvisas.
+- Manuella prov av tomt formulär, 101 tecken i rubriken och deadline före idag gjordes före sammanslagningen och har inte upprepats efteråt.
 - Jag har inte provat i andra webbläsare eller på mobil.
-- De manuella proven gjordes före sammanslagningen med `main`. Jag har inte upprepat dem efteråt.
-```
