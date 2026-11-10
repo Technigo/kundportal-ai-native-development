@@ -34,6 +34,7 @@ How we check that the acceptance criteria in [project-brief.md](project-brief.md
 | AC4.6 | `TicketList` links each subject to `/tickets/[id]`; manual keyboard check (below) |
 | AC5.x | Not built, no tests yet |
 | AC6.4 (schema part) | `newNoteSchema` and `newNoteCommentSchema` in `ticketSchema.test.ts`: trimming, empty and whitespace-only, 500 accepted and 501 rejected, inner whitespace kept, length counted in code points, unknown fields stripped. The action and component parts are not built yet. |
+| AC6.1–AC6.3, AC6.5–AC6.7, AC6.9 (data part) | `addNote`, `addNoteComment`, `listNotesWithComments`, `deleteNote` and `deleteNoteComment` in `ticketRepository.test.ts`: notes and comments are saved, same text saved twice, a missing ticket or note returns `undefined`, notes newest first and comments oldest first with id as tie-breaker, a new comment keeps the note order, a comment stays under its own note, `deleteNote` removes the comments too, `deleteNoteComment` removes one comment, a missing or already deleted row returns `false`, a deleted note stays gone and its id is not reused. Not tested: that `deleteNote` is atomic. The action, component and e2e parts are not built yet. |
 
 ## Register a ticket (AC1): test cases by type
 
