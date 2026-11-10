@@ -1,0 +1,16 @@
+dist/
+.DS_Store
+.env
+.env.*
+!.env.example
+AGENTS.md
+.opencode
+.specify
+specs
+node_modules
+.vite/
+docs
+!/docs/
+/docs/*
+!/docs/test-requirements-review.md
+cases.db
