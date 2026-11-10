@@ -11,10 +11,10 @@ Based on sections 2 and 4 of [project-brief.md](../project-brief.md).
 - There is no `/tickets/[id]` route.
 - Next.js 16: `params` and `searchParams` are Promises and must be awaited. Ticket pages read data per request, so they call `connection()` as the list page does.
 
-## Interaction with the status-change work (`jessica/status-change`, merged)
+## Interaction with the status-change work (`jessica/status-change`, spec and decision merged, code not built yet)
 
-- That work adds a status dropdown, a Save button and a status history to the detail page. This plan only reserves a section for them.
-- It added a `ticket_status_changes` table. This plan does not use it.
+- That work will add a status dropdown, a Save button and a status history to the detail page. This plan only reserves a section for them.
+- Its spec plans a `ticket_status_changes` table. The table does not exist in `src/db/schema.ts` yet. This plan does not use it.
 - Both branches edit `docs/decisions/README.md` and `docs/project-brief.md`. Decision numbers: `04` was taken by that branch, this one is `05`.
 
 ## Specification
