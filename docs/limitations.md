@@ -2,9 +2,8 @@
 
 ## Limitations
 
-- No status change yet. Tickets always stay `open`.
-- No status history is stored.
 - The status history does not record who made a change, because there is no sign-in.
+- The status history shows the date of each change, not the time. Changes made on the same day show the same date; the order (newest first) shows which came last.
 - No email is sent to the requester.
 - Data is stored in a local SQLite file. The app is meant to run locally only.
 - End-to-end tests run in Chrome only.
@@ -25,7 +24,7 @@
 ## Proposed further development
 
 
-1. Status change with a stored history table.
+1. Show the time of each status change in the history.
 2. Sign-in and roles (handler, admin).
 3. Customer view of their own tickets.
 4. Email notification on status change.

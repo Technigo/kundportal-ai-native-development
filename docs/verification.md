@@ -33,11 +33,12 @@ How we check that the acceptance criteria in [project-brief.md](project-brief.md
 | AC4.4 | `getTicket` returns undefined for an unknown id; `parseTicketId` accepts plain positive numbers only; `TicketNotice` shows the message for `ticket-not-found`; e2e redirects from `/tickets/99999`, `/tickets/abc`, `/tickets/01`, `/tickets/1e0` and `/tickets/0x1` |
 | AC4.5 | `TicketNotice` shows nothing for an unknown or missing code; e2e "shows no message for an unknown notice code" |
 | AC4.6 | `TicketList` "links each subject to the ticket details" |
-| AC5.1 (AC-S1, AC-S2) | `changeStatus` saves the new status, revalidates `/tickets` and `/tickets/[id]` and does not redirect; open → closed, closed → in_progress, in_progress → open (server action only; detail page not built) |
-| AC5.2 (AC-S6) | `changeTicketStatus` stores previous status, new status and timestamp; `listStatusChanges` newest first, `id` as tie-break for the same timestamp, only the given ticket, empty for a new ticket; `changeStatus` saves one history entry per change (restart and detail page not built) |
-| AC5.3 (AC-S3) | `statusChangeSchema` accepts open, in_progress and closed; rejects "resolved" and "" with "Invalid status."; `changeStatus` returns "Invalid status." and changes nothing (message on the detail page not built) |
+| AC5.1 (AC-S1, AC-S2) | `StatusForm` offers every status in `ticketStatuses`, starts on the current status and sends the ticket id and new status only on Save; `TicketDetails` has the status form in the "Status and history" section; `changeStatus` saves the new status, revalidates `/tickets` and `/tickets/[id]` and does not redirect; open → closed, closed → in_progress, in_progress → open; e2e "changing the status on the detail page shows it there, in the history and in the list" |
+| AC5.2 (AC-S6) | `changeTicketStatus` stores previous status, new status and timestamp; `listStatusChanges` newest first, `id` as tie-break for the same timestamp, only the given ticket, empty for a new ticket; `changeStatus` saves one history entry per change; `TicketDetails` shows the history in the order given as "Open → In progress · Nov 9, 2026" under "Status history", and "No status changes yet." when it is empty; e2e "changing the status on the detail page…"; manual checks "Change the status on the detail page" and "Status still saved after restarting the server" (below) |
+| AC5.3 (AC-S3) | `statusChangeSchema` accepts open, in_progress and closed; rejects "resolved" and "" with "Invalid status."; `changeStatus` returns "Invalid status." and changes nothing; `StatusForm` shows "Invalid status." next to the dropdown, linked with `aria-describedby` |
 | AC-S4 | `changeTicketStatus` returns `not_found` and saves nothing; `changeStatus` redirects to `/tickets?notice=ticket-not-found` for an unknown id, a malformed id ("abc", "0", "01", "") and an unknown id with an invalid status, and changes nothing. The redirect when the ticket disappears between the check and the change has no test |
 | AC-S5 | `changeTicketStatus` returns `unchanged`; `changeStatus` gives no error, no revalidation and no history entry for the same status |
+| AC-S7 | `TicketList` "shows the status without any control to change it" (no dropdown, button or form) |
 
 ## Register a ticket (AC1): test cases by type
 
@@ -89,15 +90,15 @@ Script: [scripts/mutation-check.mjs](../scripts/mutation-check.mjs).
 
 ## Latest run results
 
-Run on 2026-11-09 on branch `Alexandra/register-ticket`, after merging `main` (ticket details).
+Run on 2026-11-10 on branch `jessica/status-change-backend` (status form and history on the detail page).
 
 | Command | Result |
 |---|---|
-| `npm test` | 10 files, 78 tests passed |
+| `npm test` | 11 files, 108 tests passed |
 | `npm run lint` | No errors |
 | `npm run typecheck` | No errors |
-| `npm run test:e2e` | 17 tests passed |
-| `npm run test:mutation -- --e2e` | 5 of 5 caught (3 Vitest, 2 e2e) |
+| `npm run test:e2e` | 18 tests passed |
+| `npm run test:mutation -- --e2e` | Not rerun. Last run 2026-11-09: 5 of 5 caught (3 Vitest, 2 e2e) |
 
 Update this table when you rerun the checks.
 
@@ -117,7 +118,10 @@ Automated tests cannot see layout or real browser behaviour. These checks are do
 
 ## Limitations of the verification
 
-- AC5.x is tested at the repository and server action levels only. The detail page (status form and history), the "still there after a restart" part of AC-S6 and the end-to-end test for AC-S1 are not built yet.
+- "Still there after a restart" (AC-S6) is a manual check only.
+- "Invalid status." on the detail page is tested at component level only. The dropdown cannot send an unknown value, so e2e cannot reach it.
+- Two status tests passed on their first run, because the code already existed: the AC-S7 list test and the e2e test for AC-S1. They were seen failing with temporary changes that were then removed: a button in the list, and the detail page passing an empty history.
+- The history shows the date only, so the e2e test checks the date format, not the exact date.
 - End-to-end tests cover Chrome only.
 - No accessibility audit beyond the keyboard navigation test and labelled form fields. No screen reader test.
 - e2e tests share one seeded database, so they depend on the seed data order.
