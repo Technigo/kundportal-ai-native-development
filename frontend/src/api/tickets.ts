@@ -6,3 +6,7 @@ export function listTickets(status: StatusFilter): Promise<Ticket[]> {
   const query = status ? `?status=${encodeURIComponent(status)}` : ''
   return request<Ticket[]>(`/tickets${query}`)
 }
+
+export function getTicket(id: number): Promise<Ticket> {
+  return request<Ticket>(`/tickets/${id}`)
+}

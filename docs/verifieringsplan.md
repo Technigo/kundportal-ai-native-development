@@ -100,6 +100,12 @@ Planerade, överhoppade eller ännu inte implementerade kontroller får inte red
 
 Den 6 november 2026 gav den lokala körningen på [`afab9e7`](https://github.com/danielleven/kundportal-ai-native-development-grupp-1/commit/afab9e73414220512229b3ec6ca1ba325f4c2bf1) 27 godkända backendtester, varav 21 mot den separata MySQL-testdatabasen, och 7 godkända frontendtester. Typkontroll och bygge gick igenom. Se [arbetsloggen](arbetslogg.md#verifiering-issue-2) för kommandon, begränsningar och de 37 bekräftade punkterna.
 
+<a name="verifiering-issue-12"></a>
+
+### Issue #12 – Detaljpanel med kunduppgifter och bevarad listnavigation
+
+Den 9 november 2026 gav den lokala körningen på branchen `feature/ticket-detail` ([`8c13d6a`](https://github.com/danielleven/kundportal-ai-native-development-grupp-1/commit/8c13d6ab749d3bfff4f5368e6d9cb7cd6c23b6f1)) 27 godkända backendtester mot den separata MySQL-testdatabasen, bland annat T07 och T09, och 17 godkända frontendtester. Typkontroll och bygge gick igenom. Daniel kontrollerade tangentbordsnavigering och detaljdelen av M01 manuellt i webbläsaren. CI kördes inte, eftersom GitHub-kontot var spärrat. Se [arbetsloggen](arbetslogg.md#verifiering-issue-12) för kommandon, begränsningar och de bekräftade punkterna.
+
 ## 7. Begränsningar
 
 - Backendtester verifierar beteenden mot testdatabasen. De visar inte att frontendens ärendegränssnitt fungerar.
