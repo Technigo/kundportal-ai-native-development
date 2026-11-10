@@ -1,9 +1,12 @@
-import { act, render, screen } from "@testing-library/react"
+import { act, render, screen, within } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
+import { axe } from "jest-axe"
 import { createMemoryRouter, RouterProvider } from "react-router"
 import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest"
 
 import type { Ticket } from "@/api/types"
 import { BACKEND_UNREACHABLE } from "@/api/errors"
+import { expectNoTechnicalWords } from "@/test/technical-words"
 import { TicketDetailPage } from "./ticket-detail-page"
 
 // Made-up tickets, never real customer data.
@@ -37,26 +40,42 @@ function jsonResponse(body: unknown, status = 200): Response {
 }
 
 // Answers like the backend: 200 with the ticket, or 404 with the Swedish detail (CORE-10).
+// The history (KSP-37, the timeline) answers with the entry created, as for a new ticket.
 function fakeBackend(): Mock {
   const tickets: Record<string, Ticket> = { "5": ticket5, "6": ticket6 }
   return vi.fn(async (url: string) => {
-    const id = url.replace("/api/tickets/", "")
+    const [, id, rest] = url.match(/^\/api\/tickets\/([^/]+)(\/.*)?$/) ?? []
     const found = tickets[id]
+    if (found && rest === "/history") {
+      return jsonResponse([{ id: 1, event_type: "created", from_status: null, to_status: "new", occurred_at: "2026-10-25T09:00:00.000000Z" }])
+    }
     return found ? jsonResponse(found) : jsonResponse({ detail: "Ärendet finns inte." }, 404)
   })
 }
 
+const LINK_BACK = "Tillbaka till ärendelistan"
+const LIST_STAND_IN = "Ärendelistan (ersättare i testet)"
+
 // Renders the page on its route, as in App.tsx (KSP-31 AC5: /tickets/{id} with react-router).
+// The list is a stand-in, so a test can see that a link leads there.
 function renderAt(path: string) {
-  const router = createMemoryRouter([{ path: "/tickets/:id", element: <TicketDetailPage /> }], {
-    initialEntries: [path],
-  })
+  const router = createMemoryRouter(
+    [
+      { path: "/", element: <p>{LIST_STAND_IN}</p> },
+      { path: "/tickets/:id", element: <TicketDetailPage /> },
+    ],
+    { initialEntries: [path] },
+  )
   render(<RouterProvider router={router} />)
   return router
 }
 
+// Calls for the ticket itself. The timeline's history calls (KSP-37) are tested in
+// ticket-timeline.test.tsx.
 function requestedUrls(fetchMock: Mock): string[] {
-  return fetchMock.mock.calls.map((call) => call[0] as string)
+  return fetchMock.mock.calls
+    .map((call) => call[0] as string)
+    .filter((url) => !url.endsWith("/history"))
 }
 
 describe("TicketDetailPage", () => {
@@ -133,7 +152,10 @@ describe("TicketDetailPage", () => {
     renderAt("/tickets/5")
 
     await screen.findByText(ticket5.title)
-    expect(screen.getByText("2026-10-25 10:00")).toBeInTheDocument()
+    // Looked for in the field Skapad: the timeline (KSP-37) can show the same time for the
+    // entry created, depending on whether it has loaded yet.
+    const createdField = screen.getByText("Skapad").parentElement!
+    expect(within(createdField).getByText("2026-10-25 10:00")).toBeInTheDocument()
     expect(document.body).not.toHaveTextContent(/09:00/)
     expect(document.body).not.toHaveTextContent(ticket5.created_at)
   })
@@ -163,12 +185,55 @@ describe("TicketDetailPage", () => {
   })
 
   it("HIST-14: network error shows the shared message in an alert", async () => {
-    // Same text as the ticket list until KSP-38 (error messages in the UI) decides.
+    // The same text as the ticket list, decided in KSP-38 (error messages in the UI).
     fetchMock.mockRejectedValue(new TypeError("Failed to fetch"))
     renderAt("/tickets/5")
 
     expect(await screen.findByRole("alert")).toHaveTextContent(BACKEND_UNREACHABLE)
     expect(document.body).not.toHaveTextContent(/Failed to fetch/)
+    expectNoTechnicalWords(screen.getByRole("alert"))
+  })
+
+  // HIST-14 (errors in Swedish without technical details) and KSP-38 AC2 (no readable answer
+  // gives the shared text): an answer that is not JSON, for example an HTML page from
+  // the proxy when it cannot reach the backend, shows the shared Swedish text.
+  it("HIST-14: non-JSON error answer shows the shared message", async () => {
+    fetchMock.mockResolvedValue(
+      new Response("<html><body>Bad Gateway</body></html>", {
+        status: 502,
+        headers: { "Content-Type": "text/html" },
+      }),
+    )
+    renderAt("/tickets/5")
+
+    const alert = await screen.findByRole("alert")
+    expect(alert).toHaveTextContent(BACKEND_UNREACHABLE)
+    expect(document.body).not.toHaveTextContent(/Bad Gateway/)
+    expectNoTechnicalWords(screen.getByRole("alert"))
+  })
+
+  // KSP-38 AC2 (no readable answer gives the shared text): JSON without a detail string is
+  // not a readable answer either. The alert must not
+  // be empty.
+  // Mustafa's finding 3 in the review of PR #107: an answer without a detail came from the
+  // backend, so it must not say that the portal does not answer. Only 502, 503 and 504 mean
+  // that the backend could not be reached (the dev proxy answers 502 when it is down).
+  it("HIST-14: error answer without detail shows the general message", async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ error: "x" }, 500))
+    renderAt("/tickets/5")
+
+    const alert = await screen.findByRole("alert")
+    expect(alert).toHaveTextContent("Något gick fel. Försök igen.")
+    expect(alert).not.toHaveTextContent(BACKEND_UNREACHABLE)
+  })
+
+  it("HIST-14: 404 without detail does not say that the portal does not answer", async () => {
+    fetchMock.mockResolvedValue(jsonResponse({}, 404))
+    renderAt("/tickets/5")
+
+    const alert = await screen.findByRole("alert")
+    expect(alert).toHaveTextContent("Något gick fel. Försök igen.")
+    expect(alert).not.toHaveTextContent(BACKEND_UNREACHABLE)
   })
 
   it("HIST-14: server error shows the detail from the API in an alert", async () => {
@@ -177,5 +242,52 @@ describe("TicketDetailPage", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Något gick fel. Försök igen.")
     expect(screen.queryByText("Kategori")).not.toBeInTheDocument()
+  })
+
+  // KSP-38 AC4 (link back when the ticket does not exist): a ticket that does not exist
+  // (CORE-10, unknown ticket gives 404) shows a link back to the list inside the error
+  // message. The header link (KSP-75, the app header) does not count, so the link is
+  // looked for within the alert. Only for 404: after a 500 the advice is to try again.
+  it("KSP-38: unknown ticket shows a link back to the list in the alert", async () => {
+    renderAt("/tickets/999")
+
+    const alert = await screen.findByRole("alert")
+    expect(alert).toHaveTextContent("Ärendet finns inte.")
+    expect(within(alert).getByRole("link", { name: LINK_BACK })).toHaveAttribute("href", "/")
+  })
+
+  it("KSP-38: non-integer id shows the same link back", async () => {
+    // B8 (core spec decision: a non-integer id gives 404): the API answers 404 for "abc" too, so the page must not decide by the id.
+    renderAt("/tickets/abc")
+
+    const alert = await screen.findByRole("alert")
+    expect(within(alert).getByRole("link", { name: LINK_BACK })).toHaveAttribute("href", "/")
+  })
+
+  it("KSP-38: the link back opens the ticket list", async () => {
+    const router = renderAt("/tickets/999")
+
+    await userEvent.click(await screen.findByRole("link", { name: LINK_BACK }))
+
+    expect(await screen.findByText(LIST_STAND_IN)).toBeInTheDocument()
+    expect(router.state.location.pathname).toBe("/")
+  })
+
+  // KSP-38 AC3 (accessible error messages): the 404 message with the link has no
+  // accessibility errors.
+  // jsdom cannot compute colours, so contrast is checked by hand (docs/verifiering.md).
+  it("KSP-38: unknown ticket with link back has no accessibility errors", async () => {
+    renderAt("/tickets/999")
+
+    await screen.findByRole("link", { name: LINK_BACK })
+    expect(await axe(document.body)).toHaveNoViolations()
+  })
+
+  it("KSP-38: server error shows no link back", async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ detail: "Något gick fel. Försök igen." }, 500))
+    renderAt("/tickets/5")
+
+    await screen.findByRole("alert")
+    expect(screen.queryByRole("link", { name: LINK_BACK })).not.toBeInTheDocument()
   })
 })

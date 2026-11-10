@@ -4,8 +4,10 @@ import { MemoryRouter } from "react-router"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import type { components } from "@/api/schema"
+import { BACKEND_UNREACHABLE } from "@/api/errors"
 import { formatLocalDateTime } from "@/lib/format"
 import { categoryLabels, priorityLabels, statusLabels } from "@/labels"
+import { expectNoTechnicalWords } from "@/test/technical-words"
 
 import { TicketListPage } from "./TicketListPage"
 
@@ -46,6 +48,47 @@ function renderPage() {
 describe("Ticket list", () => {
   afterEach(() => {
     vi.unstubAllGlobals()
+  })
+
+  // HIST-14 (errors in Swedish without technical details), added by Amalia for KSP-38
+  // (error messages in the UI): a network error shows the Swedish text only,
+  // never the browser's own error.
+  it("HIST-14: list network error shows no technical words", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("Failed to fetch")))
+    render(
+      <MemoryRouter>
+        <TicketListPage />
+      </MemoryRouter>,
+    )
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(BACKEND_UNREACHABLE)
+    expectNoTechnicalWords(screen.getByRole("alert"))
+  })
+
+  // KSP-38 AC2 (network errors and 500 give a Swedish message), added by Amalia: a 500 shows
+  // the message from the API,
+  // not the empty list.
+  it("KSP-38: list server error shows the message from the API", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+        json: async () => ({ detail: "Något gick fel. Försök igen." }),
+      }),
+    )
+    render(
+      <MemoryRouter>
+        <TicketListPage />
+      </MemoryRouter>,
+    )
+
+    const alert = await screen.findByRole("alert")
+    expect(alert).toHaveTextContent("Något gick fel. Försök igen.")
+    expectNoTechnicalWords(alert)
+    expect(screen.queryByText("Inga ärenden än")).not.toBeInTheDocument()
+    // The list is a table since KSP-77 (search and filter in the ticket table).
+    expect(screen.queryByRole("table")).not.toBeInTheDocument()
   })
 
   // CORE-03: the list shows tickets in the order the API returns.

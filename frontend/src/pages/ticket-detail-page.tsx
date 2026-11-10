@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react"
-import { useParams } from "react-router"
+import { Link, useParams } from "react-router"
 
 import { fetchTicket, type TicketResult } from "@/api/tickets"
 import { TicketDetails } from "@/components/ticket-details"
+import { TicketHistory } from "@/components/ticket-history"
 import { TicketPageLayout } from "@/components/ticket-page-layout"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -15,6 +16,7 @@ export function TicketDetailPage() {
   const ticketId = useParams().id
   // The result remembers which id it belongs to, so a new id means loading again.
   const [loaded, setLoaded] = useState<{ id: string; result: TicketResult } | null>(null)
+  const [historyVersion, setHistoryVersion] = useState(0)
 
   useEffect(() => {
     if (ticketId === undefined) return
@@ -35,17 +37,35 @@ export function TicketDetailPage() {
     <TicketPageLayout>
       {result === null && <TicketDetailsSkeleton />}
       {result?.state === "ok" && (
-        <TicketDetails
-          ticket={result.ticket}
-          // A saved status replaces the ticket, so the view shows the answer from the API.
-          onStatusSaved={(ticket) => setLoaded({ id: ticketId, result: { state: "ok", ticket } })}
-        />
+        <>
+          <TicketDetails
+            ticket={result.ticket}
+            // A saved status replaces the ticket, so the view shows the answer from the API.
+            // It also fetches the history again (KSP-37 AC4, a new entry without reloading).
+            onStatusSaved={(ticket) => {
+              setLoaded({ id: ticketId, result: { state: "ok", ticket } })
+              setHistoryVersion((version) => version + 1)
+            }}
+          />
+          {/* KSP-37 (the timeline): only after the ticket has come with 200, so an unknown
+              ticket never asks for its history (HIST-08). A new id starts a new history. */}
+          <TicketHistory key={ticketId} ticketId={ticketId} version={historyVersion} />
+        </>
       )}
       {/* The detail from the API as it is (KSP-31 AC7), in the same alert as the ticket list.
-          A link back to the list comes with KSP-38 (error messages in the UI). */}
+          KSP-38 AC4 (link back when the ticket does not exist): a ticket that does not exist
+          (404 by CORE-10, also "abc" by B8, a non-integer id gives 404) gets a
+          link back to the list in the same alert. The status code decides, not the text. */}
       {result?.state === "error" && (
         <Alert variant="destructive">
-          <AlertDescription>{result.message}</AlertDescription>
+          <AlertDescription className="flex flex-col gap-2">
+            <p>{result.message}</p>
+            {result.httpStatus === 404 && (
+              <Link to="/" className="self-start font-bold underline underline-offset-4 hover:no-underline">
+                Tillbaka till ärendelistan
+              </Link>
+            )}
+          </AlertDescription>
         </Alert>
       )}
     </TicketPageLayout>

@@ -1,5 +1,6 @@
 import { render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
+import { axe } from "jest-axe"
 import { MemoryRouter } from "react-router"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
@@ -9,6 +10,7 @@ import { BACKEND_UNREACHABLE } from "@/api/errors"
 import { AppHeader } from "@/components/app-header"
 import { TicketListRefreshProvider } from "@/components/ticket-list-refresh"
 import { TicketListPage } from "@/pages/TicketListPage"
+import { expectNoTechnicalWords } from "@/test/technical-words"
 
 // KSP-30: create-ticket dialog. The API owns validation; the form shows detail unchanged.
 // KSP-77: a created ticket is a link in the table.
@@ -157,6 +159,64 @@ describe("Create ticket form", () => {
     renderPage()
 
     expect(await screen.findByRole("link", { name: TITLE })).toBeInTheDocument()
+  })
+
+  // HIST-14 (errors in Swedish without technical details), added by Amalia for KSP-38
+  // (error messages in the UI): a network error when creating shows the Swedish
+  // text only, never the browser's own error.
+  it("HIST-14: form network error shows no technical words", async () => {
+    const user = userEvent.setup()
+    mockApi(() => {
+      throw new TypeError("Failed to fetch")
+    })
+    await openForm(user)
+    await user.type(screen.getByLabelText("Rubrik"), TITLE)
+    await user.type(screen.getByLabelText("Beskrivning"), DESCRIPTION)
+    await chooseCodes(user)
+
+    await user.click(screen.getByRole("button", { name: "Registrera ärende" }))
+
+    const dialog = screen.getByRole("dialog", { name: "Nytt ärende" })
+    const alert = await within(dialog).findByRole("alert")
+    expect(alert).toHaveTextContent(BACKEND_UNREACHABLE)
+    expectNoTechnicalWords(alert)
+  })
+
+  // KSP-38 AC2 (network errors and 500 give a Swedish message), added by Amalia: a 500 shows
+  // the message from the API in the
+  // dialog, and the dialog stays open as when nothing was created.
+  it("KSP-38: form server error shows the message from the API", async () => {
+    const user = userEvent.setup()
+    mockApi(() => json(500, { detail: "Något gick fel. Försök igen." }))
+    await openForm(user)
+    await user.type(screen.getByLabelText("Rubrik"), TITLE)
+    await user.type(screen.getByLabelText("Beskrivning"), DESCRIPTION)
+    await chooseCodes(user)
+
+    await user.click(screen.getByRole("button", { name: "Registrera ärende" }))
+
+    const dialog = screen.getByRole("dialog", { name: "Nytt ärende" })
+    const alert = await within(dialog).findByRole("alert")
+    expect(alert).toHaveTextContent("Något gick fel. Försök igen.")
+    expectNoTechnicalWords(alert)
+    expect(dialog).toBeInTheDocument()
+  })
+
+  // KSP-38 AC3 (accessible error messages), added by Amalia: the dialog with an error message
+  // has no
+  // accessibility errors. jsdom cannot compute colours, so contrast is checked by hand.
+  it("KSP-38: form error has no accessibility errors", async () => {
+    const user = userEvent.setup()
+    mockApi(() => errorResponse("Rubrik måste fyllas i."))
+    await openForm(user)
+    await user.type(screen.getByLabelText("Beskrivning"), DESCRIPTION)
+    await chooseCodes(user)
+
+    await user.click(screen.getByRole("button", { name: "Registrera ärende" }))
+
+    const dialog = screen.getByRole("dialog", { name: "Nytt ärende" })
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent("Rubrik måste fyllas i.")
+    expect(await axe(dialog)).toHaveNoViolations()
   })
 
   // CORE-06: an empty title is sent, and the API message is shown unchanged inside the dialog.

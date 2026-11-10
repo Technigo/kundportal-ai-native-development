@@ -4,7 +4,7 @@ import type { ColumnDef } from "@tanstack/react-table"
 import { ChevronDown, Filter, Search } from "lucide-react"
 
 import type { components, operations } from "@/api/schema"
-import { BACKEND_UNREACHABLE } from "@/api/errors"
+import { BACKEND_UNREACHABLE, errorDetail, messageWithoutDetail } from "@/api/errors"
 import { TicketPageLayout } from "@/components/ticket-page-layout"
 import { useTicketListRefresh } from "@/components/ticket-list-refresh"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -43,7 +43,6 @@ type Status = components["schemas"]["Status"]
 
 type TicketListBody =
   operations["list_tickets_tickets_get"]["responses"][200]["content"]["application/json"]
-type ErrorBody = components["schemas"]["ErrorResponse"]
 
 type ListState =
   | { state: "loading" }
@@ -105,8 +104,10 @@ async function fetchTickets(): Promise<ListState> {
       const tickets = (await response.json()) as TicketListBody
       return { state: "ok", tickets }
     }
-    const data = (await response.json()) as ErrorBody
-    return { state: "error", message: data.detail }
+    // KSP-38 AC2 (network errors and 500 give a Swedish message): never an empty alert.
+    // Without a readable detail, the status code decides the text (messageWithoutDetail).
+    const detail = await errorDetail(response)
+    return { state: "error", message: detail ?? messageWithoutDetail(response.status) }
   } catch {
     return { state: "error", message: BACKEND_UNREACHABLE }
   }

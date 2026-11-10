@@ -1,10 +1,12 @@
-import { render, screen } from "@testing-library/react"
+import { render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
+import { axe } from "jest-axe"
 import { createMemoryRouter, RouterProvider } from "react-router"
 import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest"
 
 import type { Ticket, TicketStatus } from "@/api/types"
 import { BACKEND_UNREACHABLE } from "@/api/errors"
+import { expectNoTechnicalWords } from "@/test/technical-words"
 import { TicketDetailPage } from "./ticket-detail-page"
 
 // Status change in the detail view (KSP-32). HIST-02, 06, 07 and 13 are the rules in the API;
@@ -58,14 +60,21 @@ function fakeBackend(patchAnswer: { current: PatchAnswer }): Mock {
       const { status } = JSON.parse(String(init.body)) as { status: TicketStatus }
       return patchAnswer.current(ticket, status, tickets)
     }
+    // The timeline (KSP-37) fetches the history. Its behaviour is tested in
+    // ticket-timeline.test.tsx, so here it is just the entry created.
+    if (url.endsWith("/history")) {
+      return jsonResponse([{ id: 1, event_type: "created", from_status: null, to_status: "new", occurred_at: "2026-10-25T09:00:00.000000Z" }])
+    }
     return jsonResponse(ticket)
   })
 }
 
+// GET calls for the ticket itself, not the timeline's history calls (KSP-37).
 function getCalls(fetchMock: Mock): string[] {
   return fetchMock.mock.calls
     .filter((call) => (call[1] as RequestInit | undefined)?.method === undefined)
     .map((call) => call[0] as string)
+    .filter((url) => !url.endsWith("/history"))
 }
 
 const succeed: PatchAnswer = async (ticket, status) => jsonResponse({ ...ticket, status })
@@ -248,8 +257,10 @@ describe("Status change in the detail view", () => {
     await user.click(saveButton())
 
     expect(patchCalls(fetchMock)).toEqual([{ url: "/api/tickets/7/status", body: { status: "new" } }])
-    await screen.findByRole("button", { name: "Ändra status" })
-    expect(screen.getByText("Nytt")).toBeInTheDocument()
+    // The badge sits next to the pencil button. "Nytt" is also the first entry in the timeline
+    // (KSP-37), so the text is looked for next to the button only.
+    const pencil = await screen.findByRole("button", { name: "Ändra status" })
+    expect(within(pencil.parentElement!).getByText("Nytt")).toBeInTheDocument()
   })
 
   it("HIST-14: failed save shows the detail from the API and keeps the saved status", async () => {
@@ -278,9 +289,61 @@ describe("Status change in the detail view", () => {
     await user.selectOptions(select, "Avslutat")
     await user.click(saveButton())
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(BACKEND_UNREACHABLE)
+    const alert = await screen.findByRole("alert")
+    expect(alert).toHaveTextContent(BACKEND_UNREACHABLE)
     expect(document.body).not.toHaveTextContent(/Failed to fetch/)
+    expectNoTechnicalWords(alert)
     expect(select).toBeInTheDocument()
     expect(select).toHaveDisplayValue("Pågående")
+  })
+
+  // KSP-38 AC2 (network errors and 500 give a Swedish message): an unexpected 500 shows the
+  // message and keeps the saved status.
+  it("KSP-38: status server error shows the message and keeps the status", async () => {
+    const user = userEvent.setup()
+    patchAnswer.current = async () => jsonResponse({ detail: "Något gick fel. Försök igen." }, 500)
+    renderAt("/tickets/5")
+    const select = await openEditor(user)
+
+    await user.selectOptions(select, "Avslutat")
+    await user.click(saveButton())
+
+    const alert = await screen.findByRole("alert")
+    expect(alert).toHaveTextContent("Något gick fel. Försök igen.")
+    expectNoTechnicalWords(alert)
+    expect(select).toHaveDisplayValue("Pågående")
+  })
+
+  // KSP-38 AC3 (accessible error messages): the status editor with an error message has no
+  // accessibility errors, and the select keeps its label.
+  it("KSP-38: status error has no accessibility errors", async () => {
+    const user = userEvent.setup()
+    patchAnswer.current = async () => jsonResponse({ detail: "Ärendet har redan den statusen." }, 409)
+    renderAt("/tickets/5")
+    const select = await openEditor(user)
+
+    await user.selectOptions(select, "Avslutat")
+    await user.click(saveButton())
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Ärendet har redan den statusen.")
+    expect(screen.getByRole("combobox", { name: "Status" })).toBeInTheDocument()
+    expect(await axe(document.body)).toHaveNoViolations()
+  })
+
+  // HIST-14 (errors in Swedish without technical details): the message from the API is shown
+  // without the status code.
+  it("HIST-14: status error shows no status code", async () => {
+    const user = userEvent.setup()
+    patchAnswer.current = async () =>
+      jsonResponse({ detail: "Statusen kunde inte ändras. Försök igen." }, 503)
+    renderAt("/tickets/5")
+    const select = await openEditor(user)
+
+    await user.selectOptions(select, "Avslutat")
+    await user.click(saveButton())
+
+    const alert = await screen.findByRole("alert")
+    expect(alert).toHaveTextContent("Statusen kunde inte ändras. Försök igen.")
+    expectNoTechnicalWords(alert)
   })
 })
