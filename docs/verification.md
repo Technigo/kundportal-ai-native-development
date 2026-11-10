@@ -112,6 +112,8 @@ Automated tests cannot see layout or real browser behaviour. These checks are do
 | `?notice=hej`, `?notice=`, `?notice=<b>x</b>`, `?notice=toString` | AC4.5 | No message, no tags rendered | Passed (Alexandra, 2026-11-08) |
 | Keyboard only: list, ticket, Back to tickets | AC4.6, AC3.2 | All reachable, focus visible | Passed (Alexandra, 2026-11-08) |
 | Screen reader | All | Pages are announced in a sensible order | Not done |
+| Change the status on the detail page | AC-S1 | After choosing a new status and clicking Save, the status badge, the history and the ticket list all show the new status | Passed (Jessica, 2026-11-10) |
+| Status still saved after restarting the server | AC-S6 | After stopping and starting `npm run dev`, the ticket list and the detail page still show the changed status, and the history row is still there | Passed (Jessica, 2026-11-10): the ticket changed before still had the new status in the list, and its detail page still showed the history row |
 
 ## Limitations of the verification
 
