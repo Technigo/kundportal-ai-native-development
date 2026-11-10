@@ -201,4 +201,43 @@ Svara med 2–3 konkreta exempel, gärna med länk till en PR, ett test eller et
 
 ## Sammanfattning
 
-(Skrivs när alla har svarat.)
+Alla fyra har svarat på samma fyra frågor. Här är det som gick igen hos flera av oss.
+
+**AI hjälpte mest när den fick visa belägg.** De bästa exemplen är när AI körde något och visade
+resultatet, inte när den bara skrev. Den hittade motsägelser i en spec innan koden skrevs (Amalia,
+#109), körde mutationer och förklarade varför ett test föll (Azalea, Nicklas, #72, #73), hittade fel
+som redan fanns i koden när nya tester skrevs (Amalia, #107) och hjälpte till att hitta en
+typkontroll som inte läste några filer, vilket ledde till CI (Mustafa, #64, #84). Instruktioner och
+agentuppdrag med kontrollpunkter gjorde resultatet mätbart (Nicklas v2, #20; Azalea, #77).
+
+**AI skapade extra arbete när påståenden inte var prövade.** Alla fyra har exempel på samma sak:
+AI sa att något höll utan att ha kontrollerat det. Ordgränserna skyddade inte "Välj en giltig
+status." (Amalia), två tester föll inte som testförslaget sa (Azalea, #96), dokumentet om kända
+begränsningar hade tio påståenden som inte längre stämde (Mustafa, #98), och en mutationsrad visade
+inte alla tester som föll (Nicklas, #105). Ett annat mönster är att AI gick längre än vi bett om:
+den byggde mer än vi ville, föreslog commit och PR utan granskare, eller skickade text som vi inte
+hade sett. Felen hittades nästan alltid i granskningen av någon annan i teamet.
+
+**Besluten om ansvar, risk och begriplighet fattade vi själva.** AI kunde föreslå, men inte avgöra:
+
+- vem som äger vad och i vilken ordning arbetet görs (Mustafas plan i Linear, att Nicklas inte satte
+  Verifierat på Azaleas rader),
+- vad som får ändras i kontraktet (Azalea valde 500 i stället för 503 för att inte ändra CORE-specen),
+- vad som räcker (vilka krav som mutationsprövas, vad som är "good enough" för projektets storlek),
+- om ett test faller av rätt anledning (Azalea, Nicklas),
+- om något går att förstå och se för en människa (kontrasten 3.78, tidslinjens utseende,
+  felmeddelandena i `/docs`).
+
+**Det vi skulle förbättra.** Tre saker kommer från flera av oss:
+
+1. **Kontrollera innan något påstås.** En kolumn "Kontrollerat?" i testinstruktionen (Azalea), pröva
+   mot hela underlaget (Amalia) och mot hela testsviten (Nicklas).
+2. **Pröva i webbläsaren tidigt och ofta.** Kontroll för hand varje vecka i stället för i slutet
+   (Amalia, Nicklas), och tester mot den riktiga backenden för hela flödet (Mustafa).
+3. **Låt repot och CI bära besluten.** Beslut som styr koden ska ligga i `docs/specs/` direkt
+   (Amalia), och kontraktet ska kontrolleras automatiskt (Mustafa). Krav på grön CI före merge
+   (Azalea) är redan infört (KSP-17).
+
+**Slutsats.** AI gjorde det billigt att bygga och att testa, men arbetet flyttade till att
+kontrollera. Det som fungerade bäst för oss var när AI tog fram belägg och en människa avgjorde,
+och när någon annan i teamet granskade.
