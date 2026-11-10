@@ -134,7 +134,28 @@ som förklarar *varför*, och varje krav-id förklarat kort, t.ex.
 
 ## Hinder och frågor
 
-*(fylls i efter körningen)*
+Körningen 2026-11-10, på `1f4da6f` (grenen efter att `main` slogs in). Agenten stannade vid alla
+fyra kontrollpunkterna. Nollpunkt och slut: 11 filer, 101 passed. Inga hinder stoppade arbetet.
+
+| # | Fråga eller hinder | Hur det löstes |
+| --- | --- | --- |
+| 1 | `toResult` ger `httpStatus` vid alla felsvar. Ska listans fel få fältet, eller ska `fetchTickets` ta bort det? Listan läser bara `message`, så användaren märker ingen skillnad | Amalia valde att behålla `httpStatus` (alternativ ett). `fetchTickets` och `toTicketResult` ser då likadana ut |
+| 2 | Specen `SPEC-felmeddelanden-och-tidslinje.md` fanns inte på grenen, eftersom PR #112 (specen för felmeddelanden och tidslinjen) inte är mergad | Avsnitt 4 lästes från `origin/docs/ksp-38-spec-felmeddelanden-tidslinje`, som avsnitt 2 i uppdraget säger |
+| 3 | Uppdraget anger L3 som `` `${detail} (${status})` ``, men i `toResult` kan `detail` vara `null` | Agenten lade statuskoden till hela meddelandet, även den fasta texten: `` `${detail ?? messageWithoutDetail(status)} (${status})` `` |
+| 4 | Första körningen av typkontrollen i kontrollpunkt 2 doldes av npm-meddelanden | `tsc -b` kördes igen med `pnpm exec`. Exit 0 |
+| 5 | För att den nya filen `result.ts` skulle synas i diffen markerade agenten den med `git add -N` | Markeringen togs bort direkt med `git reset`. Inget stagades eller committades |
+
+**Mutationerna mot `toResult`.** Amalia gissade före körningen. Varje fil återställdes från en
+sparad kopia, kontrollerad med sha1, aldrig med `git checkout`.
+
+| Mutation | Gissning | Föll | Jämfört med 2026-11-05 |
+| --- | --- | --- | --- |
+| L2: listan visar webbläsarens fel (`String(e)` i `catch` i `toResult`) | 6 | 5 av 101: ett nätverksfelstest per vy (listan, `App.test.tsx`, detaljvyn, statusbytet, formuläret) | 2 föll. Mutationen når nu alla fyra vyerna. Tidslinjen klarar sig, eftersom `fetchHistory` har en egen `catch` |
+| L3: statuskoden läggs till meddelandet i `toResult` | Alla | 10 av 101, i listan, formuläret, detaljvyn, statusbytet och tidslinjen. Bland annat `HIST-14: status error shows no status code` | 4 av 32 föll. Tidslinjens tester föll, att döma av namnen, på detaljvyns felmeddelande och inte på `fetchHistory` |
+| L4: listan visar en tom lista vid fel (felgrenen i `fetchTickets`) | 1 | 3 av 101: `KSP-38: list server error shows the message from the API`, `HIST-14: list network error shows no technical words` och testet i `App.test.tsx` | 1 föll. `toResult` ger nu felsvar och nätverksfel som samma `error`, så en rad når båda fallen |
+
+**Gjordes inte:** ingen commit, push eller PR. Resultaten fördes inte in i `docs/verifiering.md`,
+eftersom `docs/` låg utanför gränserna. Projektet startades inte. Det är Amalias kontroll.
 
 ## Min granskning
 
