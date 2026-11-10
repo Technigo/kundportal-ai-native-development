@@ -27,7 +27,13 @@ How we check that the acceptance criteria in [project-brief.md](project-brief.md
 | AC2.2 | `listTickets` newest first; e2e newest first |
 | AC2.3 | `TicketList` empty state |
 | AC3.1, AC3.2 | `PortalShell`, `navItems`; e2e redirect and keyboard navigation |
-| AC4.x, AC5.x | Not built, no tests yet |
+| AC4.1, AC4.2 | `TicketDetails` shows subject, requester name and email, "No email given", description with line breaks, status, priority and date; `getTicket` returns the ticket or `undefined`; e2e "opens a ticket from the list, shows its details and goes back"; manual check for long words (below) |
+| AC4.3 | `TicketDetails` links back to the ticket list; e2e "opens a ticket from the list, shows its details and goes back" |
+| AC4.4 | `parseTicketId` accepts plain positive numbers and rejects `0`, `01`, `1e0`, `0x1` and similar; e2e redirect from invalid ids to the list with a message; manual check for `/tickets/01`, `/tickets/1e0`, `/tickets/0x1` (below) |
+| AC4.5 | `TicketNotice` shows the message for the known code and nothing for an unknown or missing code; e2e "shows no message for an unknown notice code" |
+| AC4.6 | `TicketList` links each subject to `/tickets/[id]`; manual keyboard check (below) |
+| AC5.x | Not built, no tests yet |
+| AC6.4 (schema part) | `newNoteSchema` and `newNoteCommentSchema` in `ticketSchema.test.ts`: trimming, empty and whitespace-only, 500 accepted and 501 rejected, inner whitespace kept, length counted in code points, unknown fields stripped. The action and component parts are not built yet. |
 
 ## Register a ticket (AC1): test cases by type
 
