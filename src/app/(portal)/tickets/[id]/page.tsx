@@ -5,7 +5,8 @@ import { cache, Suspense } from "react";
 import { TicketDetails } from "@/components/TicketDetails";
 import { getDb } from "@/db/client";
 import { parseTicketId } from "@/tickets/parseTicketId";
-import { getTicket } from "@/tickets/ticketRepository";
+import { getTicket, listStatusChanges } from "@/tickets/ticketRepository";
+import { changeStatus } from "../actions";
 
 const loadTicket = cache(async (rawId: string) => {
   // Ticket data is per request: render it at request time, never at build time.
@@ -22,7 +23,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 async function SelectedTicket({ params }: { params: Promise<{ id: string }> }) {
   const ticket = await loadTicket((await params).id);
   if (!ticket) redirect("/tickets?notice=ticket-not-found");
-  return <TicketDetails ticket={ticket} />;
+  const changes = await listStatusChanges(getDb(), ticket.id);
+  return <TicketDetails ticket={ticket} changes={changes} statusAction={changeStatus} />;
 }
 
 export default function TicketPage({ params }: { params: Promise<{ id: string }> }) {

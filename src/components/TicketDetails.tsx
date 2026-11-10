@@ -1,5 +1,7 @@
 import Link from "next/link";
-import type { Ticket } from "@/db/schema";
+import type { ChangeStatusState } from "@/app/(portal)/tickets/actions";
+import type { Ticket, TicketStatusChange } from "@/db/schema";
+import { StatusForm } from "./StatusForm";
 import { statusLabels } from "@/tickets/statusLabels";
 import type { TicketPriority, TicketStatus } from "@/tickets/ticketSchema";
 
@@ -17,7 +19,13 @@ const priorityLabels: Record<TicketPriority, string> = {
 
 const dateFormat = new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeZone: "UTC" });
 
-export function TicketDetails({ ticket }: { ticket: Ticket }) {
+type TicketDetailsProps = {
+  ticket: Ticket;
+  changes: TicketStatusChange[];
+  statusAction: (state: ChangeStatusState, formData: FormData) => Promise<ChangeStatusState>;
+};
+
+export function TicketDetails({ ticket, changes, statusAction }: TicketDetailsProps) {
   return (
     <article className="max-w-3xl space-y-6">
       <Link
@@ -51,7 +59,22 @@ export function TicketDetails({ ticket }: { ticket: Ticket }) {
           {ticket.description}
         </p>
       </section>
-      <section aria-label="Status and history" />
+      <section aria-label="Status and history" className="space-y-4">
+        <StatusForm ticketId={ticket.id} status={ticket.status} action={statusAction} />
+        <h2 className="text-lg font-semibold">Status history</h2>
+        {changes.length === 0 ? (
+          <p className="text-sm text-slate-600">No status changes yet.</p>
+        ) : (
+          <ol className="space-y-1 text-sm text-slate-700">
+            {changes.map((change) => (
+              <li key={change.id}>
+                {statusLabels[change.fromStatus]} → {statusLabels[change.toStatus]} ·{" "}
+                <time dateTime={change.changedAt.toISOString()}>{dateFormat.format(change.changedAt)}</time>
+              </li>
+            ))}
+          </ol>
+        )}
+      </section>
     </article>
   );
 }
