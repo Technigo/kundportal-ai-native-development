@@ -13,13 +13,13 @@
 - [Verifieringsplan](../../verifieringsplan.md): T01–T05 och T16 (frontenddelen av trimning och längd), M01 och M02.
 - Code-design: [SKILL.md](../../../.claude/skills/code-design/SKILL.md), [frontend.md](../../../.claude/skills/code-design/references/frontend.md), [ui-design.md](../../../.claude/skills/code-design/references/ui-design.md) och [tester.md](../../../.claude/skills/code-design/references/tester.md).
 
-## Filer (alla nya)
+## Filer (alla nya utom `api/tickets.ts`)
 
 | Fil | Uppgift |
 |---|---|
 | `frontend/src/features/tickets/TicketForm.tsx` och `.module.css` | Formuläret, fältfel, teckenräknare, `Alert` och bekräftelse |
 | `frontend/src/features/tickets/useCreateTicket.ts` | Anropar `createTicket`, håller `isSaving` och `error`, skickar aldrig om automatiskt |
-| `frontend/src/api/createTicket.ts` | `POST /tickets` via `request` |
+| `frontend/src/api/tickets.ts` | `createTicket` (`POST /tickets`) via `request`, tillagd i den befintliga filen bredvid `listTickets` |
 | `frontend/src/domain/text.ts` | `WHITE_SPACE`, `trimText`, `textLength`, `TEXT_LIMITS` |
 | `frontend/src/domain/fieldErrors.ts` | Svenska fältfel och klientvalidering |
 | `TicketForm.test.tsx`, `text.test.ts` | Tester |
@@ -47,7 +47,7 @@ Knappen är inaktiverad medan anropet pågår. Formuläret rensas bara efter lyc
 <TicketForm onCreated={(ticket) => /* öppna detaljvyn för ticket.id */} onCancel={() => /* tillbaka till listan */} />
 ```
 
-`App.tsx` behöver en vy-växling och en knapp "+ Registrera ärende". `TEXT_LIMITS` och `createTicket` ligger i egna filer för att inte röra `domain/ticket.ts` och `api/tickets.ts`; de kan flyttas dit vid integrationen.
+`App.tsx` behöver en vy-växling och en knapp "+ Registrera ärende". `TEXT_LIMITS` ligger i `domain/text.ts` för att inte röra `domain/ticket.ts`; den kan flyttas dit vid integrationen.
 
 ## Verifiering
 
@@ -58,7 +58,7 @@ npm test
 npm run build
 ```
 
-Senaste lokala körning: 5 testfiler och 43 tester godkända, `npm run build` utan fel. Testerna mockar `src/api/createTicket`.
+Senaste lokala körning: 5 testfiler och 45 tester godkända, `npm run build` utan fel. Testerna mockar `src/api/tickets`.
 
 ### Manuella kontroller mot riktig backend, 2026-11-05
 
@@ -66,8 +66,10 @@ Lokalt: MySQL via Docker Compose, FastAPI på port 8000 och Vite på port 5173. 
 
 | Kontroll | Resultat |
 |---|---|
-| M01: giltigt ärende | Godkänd. `POST /api/tickets` gav `201`, svaret hade `status: "new"` och `created_at` med sex decimaler, formuläret rensades och bekräftelsen "Ärendet har sparats som #N" visades. Kund-ID med blanksteg runt sparades trimmat. |
+| M01 (registreringsdelen): giltigt ärende | Godkänd. `POST /api/tickets` gav `201`, svaret hade `status: "new"` och `created_at` med sex decimaler, formuläret rensades och bekräftelsen "Ärendet har sparats som #N" visades. Kund-ID med blanksteg runt sparades trimmat. |
 | M02: fel och gränser | Godkänd. Tomt formulär, enbart blanksteg, rubrik på 100 respektive 101 tecken och emoji i räknaren fungerade som förväntat och ifyllda fält fanns kvar. Att inget anrop skickades vid blockerat försök styrks av backendens logg: inga `422` från formuläret, bara `201`-anrop. Webbläsarens Network-flik användes inte. |
 | K7: lagringsfel | Godkänd för `storage_unavailable`. Med MySQL stoppad gav `POST` `503`, formuläret visade "Ändringen kunde inte sparas. Försök igen.", visade varken bekräftelse eller JSON och behöll inmatningen. Inget nytt anrop skickades automatiskt. Efter `docker compose start mysql` sparades samma uppgifter som ärende #11. |
+
+Resten av M01 (listfält, detaljfält och väg tillbaka till listan) och K1-delen "åtkomst via lista och detaljer" återstår tills formuläret är inkopplat.
 
 Begränsningar: `save_outcome_unknown` och `network_error` är bara verifierade med mockade svar i `TicketForm.test.tsx`; de kan inte framkallas på ett säkert sätt från webbläsaren. Det finns ingen mänsklig kodgranskning och komponenten är ännu inte integrerad i `App.tsx`.
