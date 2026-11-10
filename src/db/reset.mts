@@ -12,5 +12,7 @@ const path = url.slice("file:".length);
 for (const suffix of ["", "-wal", "-shm", "-journal"]) rmSync(`${path}${suffix}`, { force: true });
 
 const env = { ...process.env, DATABASE_URL: url };
-execFileSync("npx", ["tsx", "src/db/migrate.mts"], { stdio: "inherit", env });
-execFileSync("npx", ["tsx", "src/db/seed.mts"], { stdio: "inherit", env });
+// Run the tsx CLI with node directly: spawning npx needs a shell on Windows (npx.cmd).
+const tsx = "node_modules/tsx/dist/cli.mjs";
+execFileSync(process.execPath, [tsx, "src/db/migrate.mts"], { stdio: "inherit", env });
+execFileSync(process.execPath, [tsx, "src/db/seed.mts"], { stdio: "inherit", env });
