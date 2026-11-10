@@ -154,9 +154,43 @@ sparad kopia, kontrollerad med sha1, aldrig med `git checkout`.
 | L3: statuskoden läggs till meddelandet i `toResult` | Alla | 10 av 101, i listan, formuläret, detaljvyn, statusbytet och tidslinjen. Bland annat `HIST-14: status error shows no status code` | 4 av 32 föll. Tidslinjens tester föll, att döma av namnen, på detaljvyns felmeddelande och inte på `fetchHistory` |
 | L4: listan visar en tom lista vid fel (felgrenen i `fetchTickets`) | 1 | 3 av 101: `KSP-38: list server error shows the message from the API`, `HIST-14: list network error shows no technical words` och testet i `App.test.tsx` | 1 föll. `toResult` ger nu felsvar och nätverksfel som samma `error`, så en rad når båda fallen |
 
-**Gjordes inte:** ingen commit, push eller PR. Resultaten fördes inte in i `docs/verifiering.md`,
+**Gjordes inte under körningen:** ingen commit, push eller PR. Resultaten fördes inte in i `docs/verifiering.md`,
 eftersom `docs/` låg utanför gränserna. Projektet startades inte. Det är Amalias kontroll.
+
+**Gjordes efter körningen:** jag committade koden (`7c9e1a3`), och "Hinder och frågor" och
+mutationerna L2–L4 fördes in i `docs/verifiering.md`, avsnitt 5 (`ee07e02`). Därefter provade jag
+i webbläsaren och körde testerna själv (se "Min granskning").
 
 ## Min granskning
 
-*(fylls i efter körningen)*
+| Del av diffen | Accepterade / ändrade / avvisade | Varför |
+| --- | --- | --- |
+| Planen (kontrollpunkt 1): en generisk `toResult<T>` i `api/result.ts`, som `toTicketResult` och `fetchTickets` använder | Accepterade | Den följde mitt val (en generisk funktion) och höll sig inom de tre filerna i uppdraget |
+| `api/result.ts`: tre vägar, data, `detail` eller `messageWithoutDetail(status)`, och `BACKEND_UNREACHABLE` i `catch` | Accepterade | Samma regler som förut, nu på ett ställe. Testerna är oförändrade och gröna, och mutationerna fångas av fler tester än förut |
+| `api/tickets.ts`: `toTicketResult` via `toResult`, och `fetchTickets` flyttad hit. `fetchHistory` orörd | Accepterade | All hämtning av ärenden ligger nu i API-lagret. `fetchHistory` rördes inte, eftersom den har andra regler (tidslinjen visar sitt eget meddelande) |
+| `TicketListPage.tsx` (Mustafas): egen `try/catch` borttagen, importerar `fetchTickets` | Accepterade | Sidan visar bara det den får, och felhanteringen ligger i API-lagret. Ändringen nämns för Mustafa i PR:en |
+| Listans fel behåller `httpStatus` (fråga 1) | Accepterade alternativ ett | Minsta ändringen. Att ta bort fältet hade varit en extra ändring utan nytta för användaren, eftersom listan bara visar texten |
+| L3 gjordes på hela meddelandet, inte bara `detail` (fråga 3) | Accepterade | Det är samma fel, en statuskod som läcker ut till användaren, anpassat till att `detail` kan saknas i `toResult`. Agenten skrev det själv under antaganden |
+
+**Testkörningar:** nollpunkt och slut 101 passed (11 filer), och ingen testfil ändrad. Jag körde
+hela sviten själv efter körningen (`pnpm --dir frontend test:run`): 11 filer, 101 passed. `pnpm lint`
+och `pnpm build` utan fel.
+
+**Mina gissningar:** se tabellen över mutationerna ovan. L2 och L3 stämde i princip: felet slog mot
+alla vyer som går genom `toResult`, men bara de tester som kontrollerar feltexten föll. L4 överraskade
+mig: jag trodde att bara ett test skulle falla, men eftersom `toResult` nu gör om både felsvar och
+nätverksfel till samma sorts fel slog en enda ändrad rad mot båda fallen i listan.
+
+**Mitt manuella prov (2026-11-10, port 5173):** listan laddas, jag skapade ett ärende i formuläret,
+och med backenden avstängd visar listan "Kundserviceportalen svarar inte just nu. Försök igen om en
+stund."
+
+**Vad agenten gjorde fel eller missade:**
+
+- Rapporten sa att tidslinjens tester i L3 föll på detaljvyns felmeddelande "att döma av namnen",
+  utan att det var kontrollerat. Agenten var ärlig om det, och det kontrollerades efteråt i
+  testkoden: testerna letar efter exakt "Ärendet finns inte." och "Statusen kunde inte ändras.
+  Försök igen.", som inte hittas med statuskoden efter.
+
+**Commits:** `9d7f644` (uppdraget före körningen), `7c9e1a3` (koden), `ee07e02` ("Hinder och
+frågor" och mutationerna).
