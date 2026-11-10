@@ -12,12 +12,12 @@ Arbetsunderlag för React-klient och FastAPI-backend. **Maskinvärden, felstrukt
 
 | Metod | Endpoint | Funktion | Svarskoder |
 |---|---|---|---|
-| `POST` | `/tickets` | Registrera ett ärende; returnerar det skapade ärendet och `Location: /api/tickets/{id}`. | `201`, `422`, `503`, `500` vid oklart commitutfall |
-| `GET` | `/tickets` | Lista ärenden. Valfri `?status={status}` filtrerar på exakt en status, exempelvis `/api/tickets?status=in_progress`; utelämnad parameter betyder Alla. | `200`, `422`, `503` |
-| `GET` | `/tickets/{id}` | Hämta alla fält för ett ärende. | `200`, `404`, `503` |
-| `PATCH` | `/tickets/{id}/status` | Ändra endast status; alla giltiga statusövergångar tillåts. | `200`, `404`, `422`, `503`, `500` vid oklart commitutfall |
+| `POST` | `/tickets` | Registrera ett ärende; returnerar det skapade ärendet och `Location: /api/tickets/{id}`. | `201`, `422`, `503`, `500` (`save_outcome_unknown` vid oklart commitutfall, annars `internal_error`) |
+| `GET` | `/tickets` | Lista ärenden. Valfri `?status={status}` filtrerar på exakt en status, exempelvis `/api/tickets?status=in_progress`; utelämnad parameter betyder Alla. | `200`, `422`, `503`, `500` |
+| `GET` | `/tickets/{id}` | Hämta alla fält för ett ärende. | `200`, `404`, `503`, `500` |
+| `PATCH` | `/tickets/{id}/status` | Ändra endast status; alla giltiga statusövergångar tillåts. | `200`, `404`, `422`, `503`, `500` (`save_outcome_unknown` vid oklart commitutfall, annars `internal_error`) |
 
-`200` betyder lyckad läsning eller statusändring, `201` bekräftad registrering, `404` okänt giltigt ärende-ID och `422` ogiltig indata, JSON, statusfilter eller okända request-fält. `503` används för databasfel endast när skrivningen säkert har misslyckats. Om commitutfallet är oklart svarar backend `500` med `save_outcome_unknown`; det får inte beskrivas som säker rollback. Klienten skickar inte `id`, `status` eller `created_at` vid registrering.
+`200` betyder lyckad läsning eller statusändring, `201` bekräftad registrering, `404` okänt giltigt ärende-ID och `422` ogiltig indata, JSON, statusfilter eller okända request-fält. `503` används för databasfel endast när skrivningen säkert har misslyckats. Om commitutfallet är oklart svarar backend `500` med `save_outcome_unknown`; det får inte beskrivas som säker rollback. Andra oväntade serverfel svarar `500` med `internal_error` på alla endpoints i tabellen; se felformatet nedan. Klienten skickar inte `id`, `status` eller `created_at` vid registrering.
 
 ## Värden i API:t och texter i gränssnittet
 
@@ -100,6 +100,8 @@ Backendens felstruktur:
 `fields` tas bara med när felet gäller ett eller flera fält och använder samma fältnamn som JSON-begäran. Ogiltig JSON får `422` med `code: "validation_error"`. Ett okänt giltigt ID får `404` med `code: "not_found"`. Tillfälligt databasfel med säkert misslyckad operation får `503` med `code: "storage_unavailable"`. Skicka inte SQL, tekniska feldetaljer eller interna anslutningsuppgifter till klienten.
 
 Om commit kastar ett fel vars utfall inte kan fastställas svarar backend `500` med `code: "save_outcome_unknown"` och ett generiskt besked om att sparandet inte kunde bekräftas. Detta är inte en bekräftad rollback.
+
+Andra oväntade serverfel svarar backend med `500` och `code: "internal_error"` i samma felstruktur, utan tekniska detaljer.
 
 Om klienten inte kan avgöra om ändringen sparades ska den behålla inmatningen och visa att sparandet inte kunde bekräftas. Den får inte visa att ändringen säkert sparats eller misslyckats och får inte automatiskt skicka samma skrivning igen. Användaren ska kunna hämta ärendelistan igen för att kontrollera resultatet. Om inget svar når klienten finns ingen HTTP-statuskod eller feltext från servern att tolka.
 

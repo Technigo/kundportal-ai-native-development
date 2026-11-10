@@ -24,3 +24,7 @@ export function createTicket(ticket: NewTicket): Promise<Ticket> {
     body: JSON.stringify(ticket),
   })
 }
+
+export function getTicket(id: number): Promise<Ticket> {
+  return request<Ticket>(`/tickets/${id}`)
+}

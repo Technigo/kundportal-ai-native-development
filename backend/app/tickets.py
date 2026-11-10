@@ -79,7 +79,7 @@ def list_tickets(
     status: Optional[Status] = None,
     session: Session = Depends(get_session),
 ) -> list[Ticket]:
-    statement = select(Ticket).order_by(Ticket.created_at.desc())
+    statement = select(Ticket).order_by(Ticket.created_at.desc(), Ticket.id.desc())
     if status is not None:
         statement = statement.where(Ticket.status == status)
     try:

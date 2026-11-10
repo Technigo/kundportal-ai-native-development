@@ -34,11 +34,11 @@ Backendtester finns för T01–T16 enligt länkarna nedan. T16 har begränsad ba
 | T03 | Gränsfall | K2 | Kund-ID, kundnamn, rubrik eller beskrivning med enbart blanksteg avvisas. Inget ärende sparas. | Logik och integration | [test_ticket_validation.py](../backend/tests/test_ticket_validation.py) |
 | T04 | Gränsfall | K1, K2 | Rubrik på 1 och 100 tecken godkänns; 101 avvisas. Beskrivning på 1 och 5 000 tecken godkänns; 5 001 avvisas. Längd räknas efter trimning. Notering: testerna kontrollerar maxlängd och maxlängd +1 för alla textfält, men inte minimilängderna. | Logik | [test_ticket_validation.py](../backend/tests/test_ticket_validation.py) |
 | T05 | Error path | K2 | Tom eller okänd kategori respektive prioritet avvisas i applikationslogiken även utan gränssnittets validering. Inget ärende sparas. Notering: okända värden testas; tom kategori och prioritet testas inte separat. | Logik och integration | [test_ticket_validation.py](../backend/tests/test_ticket_validation.py) |
-| T06 | Happy path | K3 | Ett registrerat ärende finns kvar med samma uppgifter när lagringen stängs och öppnas av nya instanser. | Integration | [test_tickets_api.py](../backend/tests/test_tickets_api.py) |
+| T06 | Happy path | K3 | Ett registrerat ärende finns kvar med samma uppgifter när lagringen stängs och öppnas av nya instanser. | Integration | [test_tickets_api.py](../backend/tests/test_tickets_api.py), [test_ticket_persistence.py](../backend/tests/test_ticket_persistence.py) |
 | T07 | Happy path | K4, K5 | Flera ärenden listas med angivna listfält i fallande skapandetid. Hämtning med ett ID ger samtliga fält från rätt ärende. | Integration | [test_tickets_api.py](../backend/tests/test_tickets_api.py), [test_ticket_status_and_listing.py](../backend/tests/test_ticket_status_and_listing.py) |
 | T08 | Gränsfall | K4, K8 | Tom lagring ger en tom ärendelista utan fel. Ett giltigt filter utan träffar ger en tom resultatlista. | Integration | [test_ticket_not_found.py](../backend/tests/test_ticket_not_found.py), [test_ticket_status_and_listing.py](../backend/tests/test_ticket_status_and_listing.py) |
 | T09 | Error path | K5, K6 | Hämtning eller statusändring för ett okänt ID ger ett hanterat fel. Inget ärende skapas och befintliga uppgifter ändras inte. | Integration | [test_ticket_not_found.py](../backend/tests/test_ticket_not_found.py) |
-| T10 | Happy path | K3, K6 | Tillåtna statusändringar sparas och finns kvar efter återöppnad lagring. Övriga fält är oförändrade. Återöppning från Avslutat till Pågående ingår. Notering: testerna täcker en statussekvens, inte återöppning från Avslutat till Pågående eller beständighet efter återöppnad lagring; beständighet efter backendomstart kontrollerades manuellt. | Logik och integration | [test_ticket_status_and_listing.py](../backend/tests/test_ticket_status_and_listing.py) |
+| T10 | Happy path | K3, K6 | Tillåtna statusändringar sparas och finns kvar efter återöppnad lagring. Övriga fält är oförändrade. Återöppning från Avslutat till Pågående ingår. Notering: testerna täcker en statussekvens och beständighet efter att alla databasanslutningar stängts, men inte återöppning från Avslutat till Pågående; beständighet efter backendomstart kontrollerades manuellt. | Logik och integration | [test_ticket_status_and_listing.py](../backend/tests/test_ticket_status_and_listing.py), [test_ticket_persistence.py](../backend/tests/test_ticket_persistence.py) |
 | T11 | Error path | K6 | Tom eller okänd status avvisas och tidigare lagrad status samt övriga ärendefält förblir oförändrade. Notering: okänd status och extra PATCH-fält testas; tom eller saknad status testas inte separat. | Logik och integration | [test_ticket_status_and_listing.py](../backend/tests/test_ticket_status_and_listing.py) |
 | T12 | Gränsfall | K6 | Att välja aktuell status igen lyckas utan att ändra några ärendeuppgifter. | Integration | [test_ticket_status_and_listing.py](../backend/tests/test_ticket_status_and_listing.py) |
 | T13 | Error path | K7 | Ett kontrollerat fel efter SQL-skrivning men före commit ger rollback; ny hämtning visar att inget ärende sparats. | Integration med verklig MySQL | [test_ticket_storage_failures.py](../backend/tests/test_ticket_storage_failures.py) |
@@ -70,6 +70,8 @@ Installation, start av MySQL och testkommandon finns i [README:s körinstruktion
 
 Senaste rapporterade backendkörning av Danielle den 2026-11-01: `.\.venv\Scripts\python.exe -m pytest -q` från `backend` — **27 passed in 1.50s**. Kodversionen för körningen är inte dokumenterad; körningen gjordes inte om vid denna dokumentationsändring.
 
+Backendkörning av Alvar den 2026-11-02 på macOS med Python 3.9.6, SQLAlchemy 2.0.55 och MySQL 8.4 (`mysql-test`): `.venv/bin/python -m pytest -q` från `backend` — **47 passed**, inga misslyckade eller överhoppade. Versionen är `main` (b63b3b8) med lokala, ännu ej granskade ändringar på grenen `feature/backend-tester`: nya tester i `test_ticket_database_constraints.py`, `test_ticket_persistence.py`, `test_ticket_unexpected_error.py`, `test_ticket_validation.py` och `test_ticket_status_and_listing.py` samt sortering på `id` vid lika `created_at` och felsvar `internal_error` för oväntade serverfel.
+
 Tidigare rapporterad frontendkontroll: `npm.cmd test` — 1 test passed med simulerade HTTP-svar; `npm.cmd run build` lyckades. Detta verifierar inte ärendeflödet.
 
 Manuella API-kontroller rapporterade av Danielle den 2026-11-01, separat från testerna. Kodversionen är inte dokumenterad:
@@ -93,6 +95,18 @@ Efter varje relevant verifieringstillfälle registreras verkliga resultat enligt
 | Avvikelser | Berörda krav, länk till felrapport/uppgift och resultat av eventuell omtestning. |
 
 Planerade, överhoppade eller ännu inte implementerade kontroller får inte redovisas som godkända.
+
+<a name="verifiering-issue-2"></a>
+
+### Issue #2 – Teknikbeslut och API-kontrakt
+
+Den 6 november 2026 gav den lokala körningen på [`afab9e7`](https://github.com/danielleven/kundportal-ai-native-development-grupp-1/commit/afab9e73414220512229b3ec6ca1ba325f4c2bf1) 27 godkända backendtester, varav 21 mot den separata MySQL-testdatabasen, och 7 godkända frontendtester. Typkontroll och bygge gick igenom. Se [arbetsloggen](arbetslogg.md#verifiering-issue-2) för kommandon, begränsningar och de 37 bekräftade punkterna.
+
+<a name="verifiering-issue-12"></a>
+
+### Issue #12 – Detaljpanel med kunduppgifter och bevarad listnavigation
+
+Den 9 november 2026 gav den lokala körningen på branchen `feature/ticket-detail` ([`8c13d6a`](https://github.com/danielleven/kundportal-ai-native-development-grupp-1/commit/8c13d6ab749d3bfff4f5368e6d9cb7cd6c23b6f1)) 27 godkända backendtester mot den separata MySQL-testdatabasen, bland annat T07 och T09, och 17 godkända frontendtester. Typkontroll och bygge gick igenom. Daniel kontrollerade tangentbordsnavigering och detaljdelen av M01 manuellt i webbläsaren. CI kördes inte, eftersom GitHub-kontot var spärrat. Se [arbetsloggen](arbetslogg.md#verifiering-issue-12) för kommandon, begränsningar och de bekräftade punkterna.
 
 ## 7. Begränsningar
 

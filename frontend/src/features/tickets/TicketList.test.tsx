@@ -35,16 +35,33 @@ const IN_PROGRESS_TICKET: Ticket = {
   created_at: '2026-10-30T08:00:00.000000Z',
 }
 
-// Filtret ägs av föräldern, som i App
+// Filter och valt ärende ägs av föräldern, som i App
 function TicketListWithFilter() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(null)
+  const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null)
   return (
     <TicketList
       statusFilter={statusFilter}
       onStatusFilterChange={setStatusFilter}
+      selectedTicketId={selectedTicketId}
+      onSelectTicket={setSelectedTicketId}
     />
   )
 }
+
+it('marks the ticket the user opens as the current row', async () => {
+  listTicketsMock.mockResolvedValue([NEW_TICKET, IN_PROGRESS_TICKET])
+  render(<TicketListWithFilter />)
+
+  const openButton = await screen.findByRole('button', {
+    name: 'Fråga om en påhittad faktura',
+  })
+  openButton.click()
+
+  const rows = await screen.findAllByRole('row')
+  expect(rows[2]).toHaveAttribute('aria-current', 'true')
+  expect(rows[1]).not.toHaveAttribute('aria-current')
+})
 
 it('shows list fields for every ticket in the order the API returns', async () => {
   listTicketsMock.mockResolvedValue([NEW_TICKET, IN_PROGRESS_TICKET])

@@ -60,6 +60,25 @@
   padding: var(--space-6);
 }
 
+/* Lista cirka 60 % och detaljpanel cirka 40 % */
+.ticket-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.ticket-layout > :only-child {
+  grid-column: 1 / -1;
+}
+
+/* Smalare fönster: panelen hamnar under listan */
+@media (max-width: 1100px) {
+  .ticket-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 .content h1 {
   margin: 0 0 var(--space-5);
   color: var(--color-text);
