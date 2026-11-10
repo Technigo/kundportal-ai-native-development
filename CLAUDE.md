@@ -61,6 +61,7 @@ The agent never edits these paths. If a change seems to need one, say so and let
 - Leave all changes uncommitted and tell the owners how to review them (`git status`, `git diff`).
 - When something fails (tests, lint, typecheck, the pipeline, a vulnerability scan), report what failed and offer options with a recommendation. Do not fix it unasked.
 - Say plainly what was checked and what was not.
+- Warn before running commands that delete data, such as `db:reset`, and wait for a yes.
 
 ## Allowed without asking
 
