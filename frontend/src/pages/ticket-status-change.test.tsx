@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react"
+import { render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { axe } from "jest-axe"
 import { createMemoryRouter, RouterProvider } from "react-router"
@@ -60,14 +60,21 @@ function fakeBackend(patchAnswer: { current: PatchAnswer }): Mock {
       const { status } = JSON.parse(String(init.body)) as { status: TicketStatus }
       return patchAnswer.current(ticket, status, tickets)
     }
+    // The timeline (KSP-37) fetches the history. Its behaviour is tested in
+    // ticket-timeline.test.tsx, so here it is just the entry created.
+    if (url.endsWith("/history")) {
+      return jsonResponse([{ id: 1, event_type: "created", from_status: null, to_status: "new", occurred_at: "2026-10-25T09:00:00.000000Z" }])
+    }
     return jsonResponse(ticket)
   })
 }
 
+// GET calls for the ticket itself, not the timeline's history calls (KSP-37).
 function getCalls(fetchMock: Mock): string[] {
   return fetchMock.mock.calls
     .filter((call) => (call[1] as RequestInit | undefined)?.method === undefined)
     .map((call) => call[0] as string)
+    .filter((url) => !url.endsWith("/history"))
 }
 
 const succeed: PatchAnswer = async (ticket, status) => jsonResponse({ ...ticket, status })
@@ -250,8 +257,10 @@ describe("Status change in the detail view", () => {
     await user.click(saveButton())
 
     expect(patchCalls(fetchMock)).toEqual([{ url: "/api/tickets/7/status", body: { status: "new" } }])
-    await screen.findByRole("button", { name: "Ändra status" })
-    expect(screen.getByText("Nytt")).toBeInTheDocument()
+    // The badge sits next to the pencil button. "Nytt" is also the first entry in the timeline
+    // (KSP-37), so the text is looked for next to the button only.
+    const pencil = await screen.findByRole("button", { name: "Ändra status" })
+    expect(within(pencil.parentElement!).getByText("Nytt")).toBeInTheDocument()
   })
 
   it("HIST-14: failed save shows the detail from the API and keeps the saved status", async () => {

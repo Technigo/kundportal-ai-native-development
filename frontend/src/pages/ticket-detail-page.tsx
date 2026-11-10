@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router"
 
 import { fetchTicket, type TicketResult } from "@/api/tickets"
 import { TicketDetails } from "@/components/ticket-details"
+import { TicketHistory } from "@/components/ticket-history"
 import { TicketPageLayout } from "@/components/ticket-page-layout"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -15,6 +16,7 @@ export function TicketDetailPage() {
   const ticketId = useParams().id
   // The result remembers which id it belongs to, so a new id means loading again.
   const [loaded, setLoaded] = useState<{ id: string; result: TicketResult } | null>(null)
+  const [historyVersion, setHistoryVersion] = useState(0)
 
   useEffect(() => {
     if (ticketId === undefined) return
@@ -35,11 +37,20 @@ export function TicketDetailPage() {
     <TicketPageLayout>
       {result === null && <TicketDetailsSkeleton />}
       {result?.state === "ok" && (
-        <TicketDetails
-          ticket={result.ticket}
-          // A saved status replaces the ticket, so the view shows the answer from the API.
-          onStatusSaved={(ticket) => setLoaded({ id: ticketId, result: { state: "ok", ticket } })}
-        />
+        <>
+          <TicketDetails
+            ticket={result.ticket}
+            // A saved status replaces the ticket, so the view shows the answer from the API.
+            // It also fetches the history again (KSP-37 AC4, a new entry without reloading).
+            onStatusSaved={(ticket) => {
+              setLoaded({ id: ticketId, result: { state: "ok", ticket } })
+              setHistoryVersion((version) => version + 1)
+            }}
+          />
+          {/* KSP-37 (the timeline): only after the ticket has come with 200, so an unknown
+              ticket never asks for its history (HIST-08). A new id starts a new history. */}
+          <TicketHistory key={ticketId} ticketId={ticketId} version={historyVersion} />
+        </>
       )}
       {/* The detail from the API as it is (KSP-31 AC7), in the same alert as the ticket list.
           KSP-38 AC4 (link back when the ticket does not exist): a ticket that does not exist
