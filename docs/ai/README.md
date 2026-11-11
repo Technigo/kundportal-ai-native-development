@@ -37,6 +37,17 @@ A project skill at [.claude/skills/test-cases/SKILL.md](../../.claude/skills/tes
 - A follow-up change set the page title to the ticket subject, with its own e2e check.
 - Result: left uncommitted for review, then committed by the owner (commits `55c0cdc`, `6c1d24f`).
 
+**Clear message when a ticket cannot be saved (AC1.8), 2026-11-11, owner Alexandra Petersson, reviewer Jessica Swahn**
+
+- Criterion: AC1.8 in section 1 of [project-brief.md](../project-brief.md).
+- Plan: [save-failure-message.md](../specs/save-failure-message.md), reviewed by Jessica before any code was written. Decision: [07](../decisions/07-save-failure-handling.md). After the review, T7 no longer checks the class `text-red-700`; the colour is checked by hand instead.
+- Test-first, step by step:
+  - Action: T1–T5 in `src/app/(portal)/tickets/actions.test.ts` failed first (T6 passes before the change, as it only checks that field errors give no `formError`), then `submitTicket` got a `try`/`catch` around `getDb()` and `createTicket`, with `redirect` outside it.
+  - Form: T7 and T8 in `src/components/TicketForm.test.tsx` failed with `Unable to find role="alert"`, then `TicketForm` got the message above the button.
+  - Mutation: M4 moves `redirect` inside the `try` and is caught by T5.
+- What the checks found: `npm run typecheck` failed on `button.form` in T7, which Vitest does not type-check. The e2e server did not start either, because the build type-checks. The test was changed to `alert.closest("form")`.
+- Manual check in Firefox with VoiceOver: [report](../test-reports/ac1-8-manual-check.md).
+- Result: left uncommitted for review, then committed by the owner (commits `e3584eb`, `bb994b0`, `7c8af02`, `cc2a2fd`). Commit `e3584eb` holds both the first tests and the change to `actions.ts`, so the failing step is recorded here, not in the git history.
 **Internal notes (AC6.1–AC6.10), 2026-11-10 to 2026-11-11, owner Marie Flem Honningdalnes, reviewer Alexandra Petersson**
 
 - Criterion: section 6 of [project-brief.md](../project-brief.md).

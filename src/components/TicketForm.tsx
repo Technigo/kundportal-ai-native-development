@@ -137,6 +137,12 @@ export function TicketForm({ action }: TicketFormProps) {
         </div>
       </div>
 
+      {!pending && state?.formError ? (
+        <p role="alert" className="text-sm text-red-700">
+          {state.formError}
+        </p>
+      ) : null}
+
       <button
         type="submit"
         disabled={pending}

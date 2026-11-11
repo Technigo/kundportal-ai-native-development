@@ -22,8 +22,20 @@ export type SubmitTicketState =
   | {
       errors: Partial<Record<keyof TicketFormValues, string[]>>;
       values: TicketFormValues;
+      formError?: string;
     }
   | undefined;
+
+// Only the error type is logged: Drizzle's message contains the entered values.
+function errorSummary(error: unknown) {
+  const cause = error instanceof Error ? error.cause : undefined;
+  const code = (cause as { code?: unknown } | undefined)?.code;
+  return {
+    name: error instanceof Error ? error.name : typeof error,
+    cause: cause instanceof Error ? cause.name : undefined,
+    code: typeof code === "string" && code ? code : undefined,
+  };
+}
 
 export async function submitTicket(_prev: SubmitTicketState, formData: FormData): Promise<SubmitTicketState> {
   const values: TicketFormValues = {
@@ -41,7 +53,12 @@ export async function submitTicket(_prev: SubmitTicketState, formData: FormData)
     return { errors: fieldErrors, values };
   }
 
-  await createTicket(getDb(), parsed.data);
+  try {
+    await createTicket(getDb(), parsed.data);
+  } catch (error) {
+    console.error("Failed to save ticket", errorSummary(error));
+    return { errors: {}, values, formError: "Could not save the ticket to the database. Please try again." };
+  }
 
   revalidatePath("/tickets");
   redirect("/tickets");

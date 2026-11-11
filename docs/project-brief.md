@@ -38,7 +38,7 @@ Reasons for the choices are recorded in [docs/decisions/](decisions/README.md).
 
 Status: **Done** = implemented and tested, **Planned** = not built yet. Each criterion is mapped to its tests in [docs/verification.md](verification.md).
 
-### 1. Register a ticket (Done, except AC1.8)
+### 1. Register a ticket (Done)
 
 - AC1.1: Given a valid name, subject, description and category, when the handler submits the form, then the ticket is saved with status `open` and the time it was created, and the handler is redirected to the ticket list.
 - AC1.2: Priority is `low`, `normal` or `high` and defaults to `normal`.
@@ -47,7 +47,7 @@ Status: **Done** = implemented and tested, **Planned** = not built yet. Each cri
 - AC1.5: Input is validated on the server: name 1-120 characters, subject 3-120, description 1-5000, category 1-50, email at most 254. Limits apply to the trimmed value.
 - AC1.6: A status sent in the form is ignored; a new ticket always starts as `open`.
 - AC1.7: A category is required. It is free text, at most 50 characters, and is saved trimmed. Tickets created before categories existed have the category `General`.
-- AC1.8: Given valid input, when the ticket cannot be saved to the database, then the handler stays on `/tickets/new`, nothing is saved, "Could not save the ticket to the database. Please try again." is shown and the entered values are kept. (Planned)
+- AC1.8: Given valid input, when the ticket cannot be saved to the database, then the handler stays on `/tickets/new`, nothing is saved, "Could not save the ticket to the database. Please try again." is shown and the entered values are kept. (Done)
 
 Detailed specification: [docs/specs/register-ticket.md](specs/register-ticket.md). AC1.8: [docs/specs/save-failure-message.md](specs/save-failure-message.md)
 

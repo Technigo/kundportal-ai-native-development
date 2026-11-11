@@ -24,6 +24,7 @@ How we check that the acceptance criteria in [project-brief.md](project-brief.md
 | AC1.5 | `newTicketSchema` trimming and limits: subject 3 and 120, name 120, description 5000, category 50, email 254 accepted, one more rejected with exact messages; `TicketForm` `maxlength` on every text field |
 | AC1.6 | `newTicketSchema` strips unknown fields; `submitTicket` ignores a status |
 | AC1.7 | `newTicketSchema` requires and trims the category with exact messages; `submitTicket` saves the trimmed category; `createTicket` gives a ticket without a category `General`; `TicketForm` category field; e2e missing category; manual migration check (below) |
+| AC1.8 | `submitTicket` returns a form error with the values and logs only `name`, `cause` and `code` for an unmigrated database, a read-only error, a failing `getDb()` and a thrown value that is not an `Error`, and saves the ticket on the next attempt; `TicketForm` shows the form error with `role="alert"` before the button and hides it while an attempt is pending; mutation M4; manual check with VoiceOver ([report](test-reports/ac1-8-manual-check.md)). No e2e test ([decision 07](decisions/07-save-failure-handling.md)) |
 | AC2.1 | `TicketList` renders a row per ticket; e2e list shows requester |
 | AC2.2 | `listTickets` newest first; e2e newest first |
 | AC2.3 | `TicketList` empty state |
@@ -77,8 +78,9 @@ Green tests only show that code and tests agree. To show that the tests fail for
 | Saving is disconnected (AC1.1) | "saves a valid ticket…"; e2e "submitting a valid ticket…" | Caught | Caught |
 | Category read from a misspelled field (AC1.1, AC1.7) | "returns a category error…"; e2e "submitting a valid ticket…" | Caught | Caught |
 | Category not saved, the database default `General` hides it (AC1.7) | "saves a valid ticket…" (expects `Billing`) | Caught | Not run: the list does not show the category |
+| redirect inside the try (AC1.8) | "saves the ticket and redirects when the same values are sent again after a failure" | Caught | Not run: AC1.8 has no e2e test |
 
-Run on 2026-11-07. The file was identical before and after (`shasum`).
+Vitest run on 2026-11-11, with `git diff` showing `actions.ts` unchanged afterwards. The E2E column is from 2026-11-07, before AC1.8; `-- --e2e` was not run again.
 
 **What the check found.** The first version removed the category line in mutation 2. TypeScript then stopped `npm run build`, so no e2e test ran, and the script wrongly reported "missed". The script now reports ERROR when no tests ran, and mutation 2 uses a misspelled field name that still builds. Running the old mutation again gave "ERROR, the tests did not run" instead of "missed".
 
@@ -111,9 +113,15 @@ Done by hand on 2026-11-11 with `npx playwright test e2e/notes.spec.ts`. Each mu
 | The persistence test cleans up its temporary database on Windows (AC7.1) | macOS and Linux can delete a file that is still open, so the EBUSY error only shows on Windows, and CI runs on `ubuntu-latest` only | Skipped | Not run on Windows. Listed as a known limitation in [limitations.md](limitations.md) and under "Limitations of the verification" (below) |
 | The gitignore test fails when database files are not ignored (AC7.2) | The test passed on its first run because the rule already existed, so it was never seen failing | Done 2026-11-11 (Ariadna Villar, with an AI agent) | `/data/*.db` removed from `.gitignore` by hand: the `data/dev.db` and `data/e2e.db` cases failed (`git check-ignore` exited with an error), the `-wal` case still passed because `/data/*.db-*` covers it. File restored and identical (`shasum`) |
 | Error messages for registering a ticket are understandable | Judging clarity needs a person | Done 2026-11-07 by Alexandra Petersson with `npm run dev` | Invalid email (`Alex@hej`) and an empty category, with the other fields valid and priority `low`: both errors shown next to their fields, the other fields accepted. After correcting the email (`alec@hej.se`) and the category the ticket was saved. The messages were judged clear. Not judged by hand: an empty form, a name with only spaces and a too-short subject (covered by automated tests) |
+| A valid ticket cannot be saved because the database is read-only (AC1.8) | The e2e tests share one database, and the server must be restarted around the change ([decision 07](decisions/07-save-failure-handling.md)) | Done 2026-11-11 by Alexandra Petersson in Firefox on macOS with `npm run dev`, `chmod 444` and `chmod 644` on `data/dev.db` | The message was shown in red directly above **Register ticket**. The page stayed on `/tickets/new`, all values were kept, no field was marked invalid and focus did not move to the message. VoiceOver announced the message, hid it while the next attempt was pending and announced it again when that attempt also failed. The server logged `Failed to save ticket { name: 'Error', cause: 'LibsqlError', code: 'SQLITE_READONLY' }` without the entered values. After `chmod 644` and a restart the ticket was saved and the list was shown. On 2026-11-11 Jessica Swahn did the same steps on Windows with `attrib +R` and `attrib -R`, with the same result (without a screen reader). Screenshots: [browser](images/ac1-8-save-failure-browser.png), [terminal](images/ac1-8-save-failure-terminal.png), [browser on Windows](images/ac1-8-save-failure-browser-windows.png), [terminal on Windows](images/ac1-8-save-failure-terminal-windows.png). Full report: [ac1-8-manual-check.md](test-reports/ac1-8-manual-check.md) |
 
 ## Latest run results
 
+Run on 2026-11-11 on branch `Alexandra/save-failure-message`.
+
+| Command | Result |
+|---|---|
+| `npm test` | 10 files, 85 tests passed |
 Run on 2026-11-11 on branch `ariadna/db-persistance`, with the review fixes for PR #12 (not yet committed).
 
 | Command | Result |
@@ -122,7 +130,7 @@ Run on 2026-11-11 on branch `ariadna/db-persistance`, with the review fixes for 
 | `npm run lint` | No errors |
 | `npm run typecheck` | No errors |
 | `npm run test:e2e` | 17 tests passed |
-| `npm run test:mutation -- --e2e` | 5 of 5 caught (3 Vitest, 2 e2e) |
+| `npm run test:mutation` | 4 of 4 caught (Vitest only, `-- --e2e` not run) |
 
 Run on 2026-11-11 on branch `marie/add-internal-notes-feature` (internal notes).
 
@@ -147,12 +155,17 @@ Automated tests cannot see layout or real browser behaviour. These checks are do
 | `/tickets/01`, `/tickets/1e0`, `/tickets/0x1` | AC4.4 | Redirect to the list with the message | Failed on 2026-11-08 (Alexandra), fixed on 2026-11-09, passed on re-check 2026-11-10 (Alexandra) |
 | `?notice=hej`, `?notice=`, `?notice=<b>x</b>`, `?notice=toString` | AC4.5 | No message, no tags rendered | Passed (Alexandra, 2026-11-08) |
 | Keyboard only: list, ticket, Back to tickets | AC4.6, AC3.2 | All reachable, focus visible | Passed (Alexandra, 2026-11-08) |
-| Screen reader | All | Pages are announced in a sensible order | Not done |
+| Screen reader | All | Pages are announced in a sensible order | Not done for whole pages. Only the AC1.8 save error message was checked with VoiceOver (see above) |
 
 ## Limitations of the verification
 
 - No tests for AC5.x because the feature is not built.
 - End-to-end tests cover Chrome only.
+- No accessibility audit beyond the keyboard navigation test and labelled form fields. The only screen reader test is the VoiceOver check of the save error message (AC1.8).
+- e2e tests share one seeded database, so they depend on the seed data order.
+- The AC1 tests added after the code (blank fields, limits, email, priority, `maxlength`, missing name) passed on their first run, because the behaviour already existed. They were not seen failing first; the mutation check covers `submitTicket` only.
+- The ticket list does not show the category, so e2e cannot show that it is saved. The action test covers it, and mutation 3 shows that the test catches it.
+- The mutation check tries four hand-picked mutations in `submitTicket`, not every possible fault.
 - The persistence test's cleanup has not been run on Windows. The test closes each database client before deleting its temporary folder, which should prevent the EBUSY error Windows gives for an open file, but this was only run on macOS, and CI runs on `ubuntu-latest`.
 - No accessibility audit beyond the keyboard navigation test and labelled form fields. No screen reader test.
 - e2e tests share one seeded database, so they depend on the seed data order.

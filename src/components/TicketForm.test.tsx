@@ -99,4 +99,52 @@ describe("TicketForm", () => {
     finish();
     expect(await screen.findByRole("button", { name: "Register ticket" })).toBeEnabled();
   });
+
+  const SAVE_ERROR = "Could not save the ticket to the database. Please try again.";
+  const failedSave: SubmitTicketState = {
+    errors: {},
+    values: { requesterName: "Ada", requesterEmail: "ada@example.com", subject: "Hello", description: "Body", category: "Billing", priority: "high" },
+    formError: SAVE_ERROR,
+  };
+
+  it("shows a form error before the button, keeps the values and marks no field as invalid", async () => {
+    render(<TicketForm action={vi.fn(async () => failedSave)} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Register ticket" }));
+
+    const alert = await screen.findByRole("alert");
+    const button = screen.getByRole("button", { name: "Register ticket" });
+    expect(alert).toHaveTextContent(SAVE_ERROR);
+    expect(alert.closest("form")).toContainElement(button);
+    expect(alert.compareDocumentPosition(button) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(alert).not.toHaveFocus();
+    expect(button).toBeEnabled();
+    expect(document.querySelector("[aria-invalid]")).toBeNull();
+    expect(screen.getByLabelText("Requester name")).toHaveValue("Ada");
+    expect(screen.getByLabelText("Requester email (optional)")).toHaveValue("ada@example.com");
+    expect(screen.getByLabelText("Subject")).toHaveValue("Hello");
+    expect(screen.getByLabelText("Description")).toHaveValue("Body");
+    expect(screen.getByLabelText("Category")).toHaveValue("Billing");
+    expect(screen.getByLabelText("Priority")).toHaveValue("high");
+  });
+
+  it("hides the form error while a new attempt is pending and shows it anew when that attempt also fails", async () => {
+    let finish!: () => void;
+    const action = vi
+      .fn<(s: SubmitTicketState, f: FormData) => Promise<SubmitTicketState>>()
+      .mockResolvedValueOnce(failedSave)
+      .mockImplementationOnce(() => new Promise((resolve) => (finish = () => resolve(failedSave))));
+    render(<TicketForm action={action} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Register ticket" }));
+    const firstAlert = await screen.findByRole("alert");
+    await userEvent.click(screen.getByRole("button", { name: "Register ticket" }));
+
+    expect(await screen.findByRole("button", { name: "Registering…" })).toBeDisabled();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    finish();
+    const secondAlert = await screen.findByRole("alert");
+    expect(secondAlert).toHaveTextContent(SAVE_ERROR);
+    expect(secondAlert).not.toBe(firstAlert);
+  });
 });

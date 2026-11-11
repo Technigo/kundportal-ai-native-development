@@ -1,6 +1,8 @@
 // @vitest-environment node
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { Db } from "@/db/client";
+import { LibsqlError } from "@libsql/client";
+import { DrizzleQueryError } from "drizzle-orm";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { createDb, getDb, type Db } from "@/db/client";
 import { ticketNoteComments, ticketNotes, tickets } from "@/db/schema";
 import { createTestDb } from "@/test-utils/testDb";
 import { addNote as saveNote, addNoteComment as saveComment, createTicket } from "@/tickets/ticketRepository";
@@ -18,8 +20,18 @@ vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
 vi.mock("next/navigation", () => ({ redirect: mocks.redirect }));
 vi.mock("@/db/client", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/db/client")>()),
-  getDb: () => mocks.db,
+  getDb: vi.fn(() => mocks.db),
 }));
+
+const SAVE_ERROR = "Could not save the ticket to the database. Please try again.";
+const validFields = {
+  requesterName: "Ada Lovelace",
+  requesterEmail: "ada@example.com",
+  subject: "Broken invoice",
+  description: "Totals are wrong",
+  category: "Billing",
+  priority: "high",
+};
 
 function formData(fields: Record<string, string>) {
   const data = new FormData();
@@ -35,6 +47,10 @@ beforeEach(async () => {
   mocks.db = db;
 });
 
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
 describe("submitTicket", () => {
   it("returns field errors and the submitted values when input is invalid, and saves nothing", async () => {
     const state = await submitTicket(undefined, formData({ requesterName: "Ada", subject: "", description: "Help", priority: "low" }));
@@ -48,6 +64,7 @@ describe("submitTicket", () => {
       category: "",
       priority: "low",
     });
+    expect(state?.formError).toBeUndefined();
     expect(await db.select().from(tickets)).toHaveLength(0);
     expect(mocks.redirect).not.toHaveBeenCalled();
   });
@@ -135,6 +152,83 @@ describe("submitTicket", () => {
 
     const [saved] = await db.select().from(tickets);
     expect(saved).toMatchObject({ status: "open" });
+  });
+});
+
+describe("submitTicket when the ticket cannot be saved", () => {
+  function readOnlyError() {
+    return new DrizzleQueryError(
+      "insert into tickets ...",
+      ["Ada Lovelace", "ada@example.com"],
+      new LibsqlError("attempt to write a readonly database", "SQLITE_READONLY"),
+    );
+  }
+
+  it("returns a form error with the values and logs a real database error without its message", async () => {
+    mocks.db = createDb(":memory:");
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const state = await submitTicket(undefined, formData(validFields));
+
+    expect(state).toEqual({ errors: {}, values: validFields, formError: SAVE_ERROR });
+    expect(log).toHaveBeenCalledTimes(1);
+    expect(log).toHaveBeenCalledWith("Failed to save ticket", { name: "Error", cause: "LibsqlError", code: "SQLITE_ERROR" });
+  });
+
+  it("does not redirect or save, and keeps the values and the error message out of the log, when the database is read-only", async () => {
+    vi.spyOn(db, "insert").mockImplementationOnce(() => {
+      throw readOnlyError();
+    });
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const state = await submitTicket(undefined, formData(validFields));
+
+    expect(state).toEqual({ errors: {}, values: validFields, formError: SAVE_ERROR });
+    expect(await db.select().from(tickets)).toHaveLength(0);
+    expect(mocks.redirect).not.toHaveBeenCalled();
+    expect(mocks.revalidatePath).not.toHaveBeenCalled();
+    expect(log).toHaveBeenCalledTimes(1);
+    expect(log).toHaveBeenCalledWith("Failed to save ticket", { name: "Error", cause: "LibsqlError", code: "SQLITE_READONLY" });
+    const logged = JSON.stringify(log.mock.calls);
+    for (const text of ["Ada Lovelace", "ada@example.com", "Broken invoice", "readonly database"]) expect(logged).not.toContain(text);
+  });
+
+  it("returns a form error when the database cannot be opened", async () => {
+    vi.mocked(getDb).mockImplementationOnce(() => {
+      throw new Error("Unable to open connection");
+    });
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const state = await submitTicket(undefined, formData(validFields));
+
+    expect(state?.formError).toBe(SAVE_ERROR);
+    expect(log).toHaveBeenCalledWith("Failed to save ticket", { name: "Error", cause: undefined, code: undefined });
+  });
+
+  it("returns a form error when something that is not an Error is thrown", async () => {
+    vi.spyOn(db, "insert").mockImplementationOnce(() => {
+      throw "boom";
+    });
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const state = await submitTicket(undefined, formData(validFields));
+
+    expect(state?.formError).toBe(SAVE_ERROR);
+    expect(log).toHaveBeenCalledWith("Failed to save ticket", { name: "string", cause: undefined, code: undefined });
+  });
+
+  it("saves the ticket and redirects when the same values are sent again after a failure", async () => {
+    vi.spyOn(db, "insert").mockImplementationOnce(() => {
+      throw readOnlyError();
+    });
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await submitTicket(undefined, formData(validFields));
+    await expect(submitTicket(undefined, formData(validFields))).rejects.toThrow("NEXT_REDIRECT:/tickets");
+
+    expect(await db.select().from(tickets)).toHaveLength(1);
+    expect(mocks.redirect).toHaveBeenCalledTimes(1);
+    expect(mocks.redirect).toHaveBeenCalledWith("/tickets");
   });
 });
 
