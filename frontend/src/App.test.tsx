@@ -119,3 +119,133 @@ it('returns focus to the ticket the user came from when the panel closes', async
 
   expect(openButton).toHaveFocus()
 })
+
+const EXISTING_TICKET = {
+  id: 5,
+  customer_id: 'K-5',
+  customer_name: 'Exempelkund',
+  title: 'Påhittat befintligt ärende',
+  description: 'Påhittad beskrivning.',
+  category: 'other',
+  priority: 'normal',
+  status: 'new',
+  created_at: '2026-10-31T22:08:34.123456Z',
+}
+
+const NEW_TICKET = {
+  ...EXISTING_TICKET,
+  id: 6,
+  customer_id: 'K-6',
+  title: 'Påhittat nytt ärende',
+}
+
+// Listan innehåller bara det befintliga ärendet tills ett POST har lyckats
+function stubTicketApi() {
+  const tickets = [EXISTING_TICKET]
+  const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+    const url = String(input)
+    let body: unknown = {}
+    if (init?.method === 'POST') {
+      tickets.unshift(NEW_TICKET)
+      body = NEW_TICKET
+    } else if (url.endsWith('/api/tickets/5')) {
+      body = EXISTING_TICKET
+    } else if (url.includes('/api/tickets')) {
+      body = [...tickets]
+    }
+    return Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve(body),
+    } as Response)
+  })
+  vi.stubGlobal('fetch', fetchMock)
+  return fetchMock
+}
+
+async function renderApp() {
+  vi.stubEnv('VITE_API_BASE_URL', 'http://localhost:8000')
+  const { default: App } = await import('./App')
+  render(<App />)
+  await screen.findByRole('button', { name: 'Påhittat befintligt ärende' })
+}
+
+it('opens the registration form from "Nytt ärende" and closes it with "Avbryt" (K1)', async () => {
+  stubTicketApi()
+  await renderApp()
+  expect(
+    screen.queryByRole('heading', { name: 'Registrera ärende' }),
+  ).not.toBeInTheDocument()
+
+  fireEvent.click(screen.getByRole('button', { name: 'Nytt ärende' }))
+
+  expect(
+    screen.getByRole('heading', { name: 'Registrera ärende' }),
+  ).toBeInTheDocument()
+  // Knappen göms medan formuläret är öppet
+  expect(
+    screen.queryByRole('button', { name: 'Nytt ärende' }),
+  ).not.toBeInTheDocument()
+
+  fireEvent.click(screen.getByRole('button', { name: 'Avbryt' }))
+
+  expect(
+    screen.queryByRole('heading', { name: 'Registrera ärende' }),
+  ).not.toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Nytt ärende' })).toBeInTheDocument()
+})
+
+it('replaces the ticket details with the form and the form with details', async () => {
+  stubTicketApi()
+  await renderApp()
+
+  fireEvent.click(
+    screen.getByRole('button', { name: 'Påhittat befintligt ärende' }),
+  )
+  expect(
+    await screen.findByRole('region', { name: 'Ärendedetaljer' }),
+  ).toBeInTheDocument()
+
+  fireEvent.click(screen.getByRole('button', { name: 'Nytt ärende' }))
+  expect(
+    screen.queryByRole('region', { name: 'Ärendedetaljer' }),
+  ).not.toBeInTheDocument()
+  expect(
+    screen.getByRole('heading', { name: 'Registrera ärende' }),
+  ).toBeInTheDocument()
+
+  fireEvent.click(
+    screen.getByRole('button', { name: 'Påhittat befintligt ärende' }),
+  )
+  expect(
+    screen.queryByRole('heading', { name: 'Registrera ärende' }),
+  ).not.toBeInTheDocument()
+  expect(
+    await screen.findByRole('region', { name: 'Ärendedetaljer' }),
+  ).toBeInTheDocument()
+})
+
+it('reloads the list after a ticket is saved and keeps the form open with the confirmation', async () => {
+  const fetchMock = stubTicketApi()
+  await renderApp()
+  fireEvent.click(screen.getByRole('button', { name: 'Nytt ärende' }))
+
+  const fill = (label: string, value: string) =>
+    fireEvent.change(screen.getByLabelText(label), { target: { value } })
+  fill('Kund-ID', 'K-6')
+  fill('Kundnamn', 'Exempelkund')
+  fill('Rubrik', 'Påhittat nytt ärende')
+  fill('Beskrivning', 'Påhittad beskrivning.')
+  fill('Kategori', 'other')
+  fill('Prioritet', 'normal')
+  fireEvent.click(screen.getByRole('button', { name: 'Spara ärende' }))
+
+  // Det nya ärendet kommer från backend-svaret på den omladdade listan
+  expect(
+    await screen.findByRole('button', { name: 'Påhittat nytt ärende' }),
+  ).toBeInTheDocument()
+  expect(screen.getByText('Ärendet har sparats som #6.')).toBeInTheDocument()
+  const postCalls = fetchMock.mock.calls.filter(
+    ([, init]) => init?.method === 'POST',
+  )
+  expect(postCalls).toHaveLength(1)
+})
