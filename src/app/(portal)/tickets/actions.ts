@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getDb } from "@/db/client";
+import type { ChangeStatusState } from "@/tickets/changeStatusState";
 import { parseTicketId } from "@/tickets/parseTicketId";
 import { changeTicketStatus, createTicket, getTicket } from "@/tickets/ticketRepository";
 import { newTicketSchema, ticketStatusSchema } from "@/tickets/ticketSchema";
@@ -37,8 +38,6 @@ export async function submitTicket(_prev: SubmitTicketState, formData: FormData)
   revalidatePath("/tickets");
   redirect("/tickets");
 }
-
-export type ChangeStatusState = { error: string } | undefined;
 
 export async function changeStatus(_prev: ChangeStatusState, formData: FormData): Promise<ChangeStatusState> {
   // A missing ticket wins over an invalid status (see Decisions in docs/specs/status-change.md).

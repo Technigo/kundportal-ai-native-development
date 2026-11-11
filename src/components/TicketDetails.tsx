@@ -1,6 +1,6 @@
 import Link from "next/link";
-import type { ChangeStatusState } from "@/app/(portal)/tickets/actions";
 import type { Ticket, TicketStatusChange } from "@/db/schema";
+import type { ChangeStatusState } from "@/tickets/changeStatusState";
 import { StatusForm } from "./StatusForm";
 import { statusLabels } from "@/tickets/statusLabels";
 import type { TicketPriority, TicketStatus } from "@/tickets/ticketSchema";

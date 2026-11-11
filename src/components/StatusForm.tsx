@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import type { ChangeStatusState } from "@/app/(portal)/tickets/actions";
+import type { ChangeStatusState } from "@/tickets/changeStatusState";
 import { statusLabels } from "@/tickets/statusLabels";
 import { ticketStatuses, type TicketStatus } from "@/tickets/ticketSchema";
 

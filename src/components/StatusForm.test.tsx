@@ -1,7 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import type { ChangeStatusState } from "@/app/(portal)/tickets/actions";
+import type { ChangeStatusState } from "@/tickets/changeStatusState";
 import { statusLabels } from "@/tickets/statusLabels";
 import { ticketStatuses } from "@/tickets/ticketSchema";
 import { StatusForm } from "./StatusForm";
