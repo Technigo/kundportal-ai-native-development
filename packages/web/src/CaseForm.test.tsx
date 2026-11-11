@@ -10,7 +10,7 @@ afterEach(() => {
 });
 
 describe('CaseForm', () => {
-  it('[UI-CONSISTENCY-001] gives every form field an accessible name', () => {
+  it('[ACCESSIBILITY-FORMS-001] gives every form field an accessible name', () => {
     render(<CaseForm onCreated={vi.fn()} />);
 
     for (const [label, role] of [
@@ -23,7 +23,7 @@ describe('CaseForm', () => {
     }
   });
 
-  it('[CASE-CREATE-009] and [UI-CONSISTENCY-002] explains which required fields must be corrected', async () => {
+  it('[CASE-CREATE-009] and [ACCESSIBILITY-FORMS-002] explains which required fields must be corrected', async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);
     const user = userEvent.setup();
