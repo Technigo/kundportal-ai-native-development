@@ -95,7 +95,13 @@ function NoteItem({ note, addComment, deleteNote, deleteComment }: { note: NoteW
       <time dateTime={note.createdAt.toISOString()} className="mt-2 block text-xs text-slate-600">
         {dateTimeFormat.format(note.createdAt)}
       </time>
-      <button type="button" aria-expanded={open} onClick={() => setOpen(!open)} className="mt-2 text-sm text-slate-700 underline">
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen(!open)}
+        className="mt-2 inline-flex cursor-pointer items-center gap-1 rounded-md border border-slate-300 bg-white px-3 py-1 text-sm font-medium text-slate-800 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+      >
+        <span aria-hidden="true">{open ? "▾" : "▸"}</span>
         Comments ({note.comments.length})
       </button>
       <DeleteControl
@@ -168,7 +174,12 @@ function DeleteControl({ action, field, id, label, warning }: { action: Action; 
 
   if (!confirming) {
     return (
-      <button type="button" aria-label={label} onClick={() => setConfirming(true)} className="mt-2 ml-3 text-sm text-red-700 underline">
+      <button
+        type="button"
+        aria-label={label}
+        onClick={() => setConfirming(true)}
+        className="mt-2 ml-2 inline-flex cursor-pointer items-center rounded-md border border-red-300 bg-white px-3 py-1 text-sm font-medium text-red-700 hover:bg-red-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
+      >
         Delete
       </button>
     );
@@ -177,10 +188,18 @@ function DeleteControl({ action, field, id, label, warning }: { action: Action; 
     <form action={formAction} className="mt-2 flex flex-wrap items-center gap-2 text-sm">
       <input type="hidden" name={field} value={id} />
       {warning && <p className="text-red-700">{warning}</p>}
-      <button type="submit" disabled={pending} className="rounded-md bg-red-700 px-3 py-1 text-white disabled:opacity-60">
+      <button
+        type="submit"
+        disabled={pending}
+        className="cursor-pointer rounded-md bg-red-700 px-3 py-1 font-medium text-white hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
+      >
         Confirm delete
       </button>
-      <button type="button" onClick={() => setConfirming(false)} className="underline">
+      <button
+        type="button"
+        onClick={() => setConfirming(false)}
+        className="cursor-pointer rounded-md border border-slate-300 bg-white px-3 py-1 font-medium text-slate-800 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+      >
         Cancel
       </button>
     </form>
