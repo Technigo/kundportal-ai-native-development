@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { ChevronUp } from 'lucide-react';
 import { isCreatedCase, type CreatedCase } from './caseTypes';
 import {
+  focusFirstInvalidField,
   readCaseFormValue,
   validateCaseFields,
   type CaseFieldErrors,
@@ -38,10 +39,18 @@ export function CaseDetail({ caseId, onCollapse, onUpdated, onDeleted }: CaseDet
   const [saving, setSaving] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<CaseFieldErrors>({});
+  const [focusInvalidField, setFocusInvalidField] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const editFormRef = useRef<HTMLFormElement>(null);
   const cancelDeleteButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!focusInvalidField) return;
+    focusFirstInvalidField(editFormRef.current);
+    setFocusInvalidField(false);
+  }, [focusInvalidField]);
 
   useEffect(() => {
     if (confirmDelete) {
@@ -111,7 +120,10 @@ export function CaseDetail({ caseId, onCollapse, onUpdated, onDeleted }: CaseDet
 
     const errors = validateCaseFields(payload);
     setFieldErrors(errors);
-    if (Object.keys(errors).length > 0) return;
+    if (Object.keys(errors).length > 0) {
+      setFocusInvalidField(true);
+      return;
+    }
 
     setSaving(true);
     try {
@@ -213,6 +225,7 @@ export function CaseDetail({ caseId, onCollapse, onUpdated, onDeleted }: CaseDet
             </button>
           </div>
           <form
+            ref={editFormRef}
             className="case-edit-form"
             aria-label={editing ? 'Redigera ärende' : undefined}
             onSubmit={handleEditSubmit}

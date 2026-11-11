@@ -20,9 +20,9 @@ Interaktiva kontroller kan identifieras och användas, och användaren får veta
 
 ## Implementation och teststatus
 
-- ACCESSIBILITY-FORMS-001 till 004 har kravmärkta tester i den här arbetsytan.
-- ACCESSIBILITY-FORMS-005 till 009 saknar ännu kravmärkta testtitlar här. De kraven är därför inte verifierade som klara.
-- Att beteendet finns i koden eller täcks av tester märkta med andra krav-ID:n räknas inte som verifierad kravtäckning för 005–009.
+- ACCESSIBILITY-FORMS-001 till 005 har kravmärkta tester i den här arbetsytan.
+- ACCESSIBILITY-FORMS-006 till 009 saknar ännu kravmärkta testtitlar här. De kraven är därför inte verifierade som klara.
+- Att beteendet finns i koden eller täcks av tester märkta med andra krav-ID:n räknas inte som verifierad kravtäckning för 006–009.
 
 ## Testmappning
 
@@ -32,7 +32,8 @@ Interaktiva kontroller kan identifieras och användas, och användaren får veta
 | ACCESSIBILITY-FORMS-002 | [CaseForm.test.tsx](../../packages/web/src/CaseForm.test.tsx), [CaseDetail.test.tsx](../../packages/web/src/CaseDetail.test.tsx) | **Kört**, felkoppling och stoppad uppdatering kontrolleras. |
 | ACCESSIBILITY-FORMS-003 | [CaseList.test.tsx](../../packages/web/src/CaseList.test.tsx) | **Kört**, status kontrolleras som text. |
 | ACCESSIBILITY-FORMS-004 | [CaseDetail.test.tsx](../../packages/web/src/CaseDetail.test.tsx) | **Kört**, API-valideringsfel visas som tillgänglig feedback. |
-| ACCESSIBILITY-FORMS-005–009 | Inga kravmärkta tester ännu. | **Återstår.** |
+| ACCESSIBILITY-FORMS-005 | [CaseForm.test.tsx](../../packages/web/src/CaseForm.test.tsx), [CaseDetail.test.tsx](../../packages/web/src/CaseDetail.test.tsx) | **Kört**, fokus flyttas till Rubrik efter ogiltig inskickning i skapa- och redigeringsformuläret. |
+| ACCESSIBILITY-FORMS-006–009 | Inga kravmärkta tester ännu. | **Återstår.** |
 
 ## Definition av färdig
 
@@ -46,7 +47,9 @@ Interaktiva kontroller kan identifieras och användas, och användaren får veta
 
 Kört 2026-11-11:
 
-- `npm test --workspace @kundportal/web -- src/CaseForm.test.tsx src/CaseDetail.test.tsx src/CaseStatusForm.test.tsx src/CaseNoteForm.test.tsx` — 4 testfiler passerade, 79 tester godkända.
-- `npm run check:requirements -- origin/main` — **underkänd**: ACCESSIBILITY-FORMS-005–009 saknar matchande testtitlar;
+- `npm test --workspace @kundportal/web -- src/CaseForm.test.tsx src/CaseDetail.test.tsx` — 2 testfiler passerade, 47 tester godkända.
+- `npm test` — API: 106 tester och webb: 100 tester passerade.
+- `npm run build` — API TypeScript-build och Vite-produktionsbygge passerade.
+- `npm run check:requirements -- origin/main` — **underkänd**: ACCESSIBILITY-FORMS-006–009 saknar matchande testtitlar; ACCESSIBILITY-FORMS-003 och 006–009 saknar nya testfall i ändringen.
 
 Manuell kontroll med tangentbord och hjälpmedel är inte dokumenterad.

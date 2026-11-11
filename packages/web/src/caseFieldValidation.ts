@@ -6,6 +6,10 @@ export function readCaseFormValue(formData: FormData, field: string): string {
   return typeof value === 'string' ? value : '';
 }
 
+export function focusFirstInvalidField(form: HTMLFormElement | null): void {
+  form?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+}
+
 interface CaseFieldValues {
   title: string;
   description: string;

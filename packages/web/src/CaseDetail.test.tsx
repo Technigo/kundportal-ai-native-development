@@ -145,6 +145,20 @@ describe('CaseDetail', () => {
     );
   });
 
+
+  it('[ACCESSIBILITY-FORMS-005] focuses the first invalid field when saving an invalid edit', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValueOnce(jsonResponse(caseItem)));
+    const user = userEvent.setup();
+    render(<CaseDetail caseId={7} />);
+
+    await user.click(await screen.findByRole('button', { name: 'Redigera ärende' }));
+    const title = screen.getByRole('textbox', { name: 'Rubrik' });
+    await user.clear(title);
+    await user.click(screen.getByRole('button', { name: 'Spara ändringar' }));
+
+    expect(await screen.findByText('Ange en rubrik.')).toBeInTheDocument();
+    expect(document.activeElement).toBe(title);
+  });
   it('[CASE-EDIT-010] displays the internal note in the read-only detail', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
       jsonResponse({ ...caseItem, note: 'Privat anteckning.' })
