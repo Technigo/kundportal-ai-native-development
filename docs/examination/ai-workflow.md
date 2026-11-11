@@ -30,13 +30,24 @@ Fler produkt- och processbeslut finns i [beslutsloggen](./decision-log.md).
 | Testfel användes för felsökning | Första körningar blottlade saknade API-/UI-delar och därefter ett problem med upprepade UI-renderingar i testmiljön. Koden och testuppsättningen justerades tills testerna passerade. | Historik för [API-tester](../../packages/api/src/cases.test.ts) och [UI-tester](../../packages/web/src/CaseForm.test.tsx); slutresultatet i [verifieringsplanen](./verification-plan.md). Den inledande felutskriften är inte sparad i repot. |
 | Beroenden granskades | `npm audit` rapporterade först tre sårbarheter i testverktyg. Vitest uppgraderades till 5.0.5; efter ändringen visade `npm audit` 0 sårbarheter. | Version och lockfil i commit `e0ec5616`; faktisk slutkontroll noterad i sessionen. Kör om `npm audit` för aktuellt resultat. |
 
+## Senare krav- och produktarbete
+
+Användarens promptbeslut, tillgängliga sessioner och begränsningarna i historiken finns i [chattexcerpt och sessionsindex](./conversation-log.md). Följande artefakter visar hur några av besluten omsattes; de är teamresultat och inte automatiskt personlig evidens:
+
+| Arbetsmoment | Beslut och AI-anpassning | Resultat/evidens |
+|---|---|---|
+| Kravkontroll i PR | Användaren ville se både att befintliga funktionella krav har test och att nya krav får nya tester. CI fick användarvänliga stegnamn. | Kravkontroll, tester och PR-workflow i [PR #25](https://github.com/misael86/kundportal-ai-native-development/pull/25); rapporterade resultat i [verifieringsplanen](./verification-plan.md). |
+| Funktionella/atomära krav | Användaren avvisade estetiska krav/tester och bad separera blandade beteenden, exempelvis lyckad och misslyckad radering. | Feature-specifikationer/tester uppdaterade PR #25; [beslutslogg](./decision-log.md). |
+| Komponentomfång | Användaren bad först om delade UI-komponenter, och ändrade sedan riktning eftersom en kollega skulle hantera det arbetet. De införda komponenterna togs bort; knappens dimensioner justerades separat. | Ändringshistorik och beslut i [PR #25](https://github.com/misael86/kundportal-ai-native-development/pull/25). |
+| UI-iteration | Efter första knappjusteringen påpekade användaren att stilen fortfarande skilde sig. Ändringen följdes upp; senare bad användaren att ta bort sidlinjer men behålla samma avstånd mellan beskrivning och kort. | UI-tester och webbuild rapporterades passerade i den senaste verifieringen; se [verifieringsplanen](./verification-plan.md). |
+
 ## Reflektionslogg
 
 Fyll i en rad efter ett faktiskt AI-stött moment. Länka till prompt/instruktion, ändring och testresultat; ange studentens eget bidrag.
 
 | Student | Datum/feature | AI fick i uppdrag | Eget beslut/granskning | Körda kontroller/resultat | Nytta/begränsning | Länk |
 |---|---|---|---|---|---|---|
-| Fyll i | Fyll i | Fyll i | Fyll i | Fyll i | Fyll i | Fyll i |
+| Användaren (egen uppgift; namn ej angivet) | PR #24 och #25 | Bygga Playwright-/CI-arbete och utveckla ärendeflöden med funktionella krav och tester. | Uppger att hen själv gjorde arbetet, valde funktionella krav med test per krav, manuellt testade och itererade, kontrollerade ändringar på flera ställen och avvisade visuella krav samt krav som inte följde avsedd funktion. | Uppger att implementationerna testades manuellt. Exakta manuella scenarier och resultat är inte sparade. Automatiska resultat i [verifieringsplanen](./verification-plan.md) är team-/sessionsresultat och ska inte tillskrivas hen personligen utan egen komplettering. | Uppger att AI ibland gjorde lokala ändringar utan att uppdatera liknande ytor och missförstod kravens omfattning; egen helhetskontroll fångade detta. | [PR #24](https://github.com/misael86/kundportal-ai-native-development/pull/24), [PR #25](https://github.com/misael86/kundportal-ai-native-development/pull/25), [egen promptreflektion](./conversation-log.md#studentens-egen-reflektion) |
 
 Fullständiga AI-konversationer behövs inte; välj relevanta utdrag och spårbara resultat.
 

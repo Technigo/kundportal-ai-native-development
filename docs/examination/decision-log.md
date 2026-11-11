@@ -61,6 +61,25 @@ Commitbegärandena visar godkännande för commit. För status- och anteckningss
 - Godkände CASE-CREATE och CASE-LIST; varje godkänt steg committades separat.
 - Godkände examinationsunderlaget för commit efter att sessionsevidensen sparats.
 
+## Beslut och förtydliganden från senare arbetssessioner
+
+Källor är användarens meddelanden i tillgängliga Copilot-sessioner. Tematiska sammanfattningar och utdrag finns i [chattsessionsindexet](./conversation-log.md); det är inte en export av alla AI-svar eller verktygsutskrifter.
+
+| # | Beslut | Typ | Följd/evidens |
+|---|---|---|---|
+| 30 | Ärendelistan är startsida; användaren ska kunna lista, skapa och redigera ärenden. Tomlistan ska förklara att första ärendet kan skapas. | Produktbeteende | List- och skapa-flöden i [featuretickets](../features/README.md); redesignhistorik i [chattsessionsindexet](./conversation-log.md). |
+| 31 | Ärendekort kan expanderas för skrivskyddad detaljvisning; redigering sker separat. Visa beskrivning i sammanfattningen, detaljer i tvåkolumnstabell och tillåt bara redigering av redigerbara värden. | Produktbeteende | CASE-LIST, CASE-DETAIL och CASE-EDIT i [featureindexet](../features/README.md). |
+| 32 | Skapande och listning ska ha enhetlig informationsstruktur; ärendekorten vänsterjusteras och tangentbordsfokus på logotypen ska vara användbart. | Funktionellt/tillgänglighetsbeteende | Skapa-/listvyer och UI-CONSISTENCY-specen; se [PR #25](https://github.com/misael86/kundportal-ai-native-development/pull/25). |
+| 33 | Ta bort ärende kräver bekräftelse med val att avbryta eller radera; när frågan visas ska avbryt ha fokus. Ta bort-knappen placeras till höger om spara. | Produktbeteende | CASE-DELETE i [featureindexet](../features/README.md); beslutets bakgrund finns i [chattsessionsindexet](./conversation-log.md). |
+| 34 | Begärde gemensamma komponenter för upprepade kontroller, men återkallade senare komponentändringen eftersom en kollega skulle hantera komponentiseringen. Komponenterna som tillkommit i det arbetet skulle tas bort. Knappens padding och textstorlek skulle ändå justeras. | Omfattningsändring | Den tidigare gemensamma komponentlösningen togs bort; slutlig knappjustering och relaterade ändringar dokumenteras i [PR #25](https://github.com/misael86/kundportal-ai-native-development/pull/25). |
+| 35 | Krav ska beskriva funktioner, inte ren estetik. Ta bort estetiska krav och tester som bara verifierar utseende; prioritera vad användaren kan göra och begriplig felåterkoppling. | Uttrycklig kvalitetsprincip | Funktionella krav och kravtäckning i [featureindexet](../features/README.md); implementation och tester i [PR #25](https://github.com/misael86/kundportal-ai-native-development/pull/25). |
+| 36 | Varje PR ska kontrollera kravtäckning, inklusive att nya krav har nya tester; använd begripliga namn på CI-stegen. | Uttrycklig CI-begäran | PR-workflow, kravkontroll och checker-tester i [PR #25](https://github.com/misael86/kundportal-ai-native-development/pull/25). |
+| 37 | Specifikationerna ska inte ha kolumnen ”Minst ett automatiserat test”; testkopplingen ska finnas i testnamn och automatiserad kontroll i stället. | Uttrycklig dokumentationsändring | Feature-specifikationerna, CI-checker och [PR #25](https://github.com/misael86/kundportal-ai-native-development/pull/25). |
+| 38 | Krav som omfattar flera beteenden ska delas upp; exempelvis ska lyckad och misslyckad radering vara separata krav och båda ha tester. Tester bör ha ett sammanhållet fokus. | Uttrycklig test-/kravprincip | Uppdelade krav och tester i [PR #25](https://github.com/misael86/kundportal-ai-native-development/pull/25); tidigare principer finns i beslut 23–26. |
+| 39 | Ta bort grå skiljelinjer efter sidtitlarna men behåll avstånd till första kortet och gör list-/skapa-vyerna likadana. | Visuell preferens, inte ett funktionellt krav | Genomförd som UI-ändring; inte ett funktionellt acceptanskriterium. Se [PR #25](https://github.com/misael86/kundportal-ai-native-development/pull/25). |
+| 40 | Be om separata, begripliga commits och en PR för arbetsgrenen. | Uttrycklig arbetsformsbegäran | Tre fokuserade commits på [PR #25](https://github.com/misael86/kundportal-ai-native-development/pull/25): `3e778054`, `f5d51954`, `80339c94`. |
+| 41 | För Playwright-arbetet bad användaren om 80 % av CPU-kärnorna för parallella tester och körning av tester i PR-CI; senare bad användaren om små commits och draft-PR. | Uttrycklig teknisk/processbegäran | [PR #24](https://github.com/misael86/kundportal-ai-native-development/pull/24); användarens meddelanden och källsessions-ID i [chattsessionsindexet](./conversation-log.md). |
+
 ## Viktiga öppna frågor
 
 - Vilka två oberoende individuella extrauppgifter ska ni välja?

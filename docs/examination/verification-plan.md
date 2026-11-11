@@ -1,41 +1,38 @@
 # Verifieringsplan
 
-Kravspecifikationerna definierar acceptanskriterier och planerade test-ID:n. Varje krav-ID ska ha minst ett automatiserat test; ett test kan täcka flera krav. Endast rader märkta **Kört** har verifierats. Manuella kontroller och planerade tester räknas inte som automatiserade resultat.
+Kravspecifikationerna beskriver funktionella acceptanskriterier. Varje krav-ID ska ha minst ett automatiserat test; nya krav ska också få nya tester. CI kör både kravkontroll och projektets testsviter vid PR. Se [kravindexet](../features/README.md) och [PR #25](https://github.com/misael86/kundportal-ai-native-development/pull/25).
 
-## Körkommandon
+## Senast rapporterade resultat
 
-| Kommando | Senast rapporterat resultat |
-|---|---|
-| `npm test` | **Kört:** API 10/10 och UI 9/9 tester passerade efter CASE-LIST. |
-| `npm run build` | **Kört:** API TypeScript-build och Vite-produktionsbygge passerade efter CASE-LIST. |
+Resultaten nedan kommer från projektets verifieringssessioner och PR-arbetet. De är teamresultat, inte bevis på vem som personligen körde eller granskade varje kommando.
 
-Kör om kommandona när kod ändras och uppdatera resultaten innan slutversionen. Dessa resultat visar inte i sig att alla MVP-krav är klara.
-
-## Implementerade krav
-
-| Krav-ID | Automatiserad kontroll | Nivå och resultat |
+| Kommando | Resultat | Vad det verifierar |
 |---|---|---|
-| CASE-CREATE-001 | `[cases.test.ts](../../packages/api/src/cases.test.ts)`, `[CaseForm.test.tsx](../../packages/web/src/CaseForm.test.tsx)` | API/UI; **Kört**, testsviterna passerade. |
-| CASE-CREATE-002 | Samma testfiler som ovan | API/UI; **Kört**, testsviterna passerade. |
-| CASE-CREATE-003 | Samma testfiler som ovan; tillåtna värden, rullista och API-avvisning | API/UI; **Kört**, testsviterna passerade. |
-| CASE-CREATE-004 | Samma testfiler som ovan; tillåtna värden, rullista och API-avvisning | API/UI; **Kört**, testsviterna passerade. |
-| CASE-CREATE-005 | `[cases.test.ts](../../packages/api/src/cases.test.ts)` | API; **Kört**, standardstatus och tidsstämpel kontrolleras. |
-| CASE-CREATE-006 | `[cases.test.ts](../../packages/api/src/cases.test.ts)` | API/SQLite; **Kört**, stängd databas öppnas igen och sparad rad läses. |
-| CASE-CREATE-007 | `[cases.test.ts](../../packages/api/src/cases.test.ts)`, `[CaseForm.test.tsx](../../packages/web/src/CaseForm.test.tsx)` | API/UI; **Kört**, ogiltigt ärende avvisas, lagring förblir tom och fel visas. |
-| CASE-CREATE-008 | Samma testfiler som ovan | API/UI; **Kört**, ärende skapas utan anteckning. |
-| CASE-LIST-001 | `[caseList.test.ts](../../packages/api/src/caseList.test.ts)`, `[CaseList.test.tsx](../../packages/web/src/CaseList.test.tsx)` | API/UI; **Kört**, sammanfattning och nyast-först-sortering kontrolleras. |
-| CASE-LIST-002 | Samma testfiler som ovan | API/UI; **Kört**, API ger tom array och UI visar tomläge. |
-| CASE-LIST-003 | `[CaseList.test.tsx](../../packages/web/src/CaseList.test.tsx)` | UI; **Kört**, hämtningsfel visas separat från tomlista. |
+| `npm test` | **Godkänt:** API 106/106 och webb 95/95. | Automatiserade tester i API och webb. Omfattar både lyckade och relevanta felutfall. |
+| `npm run test:requirements` | **Godkänt:** 6/6 kravchecker-tester. | Testar checkerlogik, inklusive kravtäckning, nytillkomna krav och PR-konfiguration. |
+| `npm run check:requirements -- HEAD` | **Godkänt:** 84 krav har testtitlar. | Kontrollerar att dokumenterade krav-ID:n finns i automatiserade testtitlar. PR-workflow kör kontrollen mot PR:ens basgren för att också upptäcka nya krav utan nya tester. |
+| `npm run build` | **Godkänt:** API TypeScript-build och Vite-produktionsbygge. | Projektets build. |
 
-## Återstående verifiering
+Resultaten kördes om mot nuvarande kod i arbetet med detta underlag. De är teamresultat, inte bevis på vem som personligen körde eller granskade varje kommando. Kontrollera PR #25 för aktuell status på GitHub innan rapportering.
 
-- CASE-DETAIL, CASE-STATUS, CASE-NOTE och UI-CONSISTENCY är ännu inte implementerade; deras test-ID:n är **planerade**, inte körda.
-- Playwright E2E-flöden har inte lagts till.
-- Kontrast, fokusläge och smala/breda vyer behöver manuell granskning och dokumenterat resultat.
-- Ingen negativ kontroll/mutation av persistence-testet är ännu dokumenterad för VG.
+## Omfattning och spårning
 
-## Begränsningar
+De funktionella ticketsen i [featureindexet](../features/README.md) omfattar skapa, lista, visa detalj, redigera, ta bort, ändra status, hantera intern anteckning och funktionell feedback/tillgänglighet. CI kontrollerar krav-ID:n mot tester i stället för att duplicera en manuell testkolumn i varje spec.
 
-- API-/UI-testerna verifierar avgränsade lager; de ersätter inte Playwright-flöde eller manuell UI-granskning.
-- CASE-CREATE-006 verifierar återläsning efter att testanslutningen stängts och SQLite öppnats igen, men inte separat start/stopp av hela applikationen.
-- Inga verifieringsresultat säger något om produktionsdrift, autentisering eller externa integrationer; dessa ingår inte i MVP:n.
+Exempel på spårbar testning:
+
+- CASE-CREATE-003/004 verifierar tillåtna kategori-/prioritetsvärden i UI och avvisning av ogiltiga värden i API.
+- CASE-CREATE-006 verifierar att sparad data kan läsas efter ny databasanslutning.
+- CASE-CREATE-007 verifierar avvisning av ogiltiga indata, att inget ärende sparas och att fel visas.
+- CASE-LIST-002/003 verifierar tomlista respektive hämtningsfel; fel ska inte framstå som tomlista.
+- CASE-DELETE har separata krav/tester för lyckad och misslyckad radering.
+
+Kravindexet och checkerresultatet är rätt källa för den fullständiga, aktuella krav-till-test-mappningen. För kursredovisningen ska länkas till relevanta testfiler/kravspecar för det egna bidraget i stället för att anta att teamets samlade testsvit bevisar individuellt arbete.
+
+## Begränsningar och återstående evidens
+
+- API-/UI-tester kontrollerar avgränsade lager; de bevisar inte alla beteenden i en verklig användares kompletta resa.
+- Tester visar inte att användaren själv har förstått eller manuellt granskat implementationen.
+- Ingen särskild riskfokuserad negativ kontroll/mutation är dokumenterad för VG. Planera ett tydligt feltest, visa att en avsiktligt felaktig variant fallerar av rätt anledning, återställ och kör grönt.
+- Inga resultat här bedömer produktionsdrift, autentisering eller externa integrationer; detta ligger utanför uppgiftens scope.
+- Skilj automatiserade resultat från manuella UI-/tillgänglighetskontroller och från kontroller som bara är planerade.

@@ -20,7 +20,29 @@ npm run dev
 
 Öppna frontend på <http://127.0.0.1:5173>. API:ets anslutningskontroll finns på <http://127.0.0.1:3001/api/health>. Lokal SQLite-fil skapas i `data/kundportal.sqlite`.
 
-Kör automatiserade tester med `npm test` och skapa produktionsbyggen med `npm run build`.
+## Tester och verifiering
+
+Kör alla automatiserade tester:
+
+```sh
+npm test
+```
+
+Kör testerna separat för API eller webb:
+
+```sh
+npm run test --workspace @kundportal/api
+npm run test --workspace @kundportal/web
+```
+
+Kontrollera kravens testmappning:
+
+```sh
+npm run test:requirements
+npm run check:requirements -- <bas-commit>
+```
+
+`check:requirements` jämför krav och nya tester med bas-commiten, till exempel PR:ens målbranch. Skapa produktionsbyggen med `npm run build`.
 
 ## MVP-specifikationer
 
