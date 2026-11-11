@@ -1,7 +1,7 @@
 # Plan: Internal notes (AC6.1–AC6.10)
 
 Owner: Marie Flem Honningdalnes · Reviewer: Alexandra Petersson
-Decision: [07-internal-notes.md](../decisions/07-internal-notes.md)
+Decision: [08-internal-notes.md](../decisions/08-internal-notes.md)
 Based on section 6 of [project-brief.md](../project-brief.md).
 
 ## Current state
@@ -108,7 +108,7 @@ Each criterion first goes through `test-cases`, and the owners pick the cases. E
    - Set section 6 in `project-brief.md` to Done.
    - Update the mapping and run results in `verification.md`.
    - In `limitations.md`, note that there is no author and that deleted notes cannot be restored.
-   - Write decision `07`, and update `docs/status/week-N.md`.
+   - Write decision `08`, and update `docs/status/week-N.md`.
 
 ## Not in this plan
 

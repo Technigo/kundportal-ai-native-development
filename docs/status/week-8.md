@@ -16,7 +16,7 @@ By the final deadline:
 ### Done
 
 - Internal notes and comments (AC6.1–AC6.10): schema and migration, repository, server actions, components and end-to-end tests, on branch `marie/add-internal-notes-feature`. See [verification.md](../verification.md) for the tests and the latest run.
-- Decision [07](../decisions/07-internal-notes.md) written.
+- Decision [08](../decisions/08-internal-notes.md) written.
 - Manual mutation check of the notes: two of four mutations caught, and the two missed ones are explained in [verification.md](../verification.md).
 
 ### Open / uncertain

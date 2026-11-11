@@ -30,7 +30,7 @@
 | Next.js 16 differs from AI training data | Agents suggest outdated APIs | CLAUDE.md requires reading `node_modules/next/dist/docs/` first |
 | AI-generated code merged without review | Bugs, security issues | Owners review every diff and make every commit; see [ai/README.md](ai/README.md) |
 | e2e tests depend on seed data | Flaky or wrong failures after seed changes | Reset `data/e2e.db` before each run (already done by `npm run test:e2e`) |
-| Hard delete of notes | A misclick on "Confirm delete" loses the note and its comments for good | Two-step button with a warning; see [decision 07](decisions/07-internal-notes.md) |
+| Hard delete of notes | A misclick on "Confirm delete" loses the note and its comments for good | Two-step button with a warning; see [decision 08](decisions/08-internal-notes.md) |
 
 ## Proposed further development
 
