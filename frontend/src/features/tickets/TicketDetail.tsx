@@ -2,17 +2,19 @@ import { useEffect, useRef } from 'react'
 import { ApiError } from '../../api/client'
 import { CATEGORY_LABELS, PRIORITY_LABELS } from '../../domain/ticket'
 import { formatDetailDate } from '../../domain/formatDate'
-import { StatusBadge } from './StatusBadge'
+import { TicketStatusPicker } from './TicketStatusPicker'
 import { useTicket } from './useTicket'
+import type { StatusUpdate } from './useUpdateStatus'
 import styles from './TicketDetail.module.css'
 
 type TicketDetailProps = {
   ticketId: number
   onClose: () => void
+  statusUpdate: StatusUpdate
 }
 
-export function TicketDetail({ ticketId, onClose }: TicketDetailProps) {
-  const { data: ticket, error, isLoading, reload } = useTicket(ticketId)
+export function TicketDetail({ ticketId, onClose, statusUpdate }: TicketDetailProps) {
+  const { data: ticket, error, isLoading, reload } = useTicket(ticketId, statusUpdate.updatedTicket)
   const isNotFound = error instanceof ApiError && error.code === 'not_found'
   const panelRef = useRef<HTMLElement>(null)
 
@@ -82,10 +84,14 @@ export function TicketDetail({ ticketId, onClose }: TicketDetailProps) {
                 </time>
               </dd>
             </div>
-            <div>
+            <div className={styles.status}>
               <dt>Status</dt>
               <dd>
-                <StatusBadge status={ticket.status} />
+                <TicketStatusPicker
+                  key={ticket.id}
+                  ticket={ticket}
+                  update={statusUpdate}
+                />
               </dd>
             </div>
           </dl>

@@ -90,7 +90,7 @@ Efter varje relevant verifieringstillfälle registreras verkliga resultat enligt
 | Datum och utförare | När kontrollen kördes och vem som körde den. |
 | Version | Commit-SHA för den testade koden samt eventuella lokala ändringar. |
 | Miljö | Operativsystem, runtime, databas och relevanta versioner. |
-| Automatiserade tester | Exakt kommando, test-ID:n, faktiskt antal godkända/misslyckade/överhoppade tester samt länk till testutdata eller CI-körning. |
+| Automatiserade tester | Exakt kommando, test-ID:n, faktiskt antal godkända/misslyckade/överhoppade tester samt länk till testutdata. |
 | Manuella kontroller | M-ID:n, genomförda steg, observerat resultat och godkänt/underkänt. Redovisas separat från automatiserade tester. |
 | Avvikelser | Berörda krav, länk till felrapport/uppgift och resultat av eventuell omtestning. |
 
@@ -106,7 +106,97 @@ Den 6 november 2026 gav den lokala körningen på [`afab9e7`](https://github.com
 
 ### Issue #12 – Detaljpanel med kunduppgifter och bevarad listnavigation
 
-Den 9 november 2026 gav den lokala körningen på branchen `feature/ticket-detail` ([`8c13d6a`](https://github.com/danielleven/kundportal-ai-native-development-grupp-1/commit/8c13d6ab749d3bfff4f5368e6d9cb7cd6c23b6f1)) 27 godkända backendtester mot den separata MySQL-testdatabasen, bland annat T07 och T09, och 17 godkända frontendtester. Typkontroll och bygge gick igenom. Daniel kontrollerade tangentbordsnavigering och detaljdelen av M01 manuellt i webbläsaren. CI kördes inte, eftersom GitHub-kontot var spärrat. Se [arbetsloggen](arbetslogg.md#verifiering-issue-12) för kommandon, begränsningar och de bekräftade punkterna.
+Den 9 november 2026 gav den lokala körningen på branchen `feature/ticket-detail` ([`8c13d6a`](https://github.com/danielleven/kundportal-ai-native-development-grupp-1/commit/8c13d6ab749d3bfff4f5368e6d9cb7cd6c23b6f1)) 27 godkända backendtester mot den separata MySQL-testdatabasen, bland annat T07 och T09, och 17 godkända frontendtester. Typkontroll och bygge gick igenom. Daniel kontrollerade tangentbordsnavigering och detaljdelen av M01 manuellt i webbläsaren. Se [arbetsloggen](arbetslogg.md#verifiering-issue-12) för kommandon, begränsningar och de bekräftade punkterna.
+
+### Issue #13 – Statusändring i detaljpanelen (K3, K6, K7, K8)
+
+Kontrollerat lokalt den 11 november 2026 av Codex på Windows med Node.js 24.16.0, Python 3.12.14 och den separata MySQL-testdatabasen. Branch `feature/status-change` baserad på `8b18114`.
+
+- **Frontend:** `npm.cmd test` gav 70 godkända, 0 misslyckade och 0 överhoppade tester. `npm.cmd run build` klarade typkontroll och bygge. [Flödestesterna](../frontend/src/App.status.test.tsx) täcker statusval, tangentbordsnavigation, oförändrad status under sparandet, bekräftad status i lista och detaljpanel, valt filter samt återhämtning efter fel och okänt sparutfall (T09, T10, T12, T14 och T15 på klientsidan). [API-klientens test](../frontend/src/api/tickets.test.ts) kontrollerar att PATCH skickar endast status.
+- **Backend:** `python -m pytest -q` kördes med projektets virtuella miljö och den isolerade MySQL-testdatabasen. Resultat: 47 godkända, 0 misslyckade och 0 överhoppade tester. Den befintliga testsviten täcker bland annat T09–T12 och T14.
+- **Manuell kontroll i Chrome:** Ett påhittat ärende ändrades från Nytt till Avslutat och den sparade statusen syntes i lista och detaljpanel efter omstart av backend och omladdning av klienten (del av M03). Med filtret Avslutat aktivt återöppnades ärendet som Pågående med piltangenter och Enter. Detaljpanelen visade Pågående och den filtrerade listan visade tomläget (M04).
+- Omstart av MySQL och framkallat lagringsfel via webbläsaren (M05) återstod efter den här körningen.
+
+<a name="verifiering-issue-13"></a>
+
+### Bekräftad verifiering av issue #13 – Statusändring i detaljpanelen
+
+**2026-11-11 · Verifierare: Lukas · Testutförare: Codex · Uppgiftsstatus: Inte Done.** Lukas bekräftade samtliga 24 bedömningar nedan för [issue #13](https://github.com/danielleven/kundportal-ai-native-development-grupp-1/issues/13). Den här avstämningen ersätter den tidigare lokala bedömningen av issue #13 ovan. Körningarna redovisas separat. Vid avstämningen saknades belägg för en PR och oberoende granskning av den testade commiten.
+
+Avstämningen kördes på `feature/status-change` vid `ccba1dfc25ec90bbd76116baa0978b22338ec892` utan lokala ändringar i källkod eller tester. Miljön var Windows, Node.js 24.16.0, Python 3.12.14 och MySQL 8.4.13 med den separata databasen `kundportal_test` på port 3307. De manuella gränssnittskontrollerna kördes i Chrome mot Vite och FastAPI med påhittade ärenden i samma testdatabas.
+
+#### Automatiserade körningar
+
+| Katalog | Kommando | Godkända | Misslyckade | Överhoppade | Ej körda |
+| --- | --- | ---: | ---: | ---: | ---: |
+| `frontend` | `npm.cmd test -- --reporter=verbose` | 70 i 8 filer, varav 12 statusspecifika | 0 | 0 | 0 |
+| `backend` | `.\.venv\Scripts\python.exe -m pytest -q -rs` | 47, varav 40 markerade MySQL-integrationstester | 0 | 0 | 0 |
+| `frontend` | `npm.cmd run build` | Typkontroll och produktionsbygge godkända | – | – | – |
+
+`.\.venv\Scripts\python.exe -m pytest --collect-only -q -m integration` bekräftade att 40 av de 47 backendtesterna har integrationsmarkören. Backendkörningen gav en deprecationsvarning från Starlettes testklient.
+
+| Fall | Kontrollerat beteende | Test |
+| --- | --- | --- |
+| Frontend · statusval | Fyra alternativ, vald status, piltangenter, Escape och återställt fokus | [Statusflöde](../frontend/src/App.status.test.tsx#L55) |
+| Frontend · lyckat svar | Båda vyerna behåller föregående status tills PATCH bekräftas och visar sedan den sparade statusen | [Statusflöde](../frontend/src/App.status.test.tsx#L76) |
+| Frontend · aktivt filter | Ärendet försvinner ur det tidigare filtret, filtret behålls och fokus återgår dit när panelen stängs | [Statusflöde](../frontend/src/App.status.test.tsx#L101) |
+| Frontend · hämtningsfel efter sparande | Bekräftad status visas i matchande lista även när listans omladdning misslyckas | [Statusflöde](../frontend/src/App.status.test.tsx#L119) |
+| Frontend · samma status | Aktuell status kan väljas och sparas igen | [Statusflöde](../frontend/src/App.status.test.tsx#L139) |
+| Frontend · 404, 422 och 503 | Tre fall kontrollerar begripliga fel, bevarad sparad status och bevarat försök utan sparbekräftelse | [Statusflöde](../frontend/src/App.status.test.tsx#L150) |
+| Frontend · okänt sparutfall och nätverksfel | Två fall kontrollerar obekräftat utfall, ny hämtning av detalj och lista samt en enda PATCH | [Statusflöde](../frontend/src/App.status.test.tsx#L169) |
+| Frontend · pågående skrivning | Om ett ärende stängs och öppnas under en skrivning kan ingen andra skrivning startas | [Statusflöde](../frontend/src/App.status.test.tsx#L194) |
+| API-klient | Rätt PATCH-adress, JSON-header och endast `status` i innehållet | [API-klienttest](../frontend/src/api/tickets.test.ts#L6) |
+| Frontend · regressioner | Detaljfält och fel för okänt ärende, filtrering och tomlägen samt fel och bevarad inmatning vid registrering | [Detaljpanel](../frontend/src/features/tickets/TicketDetail.test.tsx), [Ärendelista](../frontend/src/features/tickets/TicketList.test.tsx), [Registreringsformulär](../frontend/src/features/tickets/TicketForm.test.tsx) |
+| T06, T10 | Ärende och uppdaterad status läses från MySQL efter stängning av samtliga anslutningar. En sekvens av tillåtna statusändringar bevarar övriga fält. | [Beständighet](../backend/tests/test_ticket_persistence.py#L29), [Statusövergångar](../backend/tests/test_ticket_status_and_listing.py#L11) |
+| T09 | Okänt positivt ID ger 404 vid GET och PATCH utan att skapa något ärende. Ogiltiga ID:n avvisas separat. | [Okänt eller ogiltigt ID](../backend/tests/test_ticket_not_found.py) |
+| T11, T12 | Okänd status och extra PATCH-fält avvisas. Val av samma status returnerar ett oförändrat ärende. | [Statusvalidering](../backend/tests/test_ticket_status_and_listing.py#L69), [Samma status](../backend/tests/test_ticket_status_and_listing.py#L88) |
+| T13, T14 | Rollback vid fel före commit för registrering och statusändring. Backendtesterna av okänt commitutfall gäller registrering. | [Kontrollerade lagringsfel](../backend/tests/test_ticket_storage_failures.py) |
+| T07, T08, T15 | Listans ordning, exakt filter för `in_progress`, filter utan träff och listning utan filter | [Listning och filter](../backend/tests/test_ticket_status_and_listing.py#L33), [Lika skapandetid](../backend/tests/test_ticket_status_and_listing.py#L103), [Tom lagring](../backend/tests/test_ticket_not_found.py#L8) |
+| Kompletterande backendkontroller | Databasen avvisar ogiltiga statusvärden även vid direkt SQL. CORS tillåter preflight för PATCH. | [Databasbegränsningar](../backend/tests/test_ticket_database_constraints.py), [CORS](../backend/tests/test_ticket_cors.py) |
+
+#### Manuella kontroller mot FastAPI och MySQL
+
+| Kontroll | Genomförande och observerat resultat |
+| --- | --- |
+| T10/T12 · Statusflöde och tangentbord | Öppnade ett påhittat ärende i Chrome och valde Nytt igen, Väntar på kund och Avslutat. Återöppnade till Pågående med piltangenter och Enter. Den valda statusen hade bock, korrekt markerat radioval och en synlig fokusram. ID, skapandetid och övriga detaljfält förblev oförändrade. |
+| T11 · Validering i API:t | Skickade PATCH för ett befintligt testärende med saknad, tom, `null` respektive okänd status. Varje anrop gav `422 validation_error`. GET efter varje anrop returnerade det oförändrade ärendet. |
+| M03 · Beständighet | Stoppade och startade om frontend och backend och laddade om Chrome. Ärendet hade samma ID och övriga fält. Pågående visades i både listan och detaljpanelen. MySQL förblev igång. Fullständig omstart av alla tre tjänster följs upp i [issue #15](https://github.com/danielleven/kundportal-ai-native-development-grupp-1/issues/15). |
+| M04 · Filter vid statusändring | Med Avslutat aktivt återöppnades det enda matchande ärendet till Pågående. Listan hämtades med samma filter och visade sitt tomläge. Alla återställde listan. En omladdning återställde också Alla som förval. |
+| M05 · Bekräftat skrivfel | Framkallade ett SQLAlchemy-fel i `after_flush` för PATCH på ett särskilt testärende. FastAPI svarade 503. Chrome visade ett begripligt fel och bevarade det försökta valet. En ny hämtning visade att den tidigare statusen fortfarande fanns i MySQL. Sparbekräftelse uteblev. |
+| M05 · Okänt sparutfall | Framkallade ett SQLAlchemy-fel i `after_commit` för PATCH. FastAPI svarade 500. Chrome visade obekräftat utfall och behöll tidigare visad status tills **Uppdatera listan** läste tillbaka den nya statusen. API-loggen visade en PATCH följd av GET-anrop för ärendet och listan. |
+| M05 · Nätverksfel | Stoppade testbackend med ett ärende öppet och försökte ändra status. Chrome visade obekräftat utfall och behöll Pågående. Ny hämtning efter omstart visade Pågående. |
+| M07 · Okänt ärende vid statusändring | Öppnade ett testärende, tog bort just det ärendet från den isolerade testdatabasen och försökte spara en ny status. PATCH gav 404 och Chrome visade ”Ärendet kunde inte hittas.” Det gick att stänga panelen och fortsätta med ett annat ärende. En ny listning visade att det borttagna ärendet inte hade återskapats. |
+
+Felprovningen använde en separat FastAPI-process med en tillfällig sessionsersättning för de avsedda testärendena. Testärendena städades bort efter körningen. Kontrollerad felprovning av registrering i Chrome ingick inte i avstämningen.
+
+#### Bekräftade bedömningar
+
+| Punkt | Krav eller kriterium | Bekräftad status | Underlag eller återstående kontroll |
+| ---: | --- | --- | --- |
+| 1 | K3 · Samma ärende och uppgifter efter omstart | Delvis uppfyllt | T06 och Chrome efter omstart av frontend och backend. Full MySQL-omstart återstår i #15. |
+| 2 | K3/K6 · Sparad status efter omstart | Delvis uppfyllt | T10 och statusdelen av M03. MySQL var igång under omstarten. |
+| 3 | K3 · Beständig lagring | Uppfyllt | T06/T10 läste tillbaka samma ärende och status från MySQL efter stängda anslutningar. |
+| 4 | K6 · Fyra statusval, återöppning och samma status igen | Uppfyllt | T10/T12 och Chrome, inklusive Avslutat → Pågående. Eget Vitest-fall för den övergången saknas. |
+| 5 | K6 · Sparbekräftelse först efter lyckat svar | Uppfyllt | Vitest verifierade tidigare status under PATCH och bekräftad status efter svaret. |
+| 6 | K6/K8 · Ny status i båda vyerna och omladdning med aktivt filter | Uppfyllt | Vitest och M04 mot FastAPI/MySQL. Ärendet försvann ur filtret när det slutade matcha. |
+| 7 | K6 · Övriga ärendefält bevaras | Uppfyllt | API-klienttest, T10/T12 och jämförelse av detaljfält i Chrome. |
+| 8 | K6 · Ogiltig status avvisas och tidigare status bevaras | Uppfyllt | T11, Vitest och manuellt API-prov för saknad, tom, `null` och okänd status. |
+| 9 | K6 · Okänt ID ger begripligt fel och skapar inget ärende | Uppfyllt | T09, Vitest och statusdelen av M07. Det gick att fortsätta med ett annat ärende. |
+| 10 | Issue #13 · Statustext, vald markering, tangentbord och synligt fokus | Uppfyllt | Vitest och Chrome. Dropdownen följer uppdragsgivarens beställning. Designreferensen beskriver en segmenterad väljare. |
+| 11 | K7 · Begripligt besked och ingen bekräftelse vid lagringsfel | Uppfyllt | Vitest och M05 med fel före commit. Försökt val fanns kvar och sparbekräftelse uteblev. |
+| 12 | K7 · Tidigare beständig status bevaras vid bekräftat skrivfel | Uppfyllt | T14 och ny hämtning från riktig MySQL under M05. |
+| 13 | K7 · Okänt utfall eller nätverksfel kan kontrolleras utan omsändning | Uppfyllt | Vitest och Chrome med fel efter commit respektive avstängd backend. API-loggen visade en PATCH följd av GET-anrop vid kontrollen efter commit. |
+| 14 | K7 · Felbesked, bevarad inmatning och rollback vid registrering | Utanför uppgiftens del | T13 och formulärtesterna passerade. Registreringsdelen av M05 ingick inte i den manuella körningen. |
+| 15 | K8 · Alla och de fyra statusvalen finns | Utanför uppgiftens del | Valen observerades i Chrome. Filterkontrollen i sin helhet hör till #14. |
+| 16 | K8 · Alla är förvalt och visar alla ärenden | Utanför uppgiftens del | Vitest och Chrome. Kriteriet hör till #14. |
+| 17 | K8 · Exakt matchning och bibehållen sortering | Delvis uppfyllt | T15, Vitest och Chrome. Sortering med flera träffar per status återstår i #14. |
+| 18 | K8 · Begripligt tomläge när inget matchar | Uppfyllt | T08, Vitest och M04 efter återöppning från Avslutat. |
+| 19 | K8 · Alla återställer listan utan att ändra lagrad data | Utanför uppgiftens del | Vitest och Chrome visade återställd lista. En uttrycklig jämförelse av lagrade uppgifter hör till #14. |
+| 20 | Q2 · Automatiserade lyckade fall, fel och gränsfall | Delvis uppfyllt | Båda sviterna passerade. Issue #13:s efterfrågade Vitest-fall för återöppning täcktes manuellt i Chrome. |
+| 21 | Q2 · Testkommandon och testlänkar | Uppfyllt | Dokumentgranskat mot den körda versionen och länkat ovan. |
+| 22 | Q3 · Planerade, automatiserade och manuella kontroller framgår | Uppfyllt | Dokumentgranskat. Planerade kontroller och faktiska körningar har separata avsnitt. |
+| 23 | Q3 · Faktiska resultat och begränsningar är spårbara | Uppfyllt | Vid avstämningen väntade den nya posten på punktbekräftelsen. Bekräftelsen och testunderlaget är nu införda här. |
+| 24 | Leveransvillkor · Oberoende granskning | Ej verifierat | Lokal verifiering genomförd. PR och oberoende granskning saknades i det tillgängliga underlaget för `ccba1df`. |
 
 ## 7. Begränsningar
 

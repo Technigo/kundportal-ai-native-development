@@ -7,11 +7,12 @@ import {
 import { formatListDate } from '../../domain/formatDate'
 import { StatusBadge } from './StatusBadge'
 import { StatusFilter } from './StatusFilter'
-import { useTickets } from './useTickets'
+import { useTickets, type ListRefresh } from './useTickets'
 import styles from './TicketList.module.css'
 
 type TicketListProps = {
   statusFilter: StatusFilterValue
+  refresh?: ListRefresh
   onStatusFilterChange: (value: StatusFilterValue) => void
   selectedTicketId: number | null
   onSelectTicket: (id: number) => void
@@ -19,11 +20,13 @@ type TicketListProps = {
 
 export function TicketList({
   statusFilter,
+  refresh,
   onStatusFilterChange,
   selectedTicketId,
   onSelectTicket,
 }: TicketListProps) {
-  const { data: tickets, error, isLoading, reload } = useTickets(statusFilter)
+  const { data: tickets, error, isLoading, reload } = useTickets(statusFilter, refresh)
+  const listRef = useRef<HTMLElement>(null)
   const openButtons = useRef(new Map<number, HTMLButtonElement>())
   const previousSelectedId = useRef(selectedTicketId)
 
@@ -32,12 +35,15 @@ export function TicketList({
     previousSelectedId.current = selectedTicketId
     // Panelen stängdes: lämna tillbaka fokus till raden användaren kom från
     if (previous !== null && selectedTicketId === null) {
-      openButtons.current.get(previous)?.focus()
+      const rowButton = openButtons.current.get(previous)
+      const activeFilter = listRef.current?.querySelector<HTMLButtonElement>('button[aria-pressed="true"]')
+      const focusTarget = rowButton ?? activeFilter
+      focusTarget?.focus()
     }
   }, [selectedTicketId])
 
   return (
-    <section className={styles.card} aria-label="Ärendelista">
+    <section ref={listRef} className={styles.card} aria-label="Ärendelista">
       <div className={styles.header}>
         <StatusFilter value={statusFilter} onChange={onStatusFilterChange} />
       </div>
@@ -53,7 +59,7 @@ export function TicketList({
         </div>
       )}
 
-      {!isLoading && tickets?.length === 0 && (
+      {!isLoading && error === null && tickets?.length === 0 && (
         <p className={styles.message}>
           {statusFilter === null
             ? 'Det finns inga ärenden ännu'
@@ -61,7 +67,7 @@ export function TicketList({
         </p>
       )}
 
-      {!isLoading && tickets !== null && tickets.length > 0 && (
+      {tickets !== null && tickets.length > 0 && (
         // Smalt fönster: tabellen rullas i sidled inne i kortet.
         // tabIndex gör att den också kan rullas med tangentbord.
         <div

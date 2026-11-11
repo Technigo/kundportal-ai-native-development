@@ -8,7 +8,12 @@ type TicketState = {
   isLoading: boolean
 }
 
-export function useTicket(id: number) {
+export function useTicket(id: number, updatedTicket?: Ticket) {
+  // En nyöppnad panel hämtar alltid ärendet på nytt.
+  const [updateAtOpen] = useState(updatedTicket)
+  const confirmedTicket = updatedTicket !== updateAtOpen && updatedTicket?.id === id
+    ? updatedTicket
+    : undefined
   const [state, setState] = useState<TicketState>({
     data: null,
     error: null,
@@ -17,6 +22,10 @@ export function useTicket(id: number) {
   const [reloadCount, setReloadCount] = useState(0)
 
   useEffect(() => {
+    if (confirmedTicket) {
+      setState({ data: confirmedTicket, error: null, isLoading: false })
+      return
+    }
     // Ignorera svar som kommer efter att ett annat ärende valts
     let active = true
     setState({ data: null, error: null, isLoading: true })
@@ -33,7 +42,7 @@ export function useTicket(id: number) {
     return () => {
       active = false
     }
-  }, [id, reloadCount])
+  }, [id, reloadCount, confirmedTicket])
 
   const reload = useCallback(() => setReloadCount((count) => count + 1), [])
 

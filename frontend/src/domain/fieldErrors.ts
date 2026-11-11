@@ -13,6 +13,8 @@ export type TicketFormValues = {
 export type TicketField = keyof TicketFormValues
 export type FieldErrors = Partial<Record<TicketField, string>>
 
+export const STATUS_FIELD_ERROR = 'Välj en giltig status.'
+
 // Fältspecifika svenska felmeddelanden (K2): vad som är fel och hur det rättas
 const REQUIRED_MESSAGES: Record<TicketField, string> = {
   customer_id: 'Ange kund-ID',

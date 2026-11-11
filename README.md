@@ -43,7 +43,7 @@ Endast påhittade uppgifter används. Kunduppgifterna sparas på respektive äre
 | --- | --- | --- |
 | Danielle | Backend | Bygga API, databas, validering och hantering av ärendestatus med FastAPI och MySQL. |
 | Daniel | Frontend, delat med Lukas, Nora och Alvar | Bygga formulär, ärendelista, detaljvy och statusfilter i React. |
-| Lukas | Integration och utvecklingsmiljö samt delat frontendansvar med Daniel, Nora och Alvar | Koppla ihop frontend och backend, samordna API-format, ordna startkommandon och automatiska testkörningar i GitHub Actions samt utveckla frontend. |
+| Lukas | Integration och utvecklingsmiljö samt delat frontendansvar med Daniel, Nora och Alvar | Koppla ihop frontend och backend, samordna API-format, ordna startkommandon och lokala testkörningar samt utveckla frontend. |
 | Nora | UX samt delat frontendansvar med Daniel, Lukas och Alvar | Skissa användarflöden och vyer, precisera acceptanskriterier, utforma felmeddelanden och utveckla frontend. |
 | Alvar | Tester samt delat frontendansvar med Daniel, Lukas och Nora | Samordna testplanen, skriva automatiserade tester, dokumentera faktiska testresultat och utveckla frontend. |
 
@@ -53,7 +53,7 @@ Rollerna anger huvudansvar. Arbetet fördelas flexibelt och teammedlemmarna hjä
 
 En funktion räknas som färdig när den har verifierats mot den riktiga motparten, relevanta tester har körts, dokumentationen har uppdaterats och en annan teammedlem har granskat ändringen. Simulerade API-svar får användas under parallell utveckling; verifiering av integrationen görs mot den riktiga frontend- och backendlösningen.
 
-Både backend- och frontendtester ska vara godkända för den aktuella PR-versionen i GitHub Actions före merge till teamets `main`. Granskningen dokumenterar vem som granskade, vad som kontrollerades och vad återkopplingen ledde till. Automatiska testkörningar återstår att implementera.
+Både backend- och frontendtester ska vara godkända vid lokal körning på den aktuella PR-versionen före merge till teamets `main`. Granskningen dokumenterar vem som granskade, vad som kontrollerades och vad återkopplingen ledde till.
 
 Gemensamma AI-instruktioner ska versionshanteras i repot. Varje medlem ska kunna förklara sitt bidrag, vilka kontroller som genomförts och vad de faktiskt visar, även för AI-genererad kod. Instruktionerna återstår att lägga till.
 

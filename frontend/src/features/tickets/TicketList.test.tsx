@@ -1,4 +1,4 @@
-import { cleanup, render, screen, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { useState } from 'react'
 import { afterEach, expect, it, vi } from 'vitest'
 import { ApiError } from '../../api/client'
@@ -103,7 +103,7 @@ it('filters on one status and resets with Alla', async () => {
   const allButton = await screen.findByRole('button', { name: 'Alla' })
   expect(allButton).toHaveAttribute('aria-pressed', 'true')
 
-  screen.getByRole('button', { name: 'Pågående' }).click()
+  fireEvent.click(screen.getByRole('button', { name: 'Pågående' }))
 
   expect(await screen.findByText('#1')).toBeInTheDocument()
   expect(screen.queryByText('#2')).not.toBeInTheDocument()
@@ -113,7 +113,7 @@ it('filters on one status and resets with Alla', async () => {
     'true',
   )
 
-  screen.getByRole('button', { name: 'Alla' }).click()
+  fireEvent.click(screen.getByRole('button', { name: 'Alla' }))
 
   expect(await screen.findByText('#2')).toBeInTheDocument()
   expect(screen.getByText('#1')).toBeInTheDocument()
