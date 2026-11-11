@@ -7,7 +7,7 @@ import { TicketDetails } from "@/components/TicketDetails";
 import { getDb } from "@/db/client";
 import { parseTicketId } from "@/tickets/parseTicketId";
 import { getTicket, listNotesWithComments } from "@/tickets/ticketRepository";
-import { addNote, addNoteComment } from "../actions";
+import { addNote, addNoteComment, deleteNote, deleteNoteComment } from "../actions";
 
 const loadTicket = cache(async (rawId: string) => {
   // Ticket data is per request: render it at request time, never at build time.
@@ -27,7 +27,14 @@ async function SelectedTicket({ params }: { params: Promise<{ id: string }> }) {
   const notes = await listNotesWithComments(getDb(), ticket.id);
   return (
     <TicketDetails ticket={ticket}>
-      <InternalNotes ticketId={ticket.id} notes={notes} addNote={addNote} addNoteComment={addNoteComment} />
+      <InternalNotes
+        ticketId={ticket.id}
+        notes={notes}
+        addNote={addNote}
+        addNoteComment={addNoteComment}
+        deleteNote={deleteNote}
+        deleteNoteComment={deleteNoteComment}
+      />
     </TicketDetails>
   );
 }

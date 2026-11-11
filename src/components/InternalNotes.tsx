@@ -12,6 +12,8 @@ type InternalNotesProps = {
   notes: NoteWithComments[];
   addNote: Action;
   addNoteComment: Action;
+  deleteNote: Action;
+  deleteNoteComment: Action;
 };
 
 const dateTimeFormat = new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" });
@@ -21,7 +23,7 @@ const textareaClass =
 const buttonClass =
   "rounded-md bg-blue-700 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800 disabled:opacity-60";
 
-export function InternalNotes({ ticketId, notes, addNote, addNoteComment }: InternalNotesProps) {
+export function InternalNotes({ ticketId, notes, addNote, addNoteComment, deleteNote, deleteNoteComment }: InternalNotesProps) {
   const [alert, setAlert] = useState<string>();
   // Four actions write to one alert area: a new alert replaces the old one, a save clears it.
   const withAlert =
@@ -69,7 +71,13 @@ export function InternalNotes({ ticketId, notes, addNote, addNoteComment }: Inte
       {notes.length > 0 && (
         <ul className="space-y-3">
           {notes.map((note) => (
-            <NoteItem key={note.id} note={note} addComment={withAlert(addNoteComment)} />
+            <NoteItem
+              key={note.id}
+              note={note}
+              addComment={withAlert(addNoteComment)}
+              deleteNote={withAlert(deleteNote)}
+              deleteComment={withAlert(deleteNoteComment)}
+            />
           ))}
         </ul>
       )}
@@ -77,7 +85,7 @@ export function InternalNotes({ ticketId, notes, addNote, addNoteComment }: Inte
   );
 }
 
-function NoteItem({ note, addComment }: { note: NoteWithComments; addComment: Action }) {
+function NoteItem({ note, addComment, deleteNote, deleteComment }: { note: NoteWithComments; addComment: Action; deleteNote: Action; deleteComment: Action }) {
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState(addComment, undefined);
 
@@ -90,12 +98,19 @@ function NoteItem({ note, addComment }: { note: NoteWithComments; addComment: Ac
       <button type="button" aria-expanded={open} onClick={() => setOpen(!open)} className="mt-2 text-sm text-slate-700 underline">
         Comments ({note.comments.length})
       </button>
+      <DeleteControl
+        action={deleteNote}
+        field="noteId"
+        id={note.id}
+        label="Delete note"
+        warning={commentWarning(note.comments.length)}
+      />
       {open && (
         <div className="mt-2 space-y-2">
           {note.comments.length > 0 && (
             <ul className="space-y-2">
               {note.comments.map((comment) => (
-                <CommentItem key={comment.id} comment={comment} />
+                <CommentItem key={comment.id} comment={comment} deleteComment={deleteComment} />
               ))}
             </ul>
           )}
@@ -129,13 +144,45 @@ function NoteItem({ note, addComment }: { note: NoteWithComments; addComment: Ac
   );
 }
 
-function CommentItem({ comment }: { comment: TicketNoteComment }) {
+function CommentItem({ comment, deleteComment }: { comment: TicketNoteComment; deleteComment: Action }) {
   return (
     <li className="rounded-md bg-slate-50 p-3">
       <p className="wrap-break-word whitespace-pre-wrap text-slate-800">{comment.body}</p>
       <time dateTime={comment.createdAt.toISOString()} className="mt-1 block text-xs text-slate-600">
         {dateTimeFormat.format(comment.createdAt)}
       </time>
+      <DeleteControl action={deleteComment} field="commentId" id={comment.id} label="Delete comment" />
     </li>
+  );
+}
+
+function commentWarning(count: number) {
+  if (count === 0) return undefined;
+  return count === 1 ? "This also deletes 1 comment." : `This also deletes ${count} comments.`;
+}
+
+// Two steps, because a delete cannot be undone. Each control keeps its own state.
+function DeleteControl({ action, field, id, label, warning }: { action: Action; field: "noteId" | "commentId"; id: number; label: string; warning?: string }) {
+  const [confirming, setConfirming] = useState(false);
+  const [, formAction, pending] = useActionState(action, undefined);
+
+  if (!confirming) {
+    return (
+      <button type="button" aria-label={label} onClick={() => setConfirming(true)} className="mt-2 ml-3 text-sm text-red-700 underline">
+        Delete
+      </button>
+    );
+  }
+  return (
+    <form action={formAction} className="mt-2 flex flex-wrap items-center gap-2 text-sm">
+      <input type="hidden" name={field} value={id} />
+      {warning && <p className="text-red-700">{warning}</p>}
+      <button type="submit" disabled={pending} className="rounded-md bg-red-700 px-3 py-1 text-white disabled:opacity-60">
+        Confirm delete
+      </button>
+      <button type="button" onClick={() => setConfirming(false)} className="underline">
+        Cancel
+      </button>
+    </form>
   );
 }

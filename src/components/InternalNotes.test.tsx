@@ -20,12 +20,28 @@ function setup(
   notes: NoteWithComments[] = [],
   addNote: Mock<AddNote> = vi.fn<AddNote>(async () => undefined),
   addNoteComment: Mock<AddNote> = vi.fn<AddNote>(async () => undefined),
+  deleteNote: Mock<AddNote> = vi.fn<AddNote>(async () => ({})),
+  deleteNoteComment: Mock<AddNote> = vi.fn<AddNote>(async () => ({})),
 ) {
   const ui = (list: NoteWithComments[]) => (
-    <InternalNotes ticketId={7} notes={list} addNote={addNote} addNoteComment={addNoteComment} />
+    <InternalNotes
+      ticketId={7}
+      notes={list}
+      addNote={addNote}
+      addNoteComment={addNoteComment}
+      deleteNote={deleteNote}
+      deleteNoteComment={deleteNoteComment}
+    />
   );
   const view = render(ui(notes));
-  return { addNote, addNoteComment, container: view.container, rerender: (list: NoteWithComments[]) => view.rerender(ui(list)) };
+  return {
+    addNote,
+    addNoteComment,
+    deleteNote,
+    deleteNoteComment,
+    container: view.container,
+    rerender: (list: NoteWithComments[]) => view.rerender(ui(list)),
+  };
 }
 
 const addButton = () => screen.getByRole("button", { name: "Add note" });
@@ -389,6 +405,195 @@ describe("InternalNotes comments", () => {
     await openNote("Parent");
     await userEvent.type(within(noteItem("Parent")).getByLabelText("Comment"), "Thanks");
     await userEvent.click(within(noteItem("Parent")).getByRole("button", { name: "Add comment" }));
+
+    await waitFor(() => expect(screen.getByRole("alert")).toBeEmptyDOMElement());
+  });
+});
+
+const commentItem = (text: string) => screen.getByText(text).closest("li")!;
+const click = (element: HTMLElement) => userEvent.click(element);
+
+describe("InternalNotes delete", () => {
+  it("gives every note and every open comment a delete button", async () => {
+    setup([
+      note({ id: 1, body: "One", comments: [comment({ id: 1, noteId: 1, body: "c1" }), comment({ id: 2, noteId: 1, body: "c2" })] }),
+      note({ id: 2, body: "Two" }),
+    ]);
+
+    expect(within(noteItem("One")).getByRole("button", { name: "Delete note" })).toHaveTextContent("Delete");
+    expect(within(noteItem("Two")).getByRole("button", { name: "Delete note" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Delete comment" })).not.toBeInTheDocument();
+
+    await openNote("One");
+    expect(within(noteItem("One")).getAllByRole("button", { name: "Delete comment" })).toHaveLength(2);
+  });
+
+  it("asks for confirmation before deleting a note and does not call the action yet", async () => {
+    const { deleteNote } = setup([note({ body: "Parent" })]);
+
+    await click(within(noteItem("Parent")).getByRole("button", { name: "Delete note" }));
+
+    expect(within(noteItem("Parent")).getByRole("button", { name: "Confirm delete" })).toBeInTheDocument();
+    expect(within(noteItem("Parent")).getByRole("button", { name: "Cancel" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Delete note" })).not.toBeInTheDocument();
+    expect(deleteNote).not.toHaveBeenCalled();
+  });
+
+  it("warns that one comment is deleted too", async () => {
+    setup([note({ body: "Parent", comments: [comment({ noteId: 1 })] })]);
+
+    await click(within(noteItem("Parent")).getByRole("button", { name: "Delete note" }));
+
+    expect(screen.getByText("This also deletes 1 comment.")).toBeInTheDocument();
+  });
+
+  it("warns how many comments are deleted too", async () => {
+    setup([note({ body: "Parent", comments: [comment({ id: 1 }), comment({ id: 2 }), comment({ id: 3 })] })]);
+
+    await click(within(noteItem("Parent")).getByRole("button", { name: "Delete note" }));
+
+    expect(screen.getByText("This also deletes 3 comments.")).toBeInTheDocument();
+  });
+
+  it("shows no warning for a note without comments", async () => {
+    setup([note({ body: "Parent" })]);
+
+    await click(within(noteItem("Parent")).getByRole("button", { name: "Delete note" }));
+
+    expect(screen.queryByText(/This also deletes/)).not.toBeInTheDocument();
+  });
+
+  it("sends the note id to the action when the delete is confirmed", async () => {
+    const { deleteNote } = setup([note({ id: 4, body: "Parent" })]);
+
+    await click(within(noteItem("Parent")).getByRole("button", { name: "Delete note" }));
+    await click(within(noteItem("Parent")).getByRole("button", { name: "Confirm delete" }));
+
+    expect(Object.fromEntries(deleteNote.mock.calls[0]![1])).toEqual({ noteId: "4" });
+  });
+
+  it("goes back to the single Delete button when a note delete is cancelled", async () => {
+    const { deleteNote } = setup([note({ body: "Parent", comments: [comment({})] })]);
+
+    await click(within(noteItem("Parent")).getByRole("button", { name: "Delete note" }));
+    await click(within(noteItem("Parent")).getByRole("button", { name: "Cancel" }));
+
+    expect(within(noteItem("Parent")).getByRole("button", { name: "Delete note" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Confirm delete" })).not.toBeInTheDocument();
+    expect(screen.queryByText(/This also deletes/)).not.toBeInTheDocument();
+    expect(deleteNote).not.toHaveBeenCalled();
+  });
+
+  it("asks for confirmation before deleting a comment, without a warning", async () => {
+    const { deleteNoteComment } = setup([note({ body: "Parent", comments: [comment({ body: "A reply" })] })]);
+    await openNote("Parent");
+
+    await click(within(commentItem("A reply")).getByRole("button", { name: "Delete comment" }));
+
+    expect(within(commentItem("A reply")).getByRole("button", { name: "Confirm delete" })).toBeInTheDocument();
+    expect(within(commentItem("A reply")).getByRole("button", { name: "Cancel" })).toBeInTheDocument();
+    expect(screen.queryByText(/This also deletes/)).not.toBeInTheDocument();
+    expect(deleteNoteComment).not.toHaveBeenCalled();
+  });
+
+  it("sends the comment id to the action when the delete is confirmed", async () => {
+    const { deleteNoteComment } = setup([note({ body: "Parent", comments: [comment({ id: 8, body: "A reply" })] })]);
+    await openNote("Parent");
+
+    await click(within(commentItem("A reply")).getByRole("button", { name: "Delete comment" }));
+    await click(within(commentItem("A reply")).getByRole("button", { name: "Confirm delete" }));
+
+    expect(Object.fromEntries(deleteNoteComment.mock.calls[0]![1])).toEqual({ commentId: "8" });
+  });
+
+  it("goes back to the Delete button when a comment delete is cancelled", async () => {
+    const { deleteNoteComment } = setup([note({ body: "Parent", comments: [comment({ body: "A reply" })] })]);
+    await openNote("Parent");
+
+    await click(within(commentItem("A reply")).getByRole("button", { name: "Delete comment" }));
+    await click(within(commentItem("A reply")).getByRole("button", { name: "Cancel" }));
+
+    expect(within(commentItem("A reply")).getByRole("button", { name: "Delete comment" })).toBeInTheDocument();
+    expect(deleteNoteComment).not.toHaveBeenCalled();
+  });
+
+  it("lets a note and one of its comments be in the confirm step at once", async () => {
+    setup([note({ body: "Parent", comments: [comment({ body: "A reply" })] })]);
+    await openNote("Parent");
+    const parent = noteItem("Parent");
+    const reply = commentItem("A reply");
+    const noteConfirms = () => within(parent).getAllByRole("button", { name: "Confirm delete" }).filter((b) => !reply.contains(b));
+
+    await click(within(parent).getByRole("button", { name: "Delete note" }));
+    await click(within(reply).getByRole("button", { name: "Delete comment" }));
+    expect(noteConfirms()).toHaveLength(1);
+    expect(within(reply).getByRole("button", { name: "Confirm delete" })).toBeInTheDocument();
+
+    await click(within(reply).getByRole("button", { name: "Cancel" }));
+    expect(within(reply).getByRole("button", { name: "Delete comment" })).toBeInTheDocument();
+    expect(noteConfirms()).toHaveLength(1);
+  });
+
+  it("shows the new count and keeps the note and the other comment after a comment is deleted", async () => {
+    const parent = note({ id: 1, body: "Parent", comments: [comment({ id: 1, body: "Goes" }), comment({ id: 2, body: "Stays" })] });
+    const { rerender } = setup([parent]);
+    await openNote("Parent");
+
+    rerender([{ ...parent, comments: [parent.comments[1]!] }]);
+
+    expect(toggle(noteItem("Parent"))).toHaveAccessibleName("Comments (1)");
+    expect(toggle(noteItem("Parent"))).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByText("Stays")).toBeInTheDocument();
+    expect(screen.queryByText("Goes")).not.toBeInTheDocument();
+  });
+
+  it("disables the confirm button while the delete runs", async () => {
+    let finish!: () => void;
+    const deleteNote = vi.fn<AddNote>(() => new Promise<NoteActionState>((resolve) => { finish = () => resolve({}); }));
+    setup([note({ body: "Parent" })], undefined, undefined, deleteNote);
+    const control = () => within(noteItem("Parent")).getByRole("button", { name: /Confirm delete|Delete note/ });
+
+    await click(within(noteItem("Parent")).getByRole("button", { name: "Delete note" }));
+    await click(within(noteItem("Parent")).getByRole("button", { name: "Confirm delete" }));
+    expect(control()).toBeDisabled();
+
+    await act(async () => finish());
+    await waitFor(() => expect(control()).toBeEnabled());
+  });
+
+  it("shows the note alert when the note is already gone", async () => {
+    const deleteNote = vi.fn<AddNote>(async () => ({ alert: "This note no longer exists." }));
+    setup([note({ body: "Parent" })], undefined, undefined, deleteNote);
+
+    await click(within(noteItem("Parent")).getByRole("button", { name: "Delete note" }));
+    await click(within(noteItem("Parent")).getByRole("button", { name: "Confirm delete" }));
+
+    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("This note no longer exists."));
+  });
+
+  it("shows the comment alert when the comment is already gone", async () => {
+    const deleteNoteComment = vi.fn<AddNote>(async () => ({ alert: "This comment no longer exists." }));
+    setup([note({ body: "Parent", comments: [comment({ body: "A reply" })] })], undefined, undefined, undefined, deleteNoteComment);
+    await openNote("Parent");
+
+    await click(within(commentItem("A reply")).getByRole("button", { name: "Delete comment" }));
+    await click(within(commentItem("A reply")).getByRole("button", { name: "Confirm delete" }));
+
+    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent("This comment no longer exists."));
+  });
+
+  it("clears an earlier alert when the next delete succeeds", async () => {
+    const deleteNote = vi.fn<AddNote>(async () => ({ alert: "This note no longer exists." }));
+    const deleteNoteComment = vi.fn<AddNote>(async () => ({}));
+    setup([note({ body: "Parent", comments: [comment({ body: "A reply" })] })], undefined, undefined, deleteNote, deleteNoteComment);
+
+    await click(within(noteItem("Parent")).getByRole("button", { name: "Delete note" }));
+    await click(within(noteItem("Parent")).getByRole("button", { name: "Confirm delete" }));
+    await waitFor(() => expect(screen.getByRole("alert")).not.toBeEmptyDOMElement());
+
+    await openNote("Parent");
+    await click(within(commentItem("A reply")).getByRole("button", { name: "Delete comment" }));
+    await click(within(commentItem("A reply")).getByRole("button", { name: "Confirm delete" }));
 
     await waitFor(() => expect(screen.getByRole("alert")).toBeEmptyDOMElement());
   });
