@@ -63,8 +63,9 @@ Green tests only show that code and tests agree. To show that the tests fail for
 | Saving is disconnected (AC1.1) | "saves a valid ticket…"; e2e "submitting a valid ticket…" | Caught | Caught |
 | Category read from a misspelled field (AC1.1, AC1.7) | "returns a category error…"; e2e "submitting a valid ticket…" | Caught | Caught |
 | Category not saved, the database default `General` hides it (AC1.7) | "saves a valid ticket…" (expects `Billing`) | Caught | Not run: the list does not show the category |
+| redirect inside the try (AC1.8) | "saves the ticket and redirects when the same values are sent again after a failure" | Caught | Not run: AC1.8 has no e2e test |
 
-Run on 2026-11-07. The file was identical before and after (`shasum`).
+Run on 2026-11-11. `git diff` showed `actions.ts` unchanged afterwards.
 
 **What the check found.** The first version removed the category line in mutation 2. TypeScript then stopped `npm run build`, so no e2e test ran, and the script wrongly reported "missed". The script now reports ERROR when no tests ran, and mutation 2 uses a misspelled field name that still builds. Running the old mutation again gave "ERROR, the tests did not run" instead of "missed".
 
@@ -76,18 +77,19 @@ Script: [scripts/mutation-check.mjs](../scripts/mutation-check.mjs).
 |---|---|---|---|
 | Existing tickets get the category `General` after `npm run db:migrate` (AC1.7) | Tests migrate an empty database, so they do not show existing rows | Done 2026-11-07 on `data/dev.db` | All 4 existing tickets had `General` |
 | Error messages for registering a ticket are understandable | Judging clarity needs a person | Done 2026-11-07 by Alexandra Petersson with `npm run dev` | Invalid email (`Alex@hej`) and an empty category, with the other fields valid and priority `low`: both errors shown next to their fields, the other fields accepted. After correcting the email (`alec@hej.se`) and the category the ticket was saved. The messages were judged clear. Not judged by hand: an empty form, a name with only spaces and a too-short subject (covered by automated tests) |
+| A valid ticket cannot be saved because the database is read-only (AC1.8) | The e2e tests share one database, and the server must be restarted around the change ([decision 07](decisions/07-save-failure-handling.md)) | Done 2026-11-11 by Alexandra Petersson in Firefox on macOS with `npm run dev`, `chmod 444` and `chmod 644` on `data/dev.db` | The message was shown in red directly above **Register ticket**. The page stayed on `/tickets/new`, all values were kept, no field was marked invalid and focus did not move to the message. VoiceOver announced the message, hid it while the next attempt was pending and announced it again when that attempt also failed. The server logged `Failed to save ticket { name: 'Error', cause: 'LibsqlError', code: 'SQLITE_READONLY' }` without the entered values. After `chmod 644` and a restart the ticket was saved and the list was shown. Not tried yet: the Windows steps (`attrib`). Screenshots: [browser](images/ac1-8-save-failure-browser.png), [terminal](images/ac1-8-save-failure-terminal.png). Full report: [ac1-8-manual-check.md](test-reports/ac1-8-manual-check.md) |
 
 ## Latest run results
 
-Run on 2026-11-09 on branch `Alexandra/register-ticket`, after merging `main` (ticket details).
+Run on 2026-11-11 on branch `Alexandra/save-failure-message`.
 
 | Command | Result |
 |---|---|
-| `npm test` | 10 files, 78 tests passed |
+| `npm test` | 10 files, 85 tests passed |
 | `npm run lint` | No errors |
 | `npm run typecheck` | No errors |
 | `npm run test:e2e` | 17 tests passed |
-| `npm run test:mutation -- --e2e` | 5 of 5 caught (3 Vitest, 2 e2e) |
+| `npm run test:mutation` | 4 of 4 caught (Vitest only, `-- --e2e` not run) |
 
 Update this table when you rerun the checks.
 
