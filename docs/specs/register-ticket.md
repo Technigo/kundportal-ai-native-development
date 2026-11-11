@@ -2,7 +2,7 @@
 
 Ägare: Alexandra Petersson · Granskare: Jessica Swahn
 Bygger på avsnitt 1 i [project-brief.md](../project-brief.md) (AC1.1–AC1.7).
-Täcker också kravet "Handle at least one invalid use case with a clear message to the user" i [team.md](../team.md) genom AC1.3 och AC1.4.
+Täcker också kravet "Handle at least one invalid use case with a clear message to the user" i [team.md](../team.md) genom AC1.3 och AC1.4, och sedan 2026-11-10 också genom AC1.8 (databasfel) i [save-failure-message.md](save-failure-message.md).
 
 ## Läget i dag
 
@@ -56,6 +56,8 @@ Täcker också kravet "Handle at least one invalid use case with a clear message
 | Kategori över 50 tecken | Category must be at most 50 characters. |
 | Okänd prioritet (bara möjligt via en direkt förfrågan) | zods standardmeddelande, se beslut |
 
+Meddelandet när ärendet inte kan sparas i databasen visas inte under ett fält utan ovanför knappen **Register ticket**. Det specificeras i [save-failure-message.md](save-failure-message.md) (AC1.8).
+
 ## Acceptanskriterier
 
 - **AC1.1 (happy path):** Givet ett giltigt namn, ämne, beskrivning och kategori, när handläggaren klickar på Register ticket, så sparas ärendet med status `open`, prioritet `normal` och tidpunkten då det skapades, och handläggaren skickas till ärendelistan med ärendet överst.
@@ -65,6 +67,7 @@ Täcker också kravet "Handle at least one invalid use case with a clear message
 - **AC1.5 (kantfall, gränser):** Värden precis på gränserna godkänns: ämne 3 och 120 tecken, namn 120, beskrivning 5000, kategori 50 och e-post 254. Gränserna gäller det trimmade värdet. I gränssnittet hindrar `maxLength` handläggaren från att skriva fler tecken än gränsen. Om servern ändå tar emot ett värde som är ett tecken över gränsen i en direkt förfrågan avvisas det med fältets meddelande.
 - **AC1.6 (status ignoreras):** Formuläret har inget fält för status. Om servern ändå tar emot `status=closed` i en direkt förfrågan tillsammans med ett i övrigt giltigt ärende sparas ärendet som `open`.
 - **AC1.7 (kategori):** Kategorin är obligatorisk fritext på högst 50 tecken och sparas trimmad. Ärenden som fanns innan kategori infördes har kategorin `General`.
+- **AC1.8 (error path, databasfel):** se [save-failure-message.md](save-failure-message.md).
 
 ## Uppdelning i små steg (test-först enligt `ticket-change`)
 
@@ -84,7 +87,7 @@ Täcker också kravet "Handle at least one invalid use case with a clear message
 | Var valideras inmatningen? | På servern, med zod | Webbläsarens kontroller kan kringgås. Formuläret använder `noValidate`, så det är serverns meddelanden som handläggaren ser |
 | Behövs ett eget meddelande för okänd prioritet? | Nej, zods standardmeddelande behålls | `normal` är förvalt i listan, så en okänd prioritet kan inte väljas i gränssnittet. Den kan bara komma via en direkt förfrågan, och då avvisar servern den |
 | Vilket språk har gränssnitt och felmeddelanden? | Engelska | Beslutat av teamet i ett gruppsamtal på Slack den 21 oktober 2026, där alla i teamet var med |
-| Ska handläggaren se ett meddelande om sparandet i databasen misslyckas? | Nej, utanför scope. Står i [limitations.md](../limitations.md) | Kravet "Handle at least one invalid use case with a clear message to the user" uppfylls redan av valideringsfelen (AC1.3, AC1.4). Databasen är en lokal SQLite-fil, så ett misslyckat sparande är ovanligt |
+| Ska handläggaren se ett meddelande om sparandet i databasen misslyckas? | Ja, sedan 2026-11-10 (AC1.8). Specificeras i [save-failure-message.md](save-failure-message.md). Tidigare beslut: nej, utanför scope | Kravet "Handle at least one invalid use case with a clear message to the user" uppfylldes redan av valideringsfelen (AC1.3, AC1.4). Scope utökades eftersom ett databasfel i dag visar standardfelsidan och handläggaren förlorar allt hen har skrivit |
 
 ## Öppna frågor
 
