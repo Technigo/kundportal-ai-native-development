@@ -7,7 +7,8 @@ on:
 
 jobs:
   checks:
-    runs-on: ubuntu-latest
+    # Pinned: ubuntu-latest is moving to Ubuntu 26, which Playwright 1.64 may not support yet.
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -18,5 +19,12 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
-      - run: npx playwright install --with-deps chromium
+      - name: Install Playwright Chromium (retries if a download hangs)
+        run: |
+          for attempt in 1 2 3; do
+            timeout 240 npx playwright install --with-deps chromium && exit 0
+            echo "Attempt $attempt failed or timed out, retrying in 20 s"
+            sleep 20
+          done
+          exit 1
       - run: npm run test:e2e
