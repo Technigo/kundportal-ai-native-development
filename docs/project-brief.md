@@ -80,7 +80,7 @@ Detailed specification: [docs/specs/ticket-list-and-details.md](specs/ticket-lis
 
 Detailed specification: [docs/specs/status-change.md](specs/status-change.md)
 
-### 6. Internal notes (Planned)
+### 6. Internal notes (Done)
 
 - AC6.1: Given a ticket, when the handler writes a note on the detail page and adds it, then the note is saved and shown on the ticket with its created date and time, and the form is emptied.
 - AC6.2: Each note shows a "Comments (N)" button that shows or hides its comments and a comment form. Given an open note, when the handler writes a comment and adds it, then the comment is saved and shown under that note with its created date and time, and the count is updated.
@@ -101,4 +101,4 @@ Detailed specification: [docs/specs/internal-notes.md](specs/internal-notes.md)
 2. Register and list tickets, tested (done).
 3. Ticket details, tested (done).
 4. Status tracking with history (next).
-5. Internal notes with comments and delete, tested (planned).
+5. Internal notes with comments and delete, tested (done).

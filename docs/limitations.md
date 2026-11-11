@@ -11,6 +11,13 @@
 - No pagination: the ticket list loads every ticket.
 - The category is only entered in the New ticket form. It is not shown in the ticket list or on the ticket details page yet.
 - If saving a ticket fails in the database, the handler sees the default error page instead of a clear message.
+- Notes and comments cannot be edited. A typo is fixed by deleting the note (and its comments) and writing it again.
+- Notes and comments have no author, because there is no sign-in.
+- A deleted note or comment cannot be restored.
+- The "This also deletes N comments." warning can be out of date if someone adds a comment after the page loaded.
+- Foreign keys are not enforced in the database. The code checks that a note or ticket exists before it saves a note or comment.
+- After the "note is gone" case, the actions refresh all ticket pages. Whether other open tabs on other tickets also refresh is not tested.
+- Keyboard focus is lost when the "Delete" button is replaced by "Confirm delete".
 
 ## Risks
 
@@ -21,6 +28,7 @@
 | Next.js 16 differs from AI training data | Agents suggest outdated APIs | CLAUDE.md requires reading `node_modules/next/dist/docs/` first |
 | AI-generated code merged without review | Bugs, security issues | Owners review every diff and make every commit; see [ai/README.md](ai/README.md) |
 | e2e tests depend on seed data | Flaky or wrong failures after seed changes | Reset `data/e2e.db` before each run (already done by `npm run test:e2e`) |
+| Hard delete of notes | A misclick on "Confirm delete" loses the note and its comments for good | Two-step button with a warning; see [decision 07](decisions/07-internal-notes.md) |
 
 ## Proposed further development
 
@@ -33,3 +41,5 @@
 6. A CI pipeline for lint, typecheck and tests.
 7. A clear message to the handler when a ticket cannot be saved.
 8. Show the category in the ticket list and on the ticket details page.
+9. Edit notes and comments, and show the author once sign-in exists.
+10. Soft delete or undo for notes.
