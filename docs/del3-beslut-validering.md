@@ -1,11 +1,4 @@
-Filen är återställd och allt är rent: `nothing to commit, working tree clean`.
 
-**Steg 4:** Skapa beslutsdokumentet.
-1. Högerklicka på mappen **`docs`** i vänstermenyn och välj **New File**.
-2. Skriv `del3-beslut-validering.md` och tryck Enter.
-3. Klistra in texten nedan och spara med **Ctrl+S**.
-
-```
 # Del 3: Beslut om hur formuläret hanterar validering
 
 **Ansvarig:** Selin (SelinCoder) · **Datum:** 2026-11-10 · **PR:** #14
@@ -54,7 +47,7 @@ Skelettet (`showFieldErrors`, `data-error-for` och kontraktet i `index.html`) va
 - Alternativ B och C har jag inte byggt eller mätt. Jämförelsen ovan är mina slutsatser från specifikationen och API:t, inte provade resultat.
 - Meddelandena i de automatiska testerna är låtsassvar. Den riktiga serverns formuleringar har jag bara sett i de manuella proven.
 - Den del av AK1 som säger att ärendet "visas i ärendelistan" kunde jag inte kontrollera. Backend för listan (Del 2, `GET /api/arenden`) är inte byggd än, och servern svarar "Inte byggt ännu: Del 2: GET /api/arenden (AK10)". Registreringen fungerar och ger ett ärendenummer.
-- AK5 och AK8 har jag bara kontrollerat manuellt. Jag har inga egna automatiska tester för dem, och reglerna avgörs av servern.
+- AK5 och AK8 har nu automatiska tester (skrivna av en AI-agent 2026-11-10, commit `a02260a`, och granskade av mig). De använder en låtsas-server, så de visar att formuläret skickar värdena och visar svaret rätt, inte att den riktiga servern följer reglerna. Det har jag bara kontrollerat manuellt mot riktiga servern. Fallet med enbart mellanslag i Beskrivning har inget frontendtest (backend har ett).
 - Gränsvärdena som ska godtas (exakt 100 tecken i rubrik och exakt 5000 i beskrivning) har jag inte provat manuellt via formuläret. Jag har provat 101 och 5001, som avvisas.
 - Manuella prov av tomt formulär, 101 tecken i rubriken och deadline före idag gjordes före sammanslagningen och har inte upprepats efteråt.
 - Jag har inte provat i andra webbläsare eller på mobil.
