@@ -1,8 +1,8 @@
 # 07: Handling a failed save when registering a ticket
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-10
-- **Deciders:** Alexandra Petersson (owner of AC1), to be reviewed by Jessica Swahn
+- **Deciders:** Alexandra Petersson (owner of AC1), reviewed by Jessica Swahn
 
 ## Context
 
