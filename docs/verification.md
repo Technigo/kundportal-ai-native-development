@@ -23,6 +23,7 @@ How we check that the acceptance criteria in [project-brief.md](project-brief.md
 | AC1.5 | `newTicketSchema` trimming and limits: subject 3 and 120, name 120, description 5000, category 50, email 254 accepted, one more rejected with exact messages; `TicketForm` `maxlength` on every text field |
 | AC1.6 | `newTicketSchema` strips unknown fields; `submitTicket` ignores a status |
 | AC1.7 | `newTicketSchema` requires and trims the category with exact messages; `submitTicket` saves the trimmed category; `createTicket` gives a ticket without a category `General`; `TicketForm` category field; e2e missing category; manual migration check (below) |
+| AC1.8 | `submitTicket` returns a form error with the values and logs only `name`, `cause` and `code` for an unmigrated database, a read-only error, a failing `getDb()` and a thrown value that is not an `Error`, and saves the ticket on the next attempt; `TicketForm` shows the form error with `role="alert"` before the button and hides it while an attempt is pending; mutation M4; manual check with VoiceOver ([report](test-reports/ac1-8-manual-check.md)). No e2e test ([decision 07](decisions/07-save-failure-handling.md)) |
 | AC2.1 | `TicketList` renders a row per ticket; e2e list shows requester |
 | AC2.2 | `listTickets` newest first; e2e newest first |
 | AC2.3 | `TicketList` empty state |
@@ -109,7 +110,7 @@ Automated tests cannot see layout or real browser behaviour. These checks are do
 
 - No tests for AC5.x because the feature is not built.
 - End-to-end tests cover Chrome only.
-- No accessibility audit beyond the keyboard navigation test and labelled form fields. No screen reader test.
+- No accessibility audit beyond the keyboard navigation test and labelled form fields. The only screen reader test is the VoiceOver check of the save error message (AC1.8).
 - e2e tests share one seeded database, so they depend on the seed data order.
 - The AC1 tests added after the code (blank fields, limits, email, priority, `maxlength`, missing name) passed on their first run, because the behaviour already existed. They were not seen failing first; the mutation check covers `submitTicket` only.
 - The ticket list does not show the category, so e2e cannot show that it is saved. The action test covers it, and mutation 3 shows that the test catches it.
