@@ -12,14 +12,41 @@ Interaktiva kontroller kan identifieras och användas, och användaren får veta
 | ACCESSIBILITY-FORMS-002 | När obligatoriska fält saknas stoppas inskickning. Berörda fält markeras ogiltiga, och deras svenska felbesked är kopplade till fälten så hjälpmedel kan läsa dem. |
 | ACCESSIBILITY-FORMS-003 | Ärendestatus visas som text och kan inte enbart utläsas via färg. |
 | ACCESSIBILITY-FORMS-004 | API-fel visas på svenska som begriplig, tillgänglig feedback. |
+| ACCESSIBILITY-FORMS-005 | När inskickning stoppas av valideringsfel i formulären för att skapa eller redigera ärenden flyttas fokus till det första ogiltiga fältet. |
+| ACCESSIBILITY-FORMS-006 | När användaren byter vy via huvudmenyn flyttas fokus till vyns huvudrubrik och sidans titel uppdateras så att den beskriver vyn. |
+| ACCESSIBILITY-FORMS-007 | När ett ärende expanderas flyttas fokus till ärendets rubrik i detaljvyn. När ärendet fälls ihop återgår fokus till ärendets expanderingsknapp. |
+| ACCESSIBILITY-FORMS-008 | När redigering startar flyttas fokus till det första redigerbara fältet. När redigering avbryts återgår fokus till knappen som startade redigeringen. |
+| ACCESSIBILITY-FORMS-009 | Bekräftelsedialogen för borttagning kan stängas med Escape. När dialogen stängs utan borttagning återgår fokus till knappen som öppnade den. Efter en genomförd borttagning flyttas fokus till nästa ärendes expanderingsknapp, till föregående ärendes expanderingsknapp om det borttagna ärendet var sist i listan, eller till listans rubrik om listan blir tom. |
+
+## Implementation och teststatus
+
+- ACCESSIBILITY-FORMS-001 till 004 har kravmärkta tester i den här arbetsytan.
+- ACCESSIBILITY-FORMS-005 till 009 saknar ännu kravmärkta testtitlar här. De kraven är därför inte verifierade som klara.
+- Att beteendet finns i koden eller täcks av tester märkta med andra krav-ID:n räknas inte som verifierad kravtäckning för 005–009.
+
+## Testmappning
+
+| Krav-ID | Automatiserad kontroll | Resultat |
+|---|---|---|
+| ACCESSIBILITY-FORMS-001 | [CaseForm.test.tsx](../../packages/web/src/CaseForm.test.tsx), [CaseDetail.test.tsx](../../packages/web/src/CaseDetail.test.tsx), [CaseStatusForm.test.tsx](../../packages/web/src/CaseStatusForm.test.tsx), [CaseNoteForm.test.tsx](../../packages/web/src/CaseNoteForm.test.tsx) | **Kört**, testfilerna passerade. |
+| ACCESSIBILITY-FORMS-002 | [CaseForm.test.tsx](../../packages/web/src/CaseForm.test.tsx), [CaseDetail.test.tsx](../../packages/web/src/CaseDetail.test.tsx) | **Kört**, felkoppling och stoppad uppdatering kontrolleras. |
+| ACCESSIBILITY-FORMS-003 | [CaseList.test.tsx](../../packages/web/src/CaseList.test.tsx) | **Kört**, status kontrolleras som text. |
+| ACCESSIBILITY-FORMS-004 | [CaseDetail.test.tsx](../../packages/web/src/CaseDetail.test.tsx) | **Kört**, API-valideringsfel visas som tillgänglig feedback. |
+| ACCESSIBILITY-FORMS-005–009 | Inga kravmärkta tester ännu. | **Återstår.** |
 
 ## Definition av färdig
 
-- Formulärfält och felmeddelanden kan tolkas med tangentbord och hjälpmedel.
-- Samtliga krav-ID:n täcks av tester som passerar.
+- Kontroller har tillgängliga namn, kan användas med tangentbord och har synlig fokusindikering.
+- Valideringsfel är kopplade till berörda fält och går att uppfatta med hjälpmedel.
+- Status och API-fel kommuniceras med text, inte enbart med färg eller visuell utformning.
+- Fokus hanteras förutsägbart vid valideringsfel, vybyte, expandering, redigering och dialoger.
+- Samtliga krav-ID:n täcks av kravmärkta tester som passerar.
 
-## Verifiering av tillgängliga och begripliga kontroller
+## Verifiering
 
-Kört 2026-11-08:
+Kört 2026-11-11:
 
-- Testerna för formulärfält, valideringsfel och status finns i [CaseForm.test.tsx](../../packages/web/src/CaseForm.test.tsx), [CaseDetail.test.tsx](../../packages/web/src/CaseDetail.test.tsx) och [CaseList.test.tsx](../../packages/web/src/CaseList.test.tsx).
+- `npm test --workspace @kundportal/web -- src/CaseForm.test.tsx src/CaseDetail.test.tsx src/CaseStatusForm.test.tsx src/CaseNoteForm.test.tsx` — 4 testfiler passerade, 79 tester godkända.
+- `npm run check:requirements -- origin/main` — **underkänd**: ACCESSIBILITY-FORMS-005–009 saknar matchande testtitlar;
+
+Manuell kontroll med tangentbord och hjälpmedel är inte dokumenterad.
