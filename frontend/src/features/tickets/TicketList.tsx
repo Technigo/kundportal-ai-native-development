@@ -24,6 +24,12 @@ export function TicketList({
   onSelectTicket,
 }: TicketListProps) {
   const { data: tickets, error, isLoading, reload } = useTickets(statusFilter)
+  const sortedTickets = tickets
+    ?.slice()
+    .sort(
+      (left, right) =>
+        Date.parse(right.created_at) - Date.parse(left.created_at),
+    )
   const openButtons = useRef(new Map<number, HTMLButtonElement>())
   const previousSelectedId = useRef(selectedTicketId)
 
@@ -73,18 +79,18 @@ export function TicketList({
           <table className={styles.table}>
             <thead>
               <tr>
-                <th scope="col">ID</th>
+                <th scope="col">Ärende-ID</th>
                 <th scope="col">Kund-ID</th>
                 <th scope="col">Kundnamn</th>
                 <th scope="col">Rubrik</th>
                 <th scope="col">Kategori</th>
-                <th scope="col">Prio</th>
+                <th scope="col">Prioritet</th>
                 <th scope="col">Status</th>
                 <th scope="col">Skapad</th>
               </tr>
             </thead>
             <tbody>
-              {tickets.map((ticket) => (
+              {sortedTickets?.map((ticket) => (
                 <tr
                   key={ticket.id}
                   className={styles.row}

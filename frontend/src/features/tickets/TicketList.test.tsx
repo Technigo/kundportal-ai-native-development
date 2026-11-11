@@ -1,8 +1,10 @@
 import { cleanup, render, screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
 import { afterEach, expect, it, vi } from 'vitest'
 import { ApiError } from '../../api/client'
 import { listTickets } from '../../api/tickets'
+import { formatListDate } from '../../domain/formatDate'
 import type { StatusFilter, Ticket } from '../../domain/ticket'
 import { TicketList } from './TicketList'
 
@@ -50,26 +52,32 @@ function TicketListWithFilter() {
 }
 
 it('marks the ticket the user opens as the current row', async () => {
+  const user = userEvent.setup()
   listTicketsMock.mockResolvedValue([NEW_TICKET, IN_PROGRESS_TICKET])
   render(<TicketListWithFilter />)
 
   const openButton = await screen.findByRole('button', {
     name: 'Fråga om en påhittad faktura',
   })
-  openButton.click()
+  openButton.focus()
+  expect(openButton).toHaveFocus()
+  await user.keyboard('{Enter}')
 
   const rows = await screen.findAllByRole('row')
   expect(rows[2]).toHaveAttribute('aria-current', 'true')
   expect(rows[1]).not.toHaveAttribute('aria-current')
+  expect(openButton).toHaveFocus()
 })
 
-it('shows list fields for every ticket in the order the API returns', async () => {
-  listTicketsMock.mockResolvedValue([NEW_TICKET, IN_PROGRESS_TICKET])
+it('shows every list field and orders tickets newest first', async () => {
+  listTicketsMock.mockResolvedValue([IN_PROGRESS_TICKET, NEW_TICKET])
 
   render(<TicketListWithFilter />)
 
   const rows = await screen.findAllByRole('row')
   const firstRow = within(rows[1])
+  expect(screen.getByRole('columnheader', { name: 'Ärende-ID' })).toBeInTheDocument()
+  expect(screen.getByRole('columnheader', { name: 'Prioritet' })).toBeInTheDocument()
   expect(firstRow.getByText('#2')).toBeInTheDocument()
   expect(firstRow.getByText('K-208')).toBeInTheDocument()
   expect(firstRow.getByText('Exempelkund Beta')).toBeInTheDocument()
@@ -77,8 +85,19 @@ it('shows list fields for every ticket in the order the API returns', async () =
   expect(firstRow.getByText('Teknisk support')).toBeInTheDocument()
   expect(firstRow.getByText('Hög')).toBeInTheDocument()
   expect(firstRow.getByText('Nytt')).toBeInTheDocument()
+  expect(
+    firstRow.getByText(formatListDate(NEW_TICKET.created_at)),
+  ).toHaveAttribute('dateTime', NEW_TICKET.created_at)
   expect(within(rows[2]).getByText('#1')).toBeInTheDocument()
   expect(listTicketsMock).toHaveBeenCalledWith(null)
+})
+
+it('shows a loading state while the list request is pending', () => {
+  listTicketsMock.mockReturnValue(new Promise(() => {}))
+  render(<TicketListWithFilter />)
+
+  expect(screen.getByText('Hämtar ärenden …')).toBeInTheDocument()
+  expect(screen.queryByText('Det finns inga ärenden ännu')).not.toBeInTheDocument()
 })
 
 it('shows an empty state when there are no tickets', async () => {
