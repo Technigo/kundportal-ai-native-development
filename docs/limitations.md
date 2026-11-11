@@ -11,6 +11,7 @@
 - No pagination: the ticket list loads every ticket.
 - The category is only entered in the New ticket form. It is not shown in the ticket list or on the ticket details page yet.
 - If saving a ticket fails in the database, the handler sees the default error page instead of a clear message.
+- If the local database has not been set up (no `data/dev.db`, or an empty file with no tables), the Tickets page shows the default error page with `Failed query: select ... from "tickets"` instead of a message saying how to set it up. The fix is in the README under "Troubleshooting".
 
 ## Risks
 

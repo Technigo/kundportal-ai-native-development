@@ -8,7 +8,7 @@ import { createTicket, getTicket, listTickets } from "@/tickets/ticketRepository
 import { createDb, type Db } from "./client";
 import { migrationsFolder } from "./migrationsFolder";
 
-// Decision 07: tickets are stored in a file, so a new connection to the same file sees them.
+// Decision 08: tickets are stored in a file, so a new connection to the same file sees them.
 // This does not restart a process; the real restart is a manual check in docs/verification.md.
 let dir: string;
 let url: string;

@@ -1,8 +1,8 @@
-# 07: Tickets persist in a local SQLite file
+# 08: Tickets persist in a local SQLite file
 
 - **Status:** Proposed
 - **Date:** 2026-11-10
-- **Deciders:** Ariadna Villar (owner of the persistence requirement), reviewed by Marie Flem Honningdalnes
+- **Deciders:** Ariadna Villar (owner of the persistence requirement)
 
 ## Context
 
@@ -16,7 +16,7 @@ On 2026-11-10 the Tickets page crashed on a machine where `data/dev.db` was an e
 2. **Every write goes straight to the file.** `createTicket` in `src/tickets/ticketRepository.ts` returns only after the insert has finished. There is no cache to flush before closing the app.
 3. **The database file is git-ignored** (`/data/*.db` in [.gitignore](../../.gitignore)). Each team member has their own local data, and no ticket data, fake or not, reaches the repository.
 4. **The schema comes from the committed migrations in `drizzle/`.** A new clone sets up the database once with `npm run db:reset`, or with `npm run db:migrate` followed by `npm run db:seed` (see "Getting started" and "Troubleshooting" in the [README](../../README.md)). The app does not migrate automatically when it starts.
-5. **Tests never touch `data/dev.db`.** Vitest uses a fresh in-memory database for each test (`src/test-utils/testDb.ts`), and the end-to-end tests use their own `data/e2e.db`.
+5. **Tests never touch `data/dev.db`.** Vitest uses a fresh in-memory database for each test (`src/test-utils/testDb.ts`), except the persistence test, which uses a temporary file that it deletes afterwards (`src/db/persistence.test.ts`). The end-to-end tests use their own `data/e2e.db`.
 
 ## Alternatives considered
 
@@ -29,5 +29,5 @@ On 2026-11-10 the Tickets page crashed on a machine where `data/dev.db` was an e
 - Tickets survive restarts with no extra infrastructure.
 - `npm run db:reset` deletes all local tickets, so [CLAUDE.md](../../CLAUDE.md) requires agents to warn before running it.
 - The data exists on one machine only. There is no backup and no sharing between team members.
-- If the database has not been set up, the Tickets page shows the default error page instead of a clear message (see [limitations.md](../limitations.md)).
+- If the database has not been set up, the Tickets page shows the default error page instead of a clear message. This is listed in [limitations.md](../limitations.md), and the fix is in "Troubleshooting" in the [README](../../README.md).
 - This decision builds on [02](02-libsql-drizzle.md) and does not supersede it.
