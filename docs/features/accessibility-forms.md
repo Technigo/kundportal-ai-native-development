@@ -8,8 +8,8 @@ Interaktiva kontroller kan identifieras och användas, och användaren får veta
 
 | Krav-ID | Acceptanskriterium |
 |---|---|
-| ACCESSIBILITY-FORMS-001 | Interaktiva formulärfält har tillgängliga namn som beskriver vad användaren ska ange eller välja. |
-| ACCESSIBILITY-FORMS-002 | När obligatoriska fält saknas stoppas inskickning och felen identifierar vilka fält som ska rättas. |
+| ACCESSIBILITY-FORMS-001 | Fält i formulär för att skapa, redigera, statusändra och anteckna har tillgängliga namn som beskriver vad användaren ska ange eller välja. |
+| ACCESSIBILITY-FORMS-002 | När obligatoriska fält saknas stoppas inskickning. Berörda fält markeras ogiltiga, och deras svenska felbesked är kopplade till fälten så hjälpmedel kan läsa dem. |
 | ACCESSIBILITY-FORMS-003 | Ärendestatus visas som text och kan inte enbart utläsas via färg. |
 | ACCESSIBILITY-FORMS-004 | API-fel visas på svenska som begriplig, tillgänglig feedback. |
 
