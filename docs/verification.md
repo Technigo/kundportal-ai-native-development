@@ -8,6 +8,7 @@ How we check that the acceptance criteria in [project-brief.md](project-brief.md
 |---|---|---|---|
 | Unit | Vitest | zod schema, navigation data | Fast, no UI or database needed |
 | Data | Vitest + in-memory SQLite per test | `createTicket`, `getTicket`, `listTickets` | Real queries against a real schema, isolated and fast |
+| Persistence | Vitest + a temporary SQLite file per test | A ticket saved through one connection is read through a new one | Shows the ticket is written to the file, which an in-memory database cannot show. It does not restart a process; the manual restart check covers that |
 | Server action | Vitest | `submitTicket` | Checks validation, saving, revalidation and redirect without a browser |
 | Component | Vitest + React Testing Library | `TicketForm`, `TicketList`, `TicketDetails`, `TicketNotice`, `PortalShell` | Checks labels, errors and states the user sees |
 | End-to-end | Playwright (Chrome) against a production build and `data/e2e.db` | Full flows, keyboard navigation, async Server Components | Async Server Components cannot be unit-tested with Vitest |
@@ -27,6 +28,9 @@ How we check that the acceptance criteria in [project-brief.md](project-brief.md
 | AC2.2 | `listTickets` newest first; e2e newest first |
 | AC2.3 | `TicketList` empty state |
 | AC3.1, AC3.2 | `PortalShell`, `navItems`; e2e redirect and keyboard navigation |
+| AC4.x, AC5.x | Not built, no tests yet |
+| AC7.1 | [persistence.test.ts](../src/db/persistence.test.ts) "keeps a saved ticket when the database file is opened through a new connection" (the ticket is in the file and a new connection reads it); manual restart check (below) (the ticket survives a real dev server restart) |
+| AC7.2 | [gitignore.test.ts](../src/db/gitignore.test.ts) "are ignored by git" (`data/dev.db`, `data/e2e.db` and the `-wal` file are ignored and not tracked); manual restart check uses `data/dev.db` (below) |
 | AC4.1, AC4.2 | `TicketDetails` shows subject, requester name and email, "No email given", description with line breaks, status, priority and date; `getTicket` returns the ticket or `undefined`; e2e "opens a ticket from the list, shows its details and goes back"; manual check for long words (below) |
 | AC4.3 | `TicketDetails` links back to the ticket list; e2e "opens a ticket from the list, shows its details and goes back" |
 | AC4.4 | `parseTicketId` accepts plain positive numbers and rejects `0`, `01`, `1e0`, `0x1` and similar; e2e redirect from invalid ids to the list with a message; manual check for `/tickets/01`, `/tickets/1e0`, `/tickets/0x1` (below) |
@@ -102,15 +106,19 @@ Done by hand on 2026-11-11 with `npx playwright test e2e/notes.spec.ts`. Each mu
 | Check | Why manual | Status | Result |
 |---|---|---|---|
 | Existing tickets get the category `General` after `npm run db:migrate` (AC1.7) | Tests migrate an empty database, so they do not show existing rows | Done 2026-11-07 on `data/dev.db` | All 4 existing tickets had `General` |
+| A ticket is still there after the dev server restarts (AC7.1) | The test opens a new connection but does not restart a real server | Done 2026-11-10 and again 2026-11-11 after the review fixes, on `data/dev.db` | Ticket "Restart check 2026-11-10" (and on 2026-11-11 "Restart check 2026-11-11", id 7) saved with `createTicket`, shown on `/tickets`; dev server stopped and started with `npm run dev`; ticket still shown on `/tickets` and on its details page |
+| The persistence test fails when tickets are not kept in the file (AC7.1) | The test passed on its first run because persistence already worked, so it was never seen failing | Done 2026-11-10 (Ariadna Villar, with an AI agent) | `createDb` in `src/db/client.ts` changed by hand to always use `:memory:`: the test failed with "no such table: tickets" on the new connection. File restored and identical (`shasum`) |
+| The persistence test cleans up its temporary database on Windows (AC7.1) | macOS and Linux can delete a file that is still open, so the EBUSY error only shows on Windows, and CI runs on `ubuntu-latest` only | Skipped | Not run on Windows. Listed as a known limitation in [limitations.md](limitations.md) and under "Limitations of the verification" (below) |
+| The gitignore test fails when database files are not ignored (AC7.2) | The test passed on its first run because the rule already existed, so it was never seen failing | Done 2026-11-11 (Ariadna Villar, with an AI agent) | `/data/*.db` removed from `.gitignore` by hand: the `data/dev.db` and `data/e2e.db` cases failed (`git check-ignore` exited with an error), the `-wal` case still passed because `/data/*.db-*` covers it. File restored and identical (`shasum`) |
 | Error messages for registering a ticket are understandable | Judging clarity needs a person | Done 2026-11-07 by Alexandra Petersson with `npm run dev` | Invalid email (`Alex@hej`) and an empty category, with the other fields valid and priority `low`: both errors shown next to their fields, the other fields accepted. After correcting the email (`alec@hej.se`) and the category the ticket was saved. The messages were judged clear. Not judged by hand: an empty form, a name with only spaces and a too-short subject (covered by automated tests) |
 
 ## Latest run results
 
-Run on 2026-11-09 on branch `Alexandra/register-ticket`, after merging `main` (ticket details).
+Run on 2026-11-11 on branch `ariadna/db-persistance`, with the review fixes for PR #12 (not yet committed).
 
 | Command | Result |
 |---|---|
-| `npm test` | 10 files, 78 tests passed |
+| `npm test` | 12 files, 82 tests passed |
 | `npm run lint` | No errors |
 | `npm run typecheck` | No errors |
 | `npm run test:e2e` | 17 tests passed |
@@ -145,6 +153,7 @@ Automated tests cannot see layout or real browser behaviour. These checks are do
 
 - No tests for AC5.x because the feature is not built.
 - End-to-end tests cover Chrome only.
+- The persistence test's cleanup has not been run on Windows. The test closes each database client before deleting its temporary folder, which should prevent the EBUSY error Windows gives for an open file, but this was only run on macOS, and CI runs on `ubuntu-latest`.
 - No accessibility audit beyond the keyboard navigation test and labelled form fields. No screen reader test.
 - e2e tests share one seeded database, so they depend on the seed data order.
 - The AC1 tests added after the code (blank fields, limits, email, priority, `maxlength`, missing name) passed on their first run, because the behaviour already existed. They were not seen failing first; the mutation check covers `submitTicket` only.

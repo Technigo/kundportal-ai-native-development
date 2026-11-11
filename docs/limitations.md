@@ -8,9 +8,11 @@
 - No email is sent to the requester.
 - Data is stored in a local SQLite file. The app is meant to run locally only.
 - End-to-end tests run in Chrome only.
+- The persistence test (`src/db/persistence.test.ts`) has not been run on Windows. Windows cannot delete a file that is still open (EBUSY), so the test closes each database client before it deletes its temporary folder. This fix is untested on Windows: it has only run on macOS and in CI on Linux.
 - No pagination: the ticket list loads every ticket.
 - The category is only entered in the New ticket form. It is not shown in the ticket list or on the ticket details page yet.
 - If saving a ticket fails in the database, the handler sees the default error page instead of a clear message.
+- If the local database has not been set up (no `data/dev.db`, or an empty file with no tables), the Tickets page shows the default error page with `Failed query: select ... from "tickets"` instead of a message saying how to set it up. The fix is in the README under "Troubleshooting".
 - Notes and comments cannot be edited. A typo is fixed by deleting the note (and its comments) and writing it again.
 - Notes and comments have no author, because there is no sign-in.
 - A deleted note or comment cannot be restored.

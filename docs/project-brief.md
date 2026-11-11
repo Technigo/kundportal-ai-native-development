@@ -96,6 +96,13 @@ Detailed specification: [docs/specs/status-change.md](specs/status-change.md)
 
 Detailed specification: [docs/specs/internal-notes.md](specs/internal-notes.md)
 
+### 7. Persist tickets (Done)
+
+- AC7.1: Given a saved ticket, when the application is stopped and started again, then the ticket is still in the list with the same details.
+- AC7.2: Tickets are stored in a local SQLite file (`DATABASE_URL`, default `data/dev.db`) that is not committed to git.
+
+Decision: [docs/decisions/08-ticket-persistence.md](decisions/08-ticket-persistence.md) (status: Proposed). "Done" means the implementation and its tests are complete; the decision itself is still waiting for review before it can be accepted.
+
 ## Milestones
 
 1. Boilerplate: UI, server logic and storage connected (done).
