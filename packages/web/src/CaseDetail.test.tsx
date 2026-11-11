@@ -28,6 +28,25 @@ afterEach(() => {
 });
 
 describe('CaseDetail', () => {
+  it('[ACCESSIBILITY-FORMS-001] gives every edit field an accessible name', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(caseItem)));
+    const user = userEvent.setup();
+    render(<CaseDetail caseId={7} />);
+
+    await user.click(await screen.findByRole('button', { name: 'Redigera ärende' }));
+
+    for (const [label, role] of [
+      ['Rubrik', 'textbox'],
+      ['Beskrivning', 'textbox'],
+      ['Kategori', 'combobox'],
+      ['Prioritet', 'combobox'],
+      ['Status', 'combobox'],
+      ['Intern anteckning', 'textbox']
+    ]) {
+      expect(screen.getByRole(role, { name: label })).toBeInTheDocument();
+    }
+  });
+
   it('[CASE-EDIT-003] displays details in read-only mode before editing starts', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
       jsonResponse({ ...caseItem, note: 'Privat anteckning.' })
@@ -104,7 +123,7 @@ describe('CaseDetail', () => {
     });
   });
 
-  it('[CASE-EDIT-002] and [CASE-EDIT-005] explains required fields that block an update', async () => {
+  it('[CASE-EDIT-002] [CASE-EDIT-005] [ACCESSIBILITY-FORMS-002] explains an invalid required title and blocks the update', async () => {
     const fetchMock = vi.fn().mockResolvedValueOnce(jsonResponse(caseItem));
     vi.stubGlobal('fetch', fetchMock);
     const user = userEvent.setup();
@@ -120,7 +139,10 @@ describe('CaseDetail', () => {
     const errorId = title.getAttribute('aria-describedby');
     expect(errorId).toBeTruthy();
     expect(document.getElementById(errorId!)).toHaveTextContent('Ange en rubrik.');
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).not.toHaveBeenCalledWith(
+      '/api/cases/7',
+      expect.objectContaining({ method: 'PATCH' })
+    );
   });
 
   it('[CASE-EDIT-010] displays the internal note in the read-only detail', async () => {

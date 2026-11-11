@@ -25,6 +25,12 @@ afterEach(() => {
 });
 
 describe('CaseNoteForm', () => {
+  it('[ACCESSIBILITY-FORMS-001] gives the note editor an accessible name', () => {
+    render(<CaseNoteForm caseItem={caseItem} onUpdated={vi.fn()} />);
+
+    expect(screen.getByRole('textbox', { name: 'Intern anteckning' })).toBeInTheDocument();
+  });
+
   it('[CASE-NOTE-001] offers an empty editor for a case without a note', () => {
     render(<CaseNoteForm caseItem={caseItem} onUpdated={vi.fn()} />);
 
