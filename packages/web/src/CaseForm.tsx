@@ -1,6 +1,7 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { isCreatedCase, type CreatedCase } from './caseTypes';
 import {
+  focusFirstInvalidField,
   readCaseFormValue,
   validateCaseFields,
   type CaseFieldErrors,
@@ -32,10 +33,18 @@ function apiErrorMessage(value: unknown): string | null {
 }
 
 export function CaseForm({ onCreated }: CaseFormProps) {
+  const formRef = useRef<HTMLFormElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [created, setCreated] = useState<CreatedCase | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<CaseFieldErrors>({});
+  const [focusInvalidField, setFocusInvalidField] = useState(false);
+
+  useEffect(() => {
+    if (!focusInvalidField) return;
+    focusFirstInvalidField(formRef.current);
+    setFocusInvalidField(false);
+  }, [focusInvalidField]);
 
   function clearFieldError(field: CaseFieldName) {
     setFieldErrors((current) => ({ ...current, [field]: undefined }));
@@ -57,7 +66,10 @@ export function CaseForm({ onCreated }: CaseFormProps) {
 
     const errors = validateCaseFields(payload);
     setFieldErrors(errors);
-    if (Object.keys(errors).length > 0) return;
+    if (Object.keys(errors).length > 0) {
+      setFocusInvalidField(true);
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -92,7 +104,7 @@ export function CaseForm({ onCreated }: CaseFormProps) {
   }
 
   return (
-    <form className="case-form case-form-card" aria-label="Skapa ärende" onSubmit={handleSubmit} noValidate>
+    <form ref={formRef} className="case-form case-form-card" aria-label="Skapa ärende" onSubmit={handleSubmit} noValidate>
       <table className="case-fields-table" aria-label="Uppgifter för nytt ärende">
         <tbody>
           <tr>

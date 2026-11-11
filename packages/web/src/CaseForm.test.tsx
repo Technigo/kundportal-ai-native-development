@@ -47,6 +47,17 @@ describe('CaseForm', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it('[ACCESSIBILITY-FORMS-005] focuses the first invalid field after create validation fails', async () => {
+    const user = userEvent.setup();
+
+    render(<CaseForm onCreated={vi.fn()} />);
+    const title = screen.getByRole('textbox', { name: 'Rubrik' });
+    await user.click(screen.getByRole('button', { name: 'Skapa ärende' }));
+
+    expect(await screen.findByText('Ange en rubrik.')).toBeInTheDocument();
+    expect(document.activeElement).toBe(title);
+  });
+
   it('[CASE-CREATE-003] requires a category', () => {
     render(<CaseForm onCreated={vi.fn()} />);
     const category = screen.getByRole('combobox', { name: 'Kategori' });
