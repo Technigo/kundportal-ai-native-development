@@ -167,7 +167,7 @@ describe('CaseList', () => {
     expect(fetchMock).toHaveBeenLastCalledWith('/api/cases/2', { method: 'DELETE' });
   });
 
-  it('[CASE-LIST-001] and [UI-CONSISTENCY-003] displays the status as text in the case summary', async () => {
+  it('[CASE-LIST-001] and [ACCESSIBILITY-FORMS-003] displays the status as text in the case summary', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue(

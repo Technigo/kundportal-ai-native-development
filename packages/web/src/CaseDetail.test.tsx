@@ -299,7 +299,7 @@ describe('CaseDetail', () => {
     expect(screen.getByRole('textbox', { name: 'Rubrik' })).toBeInTheDocument();
   });
 
-  it('[UI-CONSISTENCY-007] exposes API validation errors as accessible feedback', async () => {
+  it('[ACCESSIBILITY-FORMS-004] exposes API validation errors as accessible feedback', async () => {
     vi.stubGlobal('fetch', vi.fn()
       .mockResolvedValueOnce(jsonResponse(caseItem))
       .mockResolvedValueOnce(jsonResponse({ error: 'Välj en giltig kategori.' }, 400)));

@@ -13,7 +13,7 @@ Ticketen är klar när acceptanskriterierna är uppfyllda, kopplade tester finns
 | CASE-DELETE | Ta bort ärende | CASE-EDIT | [case-delete.md](./case-delete.md) |
 | CASE-STATUS | Ändra status | CASE-DETAIL | [case-status.md](./case-status.md) |
 | CASE-NOTE | Hantera intern anteckning | CASE-DETAIL | [case-note.md](./case-note.md) |
-| UI-CONSISTENCY | Tillgängliga kontroller och begriplig feedback | Projektskelett | [ui-consistency.md](./ui-consistency.md) |
+| ACCESSIBILITY-FORMS | Tillgängliga kontroller och begriplig feedback | Projektskelett | [accessibility-forms.md](./accessibility-forms.md) |
 | CI-REQ-COVERAGE | Kravtestning i pull requests | MVP-featuretickets | [ci-requirement-coverage.md](./ci-requirement-coverage.md) |
 
 Märk automatiserade testnamn med de funktionella krav-ID:n de täcker. Krav som saknar ett existerande och godkänt test innebär att ticketen inte är klar.
