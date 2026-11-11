@@ -56,3 +56,10 @@ Regler för frontendkoden:
 - **Inget ramverk, inga externa bibliotek**.
 - Funktionsnamn på engelska enligt skelettet, texter till användaren på svenska.
 - **Citattecken:** enkla (`'`) i JavaScript, dubbla (`"`) i HTML-attribut. Använd backticks bara när strängen innehåller variabler. Följ stilen som redan finns i filen.
+
+## Frontend och design
+
+- Gäller Del 3 och Del 4: läs `.agents/skills/design/SKILL.md` **innan** du ändrar CSS eller markup i `frontend/index.html`.
+- Använd färger och avstånd från skelettet eller designreglerna. Nya klasser får läggas till om de följer designreglerna. Hitta inte på egna färger eller värden.
+- Kontrollera layouten vid 375, 768 och 1280 px bredd innan du säger att du är klar.
+- Rapportera vad du faktiskt har sett. Kan du inte öppna sidan i en webbläsare, säg det och lista vad som är okontrollerat.
