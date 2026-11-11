@@ -410,10 +410,18 @@
         overscroll-behavior: contain;
       }
       .detail-fields {
-        display: grid;
-        grid-template-columns: minmax(7.5rem, 11rem) minmax(0, 1fr);
-        gap: 0.65rem 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
         margin: 0;
+        min-width: 0;
+      }
+      .detail-text,
+      .detail-status-block {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        min-width: 0;
       }
       .detail-fields dt {
         margin: 0;
@@ -454,7 +462,8 @@
         flex-direction: column;
         gap: 0.25rem;
       }
-      .detail-status-form select {
+      .detail-status-form select,
+      .detail-edit-form select {
         appearance: none;
         -webkit-appearance: none;
         width: 100%;
@@ -478,7 +487,9 @@
       .detail-footer {
         flex: 0 0 auto;
         display: flex;
+        flex-wrap: wrap;
         justify-content: flex-end;
+        gap: 0.75rem;
         margin-top: 1rem;
         padding-top: 1rem;
         border-top: 1px solid var(--border);
@@ -500,6 +511,49 @@
         opacity: 0.5;
         cursor: not-allowed;
       }
+      .detail-edit-form {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        min-width: 0;
+        margin: 0;
+      }
+      .detail-edit-field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        min-width: 0;
+      }
+      .detail-edit-field label {
+        color: var(--muted);
+        font-weight: 600;
+      }
+      .detail-edit-form input,
+      .detail-edit-form textarea {
+        width: 100%;
+        min-height: 2.75rem;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--surface);
+        color: var(--text);
+        font: inherit;
+        overflow-wrap: anywhere;
+      }
+      .detail-edit-submit {
+        min-height: 2.75rem;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--surface);
+        color: var(--text);
+        font: inherit;
+        cursor: pointer;
+      }
+      .detail-edit-submit:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
       @media (max-width: 40rem) {
         #view-detail:not([hidden]) {
           padding: 0.5rem;
@@ -507,14 +561,11 @@
         .detail-dialog {
           padding: 1rem;
         }
-        .detail-fields {
-          grid-template-columns: 1fr;
-          gap: 0.15rem 0;
+        .detail-footer {
+          flex-direction: column;
         }
-        .detail-fields dd {
-          margin-bottom: 0.75rem;
-        }
-        .detail-footer .detail-status-submit {
+        .detail-footer .detail-status-submit,
+        .detail-footer .detail-edit-submit {
           width: 100%;
         }
       }
@@ -912,38 +963,25 @@
         return data != null && typeof data === 'object' && !Array.isArray(data);
       }
 
-      // Spara är inaktiv medan något sparas och så länge vald status är samma som den sparade.
-      function updateStatusControls({ select, button, confirmedStatus }, busy) {
-        select.disabled = busy;
-        button.disabled = busy || select.value === confirmedStatus;
-        button.textContent = busy ? 'Sparar…' : 'Spara';
-      }
-
       function changeStatus(arendenummer, status) {
         return api('PATCH', `/api/arenden/${encodeURIComponent(arendenummer)}/status`, { status });
       }
 
-      // Fältfel vid statusfältet när servern skickar ett. data.fel visas alltid överst.
-      function showStatusError(form, res) {
-        const fieldMessage = res.status === 400 ? res.data?.faltfel?.status : null;
-        if (fieldMessage) showFieldErrors(form, { status: fieldMessage });
-        showDetailMessage(res.data?.fel || 'Statusen kunde inte ändras.');
+      function updateListStatus(arendenummer, status) {
+        if (arendenummer == null) return;
+        const wanted = String(arendenummer);
+        const row = [...document.querySelectorAll('#case-list tr[data-arendenummer]')].find(
+          (tr) => tr.dataset.arendenummer === wanted,
+        );
+        const clip = row?.querySelector('td[data-field="status"] .case-clip');
+        if (!clip) return;
+        const text = status == null ? '' : String(status);
+        clip.textContent = text;
+        if (text) clip.title = text;
+        else clip.removeAttribute('title');
       }
 
-      // Körs när servern har bekräftat ändringen: lista och detalj visar bara serverns svar.
-      function showUpdatedCase(arende) {
-        updateListRow(arende);
-        const host = document.getElementById('case-detail');
-        host.replaceChildren();
-        renderCaseDetail(host, arende);
-        showDetailMessage('Statusen är ändrad.', 'ok');
-        document.getElementById('detail-status')?.focus(); // detaljen ritades om, så fokus måste sättas tillbaka
-      }
-
-      function createStatusForm(arende, onSaved) {
-        const requestId = detailRequest; // ignorera svar om detaljvyn hunnit stängas eller bytas
-        const confirmedStatus = arende.status ?? '';
-
+      function createStatusForm(saved) {
         const form = document.createElement('form');
         form.id = 'detail-status-form';
         form.className = 'detail-status-form';
@@ -955,75 +993,299 @@
         for (const status of PORTAL_CONFIG.STATUSAR) {
           select.append(new Option(status, status));
         }
-        select.value = confirmedStatus;
+        select.value = saved.status ?? '';
 
         const fieldError = document.createElement('span');
         fieldError.className = 'field-error';
         fieldError.dataset.errorFor = 'status';
 
         form.append(select, fieldError);
+        return { form, select };
+      }
 
-        // Spara-knappen ligger längst ner i dialogen (utanför det scrollande innehållet)
-        // och hör till formuläret via form-attributet.
+      /* ---------- Detalj: övriga fält ---------- */
+
+      function updateListCells(arendenummer, fields) {
+        if (arendenummer == null) return;
+        const wanted = String(arendenummer);
+        const row = [...document.querySelectorAll('#case-list tr[data-arendenummer]')].find(
+          (tr) => tr.dataset.arendenummer === wanted,
+        );
+        if (!row) return;
+        for (const [field, value] of Object.entries(fields)) {
+          const clip = row.querySelector(`td[data-field="${field}"] .case-clip`);
+          if (!clip) continue;
+          const text = value == null ? '' : String(value);
+          clip.textContent = text;
+          if (text) clip.title = text;
+          else clip.removeAttribute('title');
+        }
+      }
+
+      function createEditForm(saved) {
+        const form = document.createElement('form');
+        form.id = 'detail-edit-form';
+        form.className = 'detail-edit-form';
+
+        function addField(name, control) {
+          const wrap = document.createElement('div');
+          wrap.className = 'detail-edit-field';
+          const label = document.createElement('label');
+          label.htmlFor = `detail-edit-${name}`;
+          label.textContent = LIST_FIELD_LABELS[name] || name;
+          control.id = `detail-edit-${name}`;
+          control.name = name;
+          const fieldError = document.createElement('span');
+          fieldError.className = 'field-error';
+          fieldError.dataset.errorFor = name;
+          wrap.append(label, control, fieldError);
+          form.append(wrap);
+          return control;
+        }
+
+        const rubrik = addField('rubrik', document.createElement('input'));
+        rubrik.type = 'text';
+        rubrik.value = saved.rubrik;
+
+        const beskrivning = addField('beskrivning', document.createElement('textarea'));
+        beskrivning.rows = 5;
+        beskrivning.value = saved.beskrivning;
+
+        const kategori = addField('kategori', document.createElement('select'));
+        for (const value of PORTAL_CONFIG.KATEGORIER) {
+          kategori.append(new Option(value, value));
+        }
+        kategori.value = saved.kategori;
+
+        const prioritet = addField('prioritet', document.createElement('select'));
+        for (const value of PORTAL_CONFIG.PRIORITETER) {
+          prioritet.append(new Option(String(value), String(value)));
+        }
+        prioritet.value = String(saved.prioritet);
+        return { form, rubrik, beskrivning, kategori, prioritet };
+      }
+
+      function wireSaving(saved, edit, statusForm, select) {
+        const requestId = detailRequest;
+        const footer = document.getElementById('detail-footer');
+        const reset = document.createElement('button');
+        reset.type = 'button';
+        reset.className = 'detail-edit-submit';
+        reset.textContent = 'Återställ';
         const button = document.createElement('button');
-        button.type = 'submit';
+        button.type = 'button';
         button.className = 'detail-status-submit';
-        button.setAttribute('form', form.id);
-        document.getElementById('detail-footer').replaceChildren(button);
+        button.textContent = 'Spara';
+        footer.append(reset, button);
 
-        const controls = { select, button, confirmedStatus };
         let pending = false;
-        updateStatusControls(controls, false); // Spara är inaktiv tills en annan status är vald
-        select.addEventListener('change', () => updateStatusControls(controls, false));
 
-        form.addEventListener('submit', async (event) => {
-          event.preventDefault();
+        function isDirty() {
+          return select.value !== saved.status || Object.keys(fieldChanges()).length > 0;
+        }
+
+        function setBusy(busy) {
+          button.disabled = busy || !isDirty();
+          reset.disabled = busy;
+          button.textContent = busy ? 'Sparar…' : 'Spara';
+        }
+
+        function fieldChanges() {
+          const changes = {};
+          if (edit.rubrik.value !== saved.rubrik) changes.rubrik = edit.rubrik.value;
+          if (edit.beskrivning.value !== saved.beskrivning)
+            changes.beskrivning = edit.beskrivning.value;
+          if (edit.kategori.value !== saved.kategori) changes.kategori = edit.kategori.value;
+          const nextPrioritet = Number(edit.prioritet.value);
+          if (nextPrioritet !== saved.prioritet) changes.prioritet = nextPrioritet;
+          return changes;
+        }
+
+        function resetFields() {
+          edit.rubrik.value = saved.rubrik;
+          edit.beskrivning.value = saved.beskrivning;
+          edit.kategori.value = saved.kategori;
+          edit.prioritet.value = String(saved.prioritet);
+          select.value = saved.status;
+          clearFieldErrors(edit.form);
+          clearFieldErrors(statusForm);
+          clearDetailMessage();
+        }
+
+        function showOutcome(statusOk, fieldOk, statusFel, fieldFel) {
+          if (statusOk === true && fieldOk === false) {
+            showDetailMessage('Statusen är ändrad. Övriga fält kunde inte sparas.');
+          } else if (fieldOk === true && statusOk === false) {
+            showDetailMessage('Övriga fält är sparade. Statusen kunde inte ändras.');
+          } else if (statusOk === false || fieldOk === false) {
+            showDetailMessage(fieldFel || statusFel);
+          } else if (statusOk === true && fieldOk == null) {
+            showDetailMessage('Statusen är ändrad.', 'ok');
+            select.focus();
+          } else if (fieldOk === true) {
+            clearDetailMessage();
+          }
+        }
+
+        async function saveAll() {
           if (pending) return;
-          const nextStatus = select.value;
-          if (nextStatus === confirmedStatus) return;
+          const changes = fieldChanges();
+          const statusChanged = select.value !== saved.status;
+          if (!statusChanged && Object.keys(changes).length === 0) return;
 
           pending = true;
-          updateStatusControls(controls, true);
-          clearFieldErrors(form);
+          setBusy(true);
+          clearFieldErrors(edit.form);
+          clearFieldErrors(statusForm);
           clearDetailMessage();
 
-          const res = await changeStatus(arende.arendenummer, nextStatus);
+          const nextStatus = select.value;
+          const statusTask = statusChanged
+            ? changeStatus(saved.arendenummer, nextStatus)
+            : Promise.resolve(null);
+          const fieldTask =
+            Object.keys(changes).length > 0
+              ? api('PATCH', `/api/arenden/${encodeURIComponent(saved.arendenummer)}`, changes)
+              : Promise.resolve(null);
+          const [statusRes, fieldRes] = await Promise.all([statusTask, fieldTask]);
           if (requestId !== detailRequest) return;
 
-          if (res.ok && isCaseObject(res.data)) {
-            onSaved(res.data);
-            return;
-          }
-          pending = false;
-          select.value = confirmedStatus; // visa aldrig en status som servern inte har bekräftat
-          updateStatusControls(controls, false);
-          select.focus();
-          showStatusError(form, res);
-        });
+          let statusOk = null;
+          let fieldOk = null;
+          let statusFel = '';
+          let fieldFel = '';
 
-        return form;
+          if (fieldRes) {
+            if (fieldRes.ok && isCaseObject(fieldRes.data)) {
+              fieldOk = true;
+              const data = fieldRes.data;
+              if (data.rubrik != null) saved.rubrik = String(data.rubrik);
+              if (data.beskrivning != null) saved.beskrivning = String(data.beskrivning);
+              if (data.kategori != null) saved.kategori = String(data.kategori);
+              if (data.prioritet != null) saved.prioritet = Number(data.prioritet);
+              edit.rubrik.value = saved.rubrik;
+              edit.beskrivning.value = saved.beskrivning;
+              edit.kategori.value = saved.kategori;
+              edit.prioritet.value = String(saved.prioritet);
+              updateListCells(saved.arendenummer, {
+                rubrik: saved.rubrik,
+                prioritet: saved.prioritet,
+              });
+            } else {
+              fieldOk = false;
+              fieldFel = fieldRes.data?.fel || 'Ärendet kunde inte sparas.';
+              if (fieldRes.data?.faltfel && typeof fieldRes.data.faltfel === 'object') {
+                showFieldErrors(edit.form, fieldRes.data.faltfel);
+              }
+            }
+          }
+
+          if (statusRes) {
+            if (statusRes.ok && isCaseObject(statusRes.data)) {
+              statusOk = true;
+              const confirmed =
+                statusRes.data.status == null || statusRes.data.status === ''
+                  ? nextStatus
+                  : String(statusRes.data.status);
+              saved.status = confirmed;
+              select.value = confirmed;
+              updateListStatus(saved.arendenummer, confirmed);
+            } else {
+              statusOk = false;
+              statusFel = statusRes.data?.fel || 'Statusen kunde inte ändras.';
+              const fieldMessage =
+                statusRes.status === 400 ? statusRes.data?.faltfel?.status : null;
+              if (fieldMessage) showFieldErrors(statusForm, { status: fieldMessage });
+            }
+          }
+
+          pending = false;
+          setBusy(false);
+          showOutcome(statusOk, fieldOk, statusFel, fieldFel);
+        }
+
+        function onEnter(event) {
+          if (event.key !== 'Enter' || event.target.tagName === 'TEXTAREA') return;
+          event.preventDefault();
+          saveAll();
+        }
+
+        function onDraftChange() {
+          if (pending) return;
+          setBusy(false);
+        }
+
+        reset.addEventListener('click', () => {
+          if (pending) return;
+          resetFields();
+          setBusy(false);
+        });
+        button.addEventListener('click', () => saveAll());
+        edit.form.addEventListener('input', onDraftChange);
+        edit.form.addEventListener('change', onDraftChange);
+        statusForm.addEventListener('change', onDraftChange);
+        edit.form.addEventListener('keydown', onEnter);
+        statusForm.addEventListener('keydown', onEnter);
+        edit.form.addEventListener('submit', (event) => {
+          event.preventDefault();
+          saveAll();
+        });
+        statusForm.addEventListener('submit', (event) => {
+          event.preventDefault();
+          saveAll();
+        });
+        setBusy(false);
       }
 
       /* ---------- Detalj: visning ---------- */
 
+      function caseSnapshot(arende) {
+        return {
+          arendenummer: arende.arendenummer == null ? '' : String(arende.arendenummer),
+          rubrik: arende.rubrik == null ? '' : String(arende.rubrik),
+          beskrivning: arende.beskrivning == null ? '' : String(arende.beskrivning),
+          kategori: arende.kategori == null ? '' : String(arende.kategori),
+          prioritet: Number(arende.prioritet),
+          status: arende.status == null ? '' : String(arende.status),
+          deadline: arende.deadline == null ? '' : String(arende.deadline),
+        };
+      }
+
+      function createTextField(name, value) {
+        const wrap = document.createElement('div');
+        wrap.className = 'detail-text';
+        const dt = document.createElement('dt');
+        dt.textContent = LIST_FIELD_LABELS[name] || name;
+        const dd = document.createElement('dd');
+        dd.textContent = value == null ? '' : String(value);
+        wrap.append(dt, dd);
+        return wrap;
+      }
+
       function renderCaseDetail(container, arende) {
-        const dl = document.createElement('dl');
-        dl.className = 'detail-fields';
-        for (const field of DETAIL_FIELDS) {
-          const dt = document.createElement('dt');
-          dt.textContent = LIST_FIELD_LABELS[field] || field;
-          const dd = document.createElement('dd');
-          if (field === 'status') {
-            dt.id = 'detail-status-label';
-            dd.append(createStatusForm(arende, showUpdatedCase));
-          } else {
-            const value = arende[field];
-            dd.textContent =
-              field === 'skapad' ? formatCreatedAt(value) : value == null ? '' : String(value);
-          }
-          dl.append(dt, dd);
-        }
-        container.append(dl);
+        const saved = caseSnapshot(arende);
+        document.getElementById('detail-footer').replaceChildren();
+
+        const stack = document.createElement('div');
+        stack.className = 'detail-fields';
+        const statusBlock = document.createElement('div');
+        statusBlock.className = 'detail-status-block';
+        const statusLabel = document.createElement('dt');
+        statusLabel.id = 'detail-status-label';
+        statusLabel.textContent = LIST_FIELD_LABELS.status;
+        const status = createStatusForm(saved);
+        statusBlock.append(statusLabel, status.form);
+        const edit = createEditForm(saved);
+
+        stack.append(
+          createTextField('arendenummer', saved.arendenummer),
+          edit.form,
+          statusBlock,
+          createTextField('skapad', formatCreatedAt(arende.skapad)),
+          createTextField('deadline', saved.deadline),
+        );
+        wireSaving(saved, edit, status.form, status.select);
+        container.append(stack);
       }
 
       async function onShowDetailView(arendenummer) {
