@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { StatusFilter } from './domain/ticket'
 import { TicketDetail } from './features/tickets/TicketDetail'
+import { TicketForm } from './features/tickets/TicketForm'
 import { TicketList } from './features/tickets/TicketList'
 import './App.css'
 
@@ -32,6 +33,19 @@ function App() {
   // K8: filtret ligger här så att det finns kvar när vyer byts, men inte efter omladdning
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(null)
   const [selectedTicketId, setSelectedTicketId] = useState<number | null>(null)
+  const [showForm, setShowForm] = useState(false)
+  // Ändras efter registrering så att listan hämtas på nytt
+  const [listVersion, setListVersion] = useState(0)
+
+  function openForm() {
+    setSelectedTicketId(null)
+    setShowForm(true)
+  }
+
+  function selectTicket(id: number) {
+    setShowForm(false)
+    setSelectedTicketId(id)
+  }
 
   useEffect(() => {
     let active = true
@@ -72,14 +86,28 @@ function App() {
         </div>
       </aside>
       <main className="content">
-        <h1>Ärenden</h1>
+        <div className="content-header">
+          <h1>Ärenden</h1>
+          {!showForm && (
+            <button type="button" className="new-ticket-button" onClick={openForm}>
+              Nytt ärende
+            </button>
+          )}
+        </div>
         <div className="ticket-layout">
           <TicketList
+            key={listVersion}
             statusFilter={statusFilter}
             onStatusFilterChange={setStatusFilter}
             selectedTicketId={selectedTicketId}
-            onSelectTicket={setSelectedTicketId}
+            onSelectTicket={selectTicket}
           />
+          {showForm && (
+            <TicketForm
+              onCreated={() => setListVersion((version) => version + 1)}
+              onCancel={() => setShowForm(false)}
+            />
+          )}
           {selectedTicketId !== null && (
             <TicketDetail
               key={selectedTicketId}
