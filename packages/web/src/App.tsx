@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { CaseForm, type CreatedCase } from './CaseForm';
 import { CaseList } from './CaseList';
 
@@ -8,6 +8,23 @@ export function App() {
   const [view, setView] = useState<View>('list');
   const [createdCase, setCreatedCase] = useState<CreatedCase | null>(null);
   const [listRefresh, setListRefresh] = useState(0);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const focusHeadingAfterMenuNavigation = useRef(false);
+
+  useEffect(() => {
+    if (!focusHeadingAfterMenuNavigation.current) return;
+
+    headingRef.current?.focus();
+    document.title = view === 'list' ? 'Alla ärenden' : 'Skapa ärende';
+    focusHeadingAfterMenuNavigation.current = false;
+  }, [view]);
+
+  function handleMenuNavigation(nextView: View) {
+    if (nextView === view) return;
+
+    focusHeadingAfterMenuNavigation.current = true;
+    setView(nextView);
+  }
 
   function handleCreated(caseItem: CreatedCase) {
     setCreatedCase(caseItem);
@@ -27,7 +44,7 @@ export function App() {
             className="main-nav__item case-edit-button"
             type="button"
             aria-current={view === 'list' ? 'page' : undefined}
-            onClick={() => setView('list')}
+            onClick={() => handleMenuNavigation('list')}
           >
             Alla ärenden
           </button>
@@ -35,7 +52,7 @@ export function App() {
             className="main-nav__item case-edit-button"
             type="button"
             aria-current={view === 'create' ? 'page' : undefined}
-            onClick={() => setView('create')}
+            onClick={() => handleMenuNavigation('create')}
           >
             Skapa ärende
           </button>
@@ -44,7 +61,9 @@ export function App() {
       <section className="welcome" aria-labelledby="workspace-title">
         <div className="workspace-heading">
           <div>
-            <h1 id="workspace-title">{view === 'list' ? 'Alla ärenden' : 'Skapa ärende'}</h1>
+            <h1 ref={headingRef} id="workspace-title" tabIndex={-1}>
+              {view === 'list' ? 'Alla ärenden' : 'Skapa ärende'}
+            </h1>
             <p className="intro">
               {view === 'list'
                 ? 'Håll koll på inkomna kundärenden och deras status.'
