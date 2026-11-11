@@ -90,11 +90,11 @@ Script: [scripts/mutation-check.mjs](../scripts/mutation-check.mjs).
 
 ## Latest run results
 
-Run on 2026-11-10 on branch `jessica/status-change-backend` (status form and history on the detail page).
+Run on 2026-11-11 on branch `jessica/status-change-backend`, after the review fixes for PR #13.
 
 | Command | Result |
 |---|---|
-| `npm test` | 11 files, 108 tests passed |
+| `npm test` | 11 files, 109 tests passed |
 | `npm run lint` | No errors |
 | `npm run typecheck` | No errors |
 | `npm run test:e2e` | 18 tests passed |

@@ -51,7 +51,7 @@ Based on section 5 of [project-brief.md](../project-brief.md) (AC5.1–AC5.3).
 
 ## Breakdown into small steps (test-first, following `ticket-change`)
 
-1. **Status change schema:** a zod schema for a status change (ticket id + new status) in `ticketSchema.ts`. Tested with Vitest.
+1. **Status schema:** a zod schema for the status only (`ticketStatusSchema`) in `ticketSchema.ts`. The ticket id is parsed with `parseTicketId`, the same as on the detail page. Tested with Vitest.
 2. **History table:** a new table `ticket_status_changes` (ticket id, from, to, timestamp) in `src/db/schema.ts`. I run `npm run db:generate` myself.
 3. **Repository:** `changeTicketStatus(db, id, to)` and `listStatusChanges(db, id)` in `ticketRepository.ts`. Handles "not found" and "same status", and writes the ticket and the history entry in one transaction. Tested with Vitest against the test database.
 4. **Server action:** `changeStatus` in `tickets/actions.ts`, which parses the ticket id with `parseTicketId`, validates the status, calls the repository, returns the "Invalid status." error and redirects when the ticket does not exist. Tested with Vitest.
