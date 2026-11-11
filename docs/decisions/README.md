@@ -32,3 +32,4 @@ Each file has:
 | [07](07-save-failure-handling.md) | Handling a failed save when registering a ticket | Proposed |
 | [08](08-ticket-persistence.md) | Tickets persist in a local SQLite file | Proposed |
 | [09](09-internal-notes.md) | Internal notes and comments | Accepted |
+| [10](10-run-and-demo-instructions.md) | Someone else can run and demonstrate the app from our instructions | Proposed |

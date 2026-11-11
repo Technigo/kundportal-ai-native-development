@@ -1,4 +1,4 @@
-# 08: Internal notes and comments
+# 09: Internal notes and comments
 
 - **Status:** Accepted
 - **Date:** 2026-11-11

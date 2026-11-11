@@ -1,7 +1,7 @@
 # Plan: Internal notes (AC6.1–AC6.10)
 
 Owner: Marie Flem Honningdalnes · Reviewer: Alexandra Petersson
-Decision: [08-internal-notes.md](../decisions/08-internal-notes.md)
+Decision: [09-internal-notes.md](../decisions/09-internal-notes.md)
 Based on section 6 of [project-brief.md](../project-brief.md).
 
 ## Starting point (2026-11-09, before the work)
