@@ -97,11 +97,11 @@ Use the database file that `DATABASE_URL` points to. By default it is `data/dev.
 | 6. Start the server and click **Register ticket** again | `npm run dev` | `npm run dev` |
 | 7. Check | The ticket is saved and the ticket list is shown | Same |
 
-On 2026-11-10 the `chmod` behaviour was checked on a copy of the database with libSQL directly, not yet with `npm run dev`: a connection opened while the file is read-only fails with `SQLITE_READONLY`, and `chmod` on an open connection has no effect. On 2026-11-11 the whole check was done with `npm run dev` in Firefox on macOS: see the [test report](../test-reports/ac1-8-manual-check.md). The Windows steps have not been tried yet.
+On 2026-11-10 the `chmod` behaviour was checked on a copy of the database with libSQL directly, not yet with `npm run dev`: a connection opened while the file is read-only fails with `SQLITE_READONLY`, and `chmod` on an open connection has no effect. On 2026-11-11 the whole check was done with `npm run dev` in Firefox on macOS: see the [test report](../test-reports/ac1-8-manual-check.md). On 2026-11-11 Jessica Swahn did the Windows steps with `npm run dev`: `attrib` works the same way as `chmod`.
 
 ## Steps (test-first, following `ticket-change`)
 
-All steps were done by 2026-11-11, except the Windows steps of the manual check.
+All steps were done by 2026-11-11.
 
 1. **Spec:** Jessica reviews this spec and [decision 07](../decisions/07-save-failure-handling.md).
 2. **Action:** change the `getDb` mock to `vi.fn`, write T1–T6 and see them fail. Then add `formError`, `try`/`catch` and the logging to `submitTicket`.

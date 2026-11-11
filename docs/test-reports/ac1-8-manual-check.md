@@ -1,8 +1,8 @@
 # Manual check: clear message when a ticket cannot be saved (AC1.8)
 
 - **Date:** 2026-11-11
-- **Tester:** Alexandra Petersson
-- **Environment:** macOS, Firefox, VoiceOver, `npm run dev` (Next.js 16.4.2)
+- **Tester:** Alexandra Petersson (macOS), Jessica Swahn (Windows)
+- **Environment:** macOS, Firefox, VoiceOver, `npm run dev` (Next.js 16.4.2). Windows, `npm run dev`, no screen reader (see [Windows check](#windows-check))
 - **Branch:** `Alexandra/save-failure-message`
 - **Database:** `data/dev.db`
 - **Spec:** [save-failure-message.md](../specs/save-failure-message.md#manual-check) · **Decision:** [07](../decisions/07-save-failure-handling.md)
@@ -40,8 +40,24 @@ The form on `http://localhost:3000/tickets/new` after a failed save. The handler
 
 `ls -l` shows that `data/dev.db` was writable (`-rw-r--r--`) before the test. `chmod 444` makes it read-only, and `npm run dev` starts the server. When `POST /tickets/new` runs, the server logs `Failed to save ticket { name: 'Error', cause: 'LibsqlError', code: 'SQLITE_READONLY' }`, and the request answers `200`, not an error page. Next.js prints each request line after the request is done, so the log line comes before the `POST` line. The log line has no name, email or SQL (R12).
 
+## Windows check
+
+On 2026-11-11 Jessica Swahn did steps 2–9 on Windows with `npm run dev`, using `attrib +R data\dev.db` and `attrib -R data\dev.db` instead of `chmod 444` and `chmod 644`. The message was shown in red directly above **Register ticket**, the page stayed on `/tickets/new`, all values were kept and no field was marked invalid. The server logged `Failed to save ticket { name: 'Error', cause: 'LibsqlError', code: 'SQLITE_READONLY' }` without the entered values. After `attrib -R` and a restart the ticket was saved and shown first in the ticket list. `attrib` works the same way as `chmod`. Step 8 (screen reader) was not part of the Windows check.
+
+### Figure 3: the message in the browser on Windows
+
+![The New ticket form on Windows with the red message above the Register ticket button](../images/ac1-8-save-failure-browser-windows.png)
+
+The form after a failed save on Windows. The input is kept: name "Lisa Andersson", an empty email, subject "Change Email", description "Can you change my email?", category "urgent" and priority High. The red message is shown directly above **Register ticket**, and no field has a red border. The data is fake.
+
+### Figure 4: the server log on Windows
+
+![The terminal on Windows with the log line Failed to save ticket](../images/ac1-8-save-failure-terminal-windows.png)
+
+The server logs `Failed to save ticket { name: 'Error', cause: 'LibsqlError', code: 'SQLITE_READONLY' }`, and `POST /tickets/new` answers `200`. The log line has no name, subject or other entered values (R12).
+
 ## Not covered
 
-- Windows (`attrib +R` and `attrib -R`). Jessica Swahn will try these steps.
+- A screen reader on Windows.
 - Other browsers than Firefox, and other screen readers than VoiceOver.
 - Other database errors than `SQLITE_READONLY` in a real browser. The automated tests cover `SQLITE_ERROR`, a missing database directory and values that are not an `Error`.
