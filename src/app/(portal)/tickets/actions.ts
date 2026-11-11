@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { getDb } from "@/db/client";
 import { parseTicketId } from "@/tickets/parseTicketId";
 import { changeTicketStatus, createTicket, getTicket } from "@/tickets/ticketRepository";
-import { newTicketSchema, statusChangeSchema } from "@/tickets/ticketSchema";
+import { newTicketSchema, ticketStatusSchema } from "@/tickets/ticketSchema";
 
 type TicketFormValues = { requesterName: string; requesterEmail: string; subject: string; description: string; category: string; priority: string };
 
@@ -45,7 +45,7 @@ export async function changeStatus(_prev: ChangeStatusState, formData: FormData)
   const id = parseTicketId(String(formData.get("ticketId") ?? ""));
   if (id === undefined || !(await getTicket(getDb(), id))) redirect("/tickets?notice=ticket-not-found");
 
-  const parsed = statusChangeSchema.shape.status.safeParse(formData.get("status"));
+  const parsed = ticketStatusSchema.safeParse(formData.get("status"));
   if (!parsed.success) return { error: "Invalid status." };
 
   const result = await changeTicketStatus(getDb(), id, parsed.data);

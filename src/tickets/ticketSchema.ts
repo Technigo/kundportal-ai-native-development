@@ -39,9 +39,5 @@ export const newTicketSchema = z.object({
 
 export type NewTicket = z.infer<typeof newTicketSchema>;
 
-export const statusChangeSchema = z.object({
-  ticketId: z.number().int().positive(),
-  status: z.enum(ticketStatuses, { error: "Invalid status." }),
-});
-
-export type StatusChange = z.infer<typeof statusChangeSchema>;
+// The ticket id is parsed with parseTicketId, so only the status needs a schema.
+export const ticketStatusSchema = z.enum(ticketStatuses, { error: "Invalid status." });
