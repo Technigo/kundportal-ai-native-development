@@ -1,8 +1,9 @@
-import { createClient } from "@libsql/client";
+import { createClient, type Client } from "@libsql/client";
 import { drizzle, type LibSQLDatabase } from "drizzle-orm/libsql";
 import * as schema from "./schema";
 
-export type Db = LibSQLDatabase<typeof schema>;
+/** The Drizzle database, plus the underlying libSQL client so callers can close it (`db.$client.close()`). */
+export type Db = LibSQLDatabase<typeof schema> & { $client: Client };
 
 export function createDb(url: string, authToken?: string): Db {
   return drizzle(createClient({ url, authToken: authToken || undefined }), { schema });
