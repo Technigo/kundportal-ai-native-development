@@ -598,3 +598,126 @@ describe("InternalNotes delete", () => {
     await waitFor(() => expect(screen.getByRole("alert")).toBeEmptyDOMElement());
   });
 });
+
+async function submitCommentError(message: string, typed = "Keep me") {
+  const addNoteComment = vi.fn<AddNote>(async () => ({ value: typed, error: message }));
+  setup([note({ body: "Parent" })], undefined, addNoteComment);
+  await openNote("Parent");
+  await userEvent.type(within(noteItem("Parent")).getByLabelText("Comment"), typed);
+  await userEvent.click(within(noteItem("Parent")).getByRole("button", { name: "Add comment" }));
+  expect(await screen.findByText(message)).toBeInTheDocument();
+  return addNoteComment;
+}
+
+const clickOutside = () => userEvent.click(screen.getByRole("heading", { level: 2, name: "Internal notes" }));
+
+describe("InternalNotes error messages go away", () => {
+  const commentMessage = "Please write a comment.";
+  const noteMessage = "Please write a note.";
+
+  it("hides the comment error when the comments are closed, and keeps the text", async () => {
+    await submitCommentError(commentMessage);
+
+    await openNote("Parent");
+    await openNote("Parent");
+
+    expect(screen.queryByText(commentMessage)).not.toBeInTheDocument();
+    expect(within(noteItem("Parent")).getByLabelText("Comment")).toHaveValue("Keep me");
+  });
+
+  it("hides the comment error when the handler clicks outside the textarea, and keeps the text", async () => {
+    await submitCommentError(commentMessage);
+
+    await clickOutside();
+
+    expect(screen.queryByText(commentMessage)).not.toBeInTheDocument();
+    const textarea = within(noteItem("Parent")).getByLabelText("Comment");
+    expect(textarea).toHaveValue("Keep me");
+    expect(textarea).not.toHaveAttribute("aria-describedby");
+  });
+
+  it("hides the comment error when the handler starts typing", async () => {
+    await submitCommentError(commentMessage);
+
+    await userEvent.keyboard("x");
+
+    expect(screen.queryByText(commentMessage)).not.toBeInTheDocument();
+    expect(within(noteItem("Parent")).getByLabelText("Comment")).toHaveValue("Keep mex");
+  });
+
+  it("shows the comment error again after a new failed submit", async () => {
+    await submitCommentError(commentMessage);
+    await clickOutside();
+    expect(screen.queryByText(commentMessage)).not.toBeInTheDocument();
+
+    await userEvent.click(within(noteItem("Parent")).getByRole("button", { name: "Add comment" }));
+
+    expect(await screen.findByText(commentMessage)).toBeInTheDocument();
+  });
+
+  it("puts focus in the comment textarea when an error is shown", async () => {
+    await submitCommentError(commentMessage);
+
+    await waitFor(() => expect(within(noteItem("Parent")).getByLabelText("Comment")).toHaveFocus());
+  });
+
+  describe("note form", () => {
+    async function submitNoteError() {
+      const addNote = vi.fn<AddNote>(async () => ({ value: "Keep me", error: noteMessage }));
+      setup([], addNote);
+      await userEvent.type(screen.getByLabelText("Note"), "Keep me");
+      await userEvent.click(addButton());
+      expect(await screen.findByText(noteMessage)).toBeInTheDocument();
+    }
+
+    it("puts focus in the textarea when an error is shown", async () => {
+      await submitNoteError();
+
+      await waitFor(() => expect(screen.getByLabelText("Note")).toHaveFocus());
+    });
+
+    it("hides the error when the handler clicks outside, and keeps the text", async () => {
+      await submitNoteError();
+
+      await clickOutside();
+
+      expect(screen.queryByText(noteMessage)).not.toBeInTheDocument();
+      expect(screen.getByLabelText("Note")).toHaveValue("Keep me");
+      expect(screen.getByLabelText("Note")).not.toHaveAttribute("aria-describedby");
+    });
+
+    it("hides the error when the handler starts typing", async () => {
+      await submitNoteError();
+
+      await userEvent.keyboard("x");
+
+      expect(screen.queryByText(noteMessage)).not.toBeInTheDocument();
+      expect(screen.getByLabelText("Note")).toHaveValue("Keep mex");
+    });
+
+    it("shows the error again after a new failed submit", async () => {
+      await submitNoteError();
+      await clickOutside();
+      expect(screen.queryByText(noteMessage)).not.toBeInTheDocument();
+
+      await userEvent.click(addButton());
+
+      expect(await screen.findByText(noteMessage)).toBeInTheDocument();
+    });
+  });
+
+  it("leaves the alert area alone when an error is dismissed", async () => {
+    const alert = "This ticket no longer exists. Go back to the ticket list.";
+    const addNote = vi.fn<AddNote>(async () => ({ value: "x", error: noteMessage, alert }));
+    setup([], addNote);
+    await userEvent.type(screen.getByLabelText("Note"), "x");
+    await userEvent.click(addButton());
+    expect(await screen.findByText(noteMessage)).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent(alert);
+
+    await clickOutside();
+
+    expect(screen.queryByText(noteMessage)).not.toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent(alert);
+  });
+});

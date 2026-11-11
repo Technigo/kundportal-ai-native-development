@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import type { NoteActionState } from "@/app/(portal)/tickets/actions";
 import type { TicketNoteComment } from "@/db/schema";
 import type { NoteWithComments } from "@/tickets/ticketRepository";
@@ -34,6 +34,7 @@ export function InternalNotes({ ticketId, notes, addNote, addNoteComment, delete
       return next;
     };
   const [state, formAction, pending] = useActionState(withAlert(addNote), undefined);
+  const { error, dismiss, ref } = useDismissableError(state);
 
   return (
     <section aria-labelledby="internal-notes-heading" className="space-y-4">
@@ -50,18 +51,21 @@ export function InternalNotes({ ticketId, notes, addNote, addNoteComment, delete
           Note
         </label>
         <textarea
+          ref={ref}
+          onBlur={dismiss}
+          onChange={dismiss}
           id="note-body"
           name="body"
           maxLength={500}
           rows={3}
           defaultValue={state?.value}
-          aria-invalid={state?.error ? true : undefined}
-          aria-describedby={state?.error ? "note-body-error" : undefined}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? "note-body-error" : undefined}
           className={textareaClass}
         />
-        {state?.error && (
+        {error && (
           <p id="note-body-error" className="text-sm text-red-700">
-            {state.error}
+            {error}
           </p>
         )}
         <button type="submit" disabled={pending} className={buttonClass}>
@@ -88,6 +92,7 @@ export function InternalNotes({ ticketId, notes, addNote, addNoteComment, delete
 function NoteItem({ note, addComment, deleteNote, deleteComment }: { note: NoteWithComments; addComment: Action; deleteNote: Action; deleteComment: Action }) {
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState(addComment, undefined);
+  const { error, dismiss, ref } = useDismissableError(state);
 
   return (
     <li className="rounded-lg border border-slate-200 bg-white p-4">
@@ -98,7 +103,10 @@ function NoteItem({ note, addComment, deleteNote, deleteComment }: { note: NoteW
       <button
         type="button"
         aria-expanded={open}
-        onClick={() => setOpen(!open)}
+        onClick={() => {
+          dismiss();
+          setOpen(!open);
+        }}
         className="mt-2 inline-flex cursor-pointer items-center gap-1 rounded-md border border-slate-300 bg-white px-3 py-1 text-sm font-medium text-slate-800 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
       >
         <span aria-hidden="true">{open ? "▾" : "▸"}</span>
@@ -126,18 +134,21 @@ function NoteItem({ note, addComment, deleteNote, deleteComment }: { note: NoteW
               Comment
             </label>
             <textarea
+              ref={ref}
+              onBlur={dismiss}
+              onChange={dismiss}
               id={`comment-body-${note.id}`}
               name="body"
               maxLength={500}
               rows={2}
               defaultValue={state?.value}
-              aria-invalid={state?.error ? true : undefined}
-              aria-describedby={state?.error ? `comment-body-${note.id}-error` : undefined}
+              aria-invalid={error ? true : undefined}
+              aria-describedby={error ? `comment-body-${note.id}-error` : undefined}
               className={textareaClass}
             />
-            {state?.error && (
+            {error && (
               <p id={`comment-body-${note.id}-error`} className="text-sm text-red-700">
-                {state.error}
+                {error}
               </p>
             )}
             <button type="submit" disabled={pending} className={buttonClass}>
@@ -160,6 +171,26 @@ function CommentItem({ comment, deleteComment }: { comment: TicketNoteComment; d
       <DeleteControl action={deleteComment} field="commentId" id={comment.id} label="Delete comment" />
     </li>
   );
+}
+
+// An error stays until the handler closes the form, leaves the field or types. A new result shows it again.
+function useDismissableError(state: NoteActionState) {
+  const [dismissed, setDismissed] = useState<NoteActionState>();
+  const ref = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    const field = ref.current;
+    if (!state?.error || !field) return;
+    field.focus();
+    // Focus puts the cursor at the start; keep typing after the existing text.
+    field.setSelectionRange(field.value.length, field.value.length);
+  }, [state]);
+
+  return {
+    error: state?.error && dismissed !== state ? state.error : undefined,
+    dismiss: () => setDismissed(state),
+    ref,
+  };
 }
 
 function commentWarning(count: number) {
