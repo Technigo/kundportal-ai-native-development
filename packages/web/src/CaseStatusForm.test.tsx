@@ -31,6 +31,12 @@ async function submitStatus() {
 }
 
 describe('CaseStatusForm', () => {
+  it('[ACCESSIBILITY-FORMS-001] gives the status selector an accessible name', () => {
+    render(<CaseStatusForm caseItem={caseItem} onUpdated={vi.fn()} />);
+
+    expect(screen.getByRole('combobox', { name: 'Ändra status' })).toBeInTheDocument();
+  });
+
   it('[CASE-STATUS-001] offers exactly the allowed statuses', () => {
     render(<CaseStatusForm caseItem={caseItem} onUpdated={vi.fn()} />);
 
