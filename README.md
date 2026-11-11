@@ -49,7 +49,7 @@ There's no sign-in yet: anyone who opens the app is treated as a case handler an
 | `npm run test:mutation` | Break `submitTicket` on purpose and check that the right tests fail (`-- --e2e` adds Playwright) |
 | `npm run db:generate` | Create a migration in `drizzle/` from changes to `src/db/schema.ts` |
 | `npm run db:migrate` | Apply migrations to `DATABASE_URL` |
-| `npm run db:seed` | Insert demo tickets |
+| `npm run db:seed` | Insert demo tickets, with notes and comments on two of them |
 | `npm run db:reset` | Delete the local database file, then migrate and seed (local files only) |
 
 ### Test-driven development

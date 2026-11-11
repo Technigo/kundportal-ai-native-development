@@ -4,7 +4,9 @@ Owner: Marie Flem Honningdalnes · Reviewer: Alexandra Petersson
 Decision: [08-internal-notes.md](../decisions/08-internal-notes.md)
 Based on section 6 of [project-brief.md](../project-brief.md).
 
-## Current state
+## Starting point (2026-11-09, before the work)
+
+This describes the code before the work started. Implemented on 2026-11-11; the tests and results are in [verification.md](../verification.md).
 
 - `src/db/schema.ts` has only the `tickets` table. There is no table for notes or comments, and no foreign keys yet.
 - `src/db/client.ts` does not turn on SQLite foreign-key enforcement (`PRAGMA foreign_keys`), so `onDelete: "cascade"` alone does not remove comments.
@@ -90,7 +92,7 @@ Each criterion first goes through `test-cases`, and the owners pick the cases. E
 4. **Server actions:** `addNote`, `addNoteComment`, `deleteNote` and `deleteNoteComment` in `src/app/(portal)/tickets/actions.ts`. They follow the `submitTicket` pattern, parse ids with the strict rule of `parseTicketId`, check the parent before the text, and revalidate the ticket page (see the next bullet). Server action tests in `actions.test.ts` (AC6.4, AC6.5, AC6.9).
    - `addNoteComment`, `deleteNote` and `deleteNoteComment` take no ticket id from the form. They look up the ticket id through the note (or comment) in the database and revalidate that ticket's page. `addNote` takes the ticket id from the form because the ticket is its parent. If the note or comment no longer exists, there is no ticket id to look up. Then the action revalidates all ticket pages with `revalidatePath("/tickets/[id]", "page")`, so the page shows the current database state with the message (AC6.5, AC6.9). The route is in the `(portal)` group, so step 4 checks in a test whether the pattern needs the group name.
 5. **Components:**
-   - The notes section in `TicketDetails` shows the alert area, the note form and the list, with the date-and-time format and no empty-state text. Text uses the `whitespace-pre-wrap wrap-break-word` style and is never rendered as HTML.
+   - The notes section (the `InternalNotes` component, passed to `TicketDetails` as `children` and shown after "Status and history") shows the alert area, the note form and the list, with the date-and-time format and no empty-state text. Text uses the `whitespace-pre-wrap wrap-break-word` style and is never rendered as HTML.
    - New client components: the note form, a note item with the "Comments (N)" toggle and the comment form, and the two-step delete control. They use `useActionState`, disable the button while saving, and empty the form after a success. The alert state is lifted to a shared client parent, because four actions write to one alert area.
    - React Testing Library tests for AC6.1, AC6.2, AC6.4 and AC6.6–AC6.10.
    - The delete buttons have `aria-label` "Delete note" and "Delete comment". Tests scope them by note.
