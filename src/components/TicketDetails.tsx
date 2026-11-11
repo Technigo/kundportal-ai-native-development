@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import type { Ticket } from "@/db/schema";
 import type { TicketPriority, TicketStatus } from "@/tickets/ticketSchema";
 
@@ -22,7 +23,7 @@ const priorityLabels: Record<TicketPriority, string> = {
 
 const dateFormat = new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeZone: "UTC" });
 
-export function TicketDetails({ ticket }: { ticket: Ticket }) {
+export function TicketDetails({ ticket, children }: { ticket: Ticket; children?: ReactNode }) {
   return (
     <article className="max-w-3xl space-y-6">
       <Link
@@ -57,6 +58,7 @@ export function TicketDetails({ ticket }: { ticket: Ticket }) {
         </p>
       </section>
       <section aria-label="Status and history" />
+      {children}
     </article>
   );
 }
