@@ -13,11 +13,66 @@
   background: var(--color-bg);
 }
 
+/* Markis: rundade bågar i rosa, som i designförslaget */
+.awning {
+  display: flex;
+  height: 36px;
+  margin: calc(-1 * var(--space-6)) calc(-1 * var(--space-4)) 0;
+  overflow: hidden;
+  background: linear-gradient(var(--color-accent-line), var(--color-accent-line))
+    top / 100% 8px no-repeat;
+  transform-origin: top;
+  /* Rullas ner när sidan laddas och studsar lätt på plats */
+  animation: awning-roll 1s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+}
+
+.awning span {
+  flex: 0 0 22px;
+  /* Avlånga bågar: rak överkant mot bandet, rund underkant */
+  height: 29px;
+  margin: 0 2px;
+  border-radius: 0 0 11px 11px;
+  background: var(--color-accent-line);
+}
+
+/* Gungar från vänster till höger när musen är över loggan */
+.sidebar:has(.brand:hover) .awning span {
+  animation: awning-wave 0.6s ease-in-out calc(var(--i) * 60ms) both;
+}
+
+@keyframes awning-roll {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes awning-wave {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(4px);
+  }
+}
+
+/* Ingen rörelse för den som valt minskad rörelse i operativsystemet */
+@media (prefers-reduced-motion: reduce) {
+  .awning,
+  .sidebar:has(.brand:hover) .awning span {
+    animation: none;
+  }
+}
+
 .brand {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  color: var(--color-text);
+  color: var(--color-primary);
+  font-size: 1.35rem;
   font-weight: 700;
 }
 
@@ -26,8 +81,9 @@
   place-items: center;
   width: 36px;
   height: 36px;
-  border-radius: var(--radius-control);
+  border-radius: 50%;
   background: var(--color-accent);
+  font-size: 1rem;
   color: var(--color-on-primary);
 }
 
@@ -57,12 +113,12 @@
 
 .content {
   min-width: 0;
-  padding: var(--space-6);
 }
 
 /* Lista cirka 60 % och detaljpanel cirka 40 % */
 .ticket-layout {
   display: grid;
+  padding: var(--space-6);
   grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
   gap: var(--space-5);
   align-items: start;
@@ -84,7 +140,9 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
-  margin-bottom: var(--space-5);
+  padding: var(--space-3) var(--space-6);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
 }
 
 .new-ticket-button {
@@ -94,6 +152,7 @@
   background: var(--color-primary);
   color: var(--color-on-primary);
   font: inherit;
+  font-weight: 700;
   cursor: pointer;
 }
 
@@ -103,6 +162,6 @@
 
 .content h1 {
   margin: 0;
-  color: var(--color-text);
+  color: var(--color-primary);
   font-size: 1.5rem;
 }
