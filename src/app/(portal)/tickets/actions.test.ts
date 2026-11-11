@@ -3,9 +3,6 @@ import { LibsqlError } from "@libsql/client";
 import { DrizzleQueryError } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createDb, getDb, type Db } from "@/db/client";
-import { tickets } from "@/db/schema";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { Db } from "@/db/client";
 import { ticketNoteComments, ticketNotes, tickets } from "@/db/schema";
 import { createTestDb } from "@/test-utils/testDb";
 import { addNote as saveNote, addNoteComment as saveComment, createTicket } from "@/tickets/ticketRepository";
@@ -232,6 +229,9 @@ describe("submitTicket when the ticket cannot be saved", () => {
     expect(await db.select().from(tickets)).toHaveLength(1);
     expect(mocks.redirect).toHaveBeenCalledTimes(1);
     expect(mocks.redirect).toHaveBeenCalledWith("/tickets");
+  });
+});
+
 const ticketGone = "This ticket no longer exists. Go back to the ticket list.";
 const noteGone = "This note no longer exists.";
 const commentGone = "This comment no longer exists.";
