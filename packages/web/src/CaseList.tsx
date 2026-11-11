@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { CaseDetail } from './CaseDetail';
 import { isCaseSummary, type CaseSummary } from './caseTypes';
@@ -13,6 +13,15 @@ export function CaseList({ refreshKey = 0, onCreateCase }: CaseListProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [selectedCaseId, setSelectedCaseId] = useState<number | null>(null);
+  const [focusCaseButtonId, setFocusCaseButtonId] = useState<number | null>(null);
+  const expandButtonRefs = useRef(new Map<number, HTMLButtonElement>());
+
+  useLayoutEffect(() => {
+    if (selectedCaseId === null && focusCaseButtonId !== null) {
+      expandButtonRefs.current.get(focusCaseButtonId)?.focus();
+      setFocusCaseButtonId(null);
+    }
+  }, [selectedCaseId, focusCaseButtonId]);
 
   useEffect(() => {
     let active = true;
@@ -85,7 +94,10 @@ export function CaseList({ refreshKey = 0, onCreateCase }: CaseListProps) {
                   <CaseDetail
                     key={caseItem.id}
                     caseId={caseItem.id}
-                    onCollapse={() => setSelectedCaseId(null)}
+                    onCollapse={() => {
+                      setFocusCaseButtonId(caseItem.id);
+                      setSelectedCaseId(null);
+                    }}
                     onDeleted={() => {
                       setCases((current) => current.filter((item) => item.id !== caseItem.id));
                       setSelectedCaseId(null);
@@ -101,6 +113,13 @@ export function CaseList({ refreshKey = 0, onCreateCase }: CaseListProps) {
                     <div className="case-item__heading">
                       <div className="case-item__title">
                         <button
+                          ref={(element) => {
+                            if (element) {
+                              expandButtonRefs.current.set(caseItem.id, element);
+                            } else {
+                              expandButtonRefs.current.delete(caseItem.id);
+                            }
+                          }}
                           className="case-expand-button"
                           type="button"
                           aria-label="Visa ärendedetaljer"

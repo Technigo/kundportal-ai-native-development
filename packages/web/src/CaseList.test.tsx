@@ -89,6 +89,32 @@ describe('CaseList', () => {
     );
   });
 
+  it('[ACCESSIBILITY-FORMS-007] moves focus to the case heading on expand and back to its button on collapse', async () => {
+    const selectedCase = cases[1];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn()
+        .mockResolvedValueOnce(new Response(JSON.stringify(cases)))
+        .mockResolvedValueOnce(new Response(JSON.stringify(selectedCase)))
+    );
+    const user = userEvent.setup();
+    render(<CaseList />);
+
+    const list = await screen.findByRole('list', { name: 'Alla ärenden' });
+    const item = within(list).getAllByRole('listitem')[1];
+    const expandButton = within(item).getByRole('button', { name: 'Visa ärendedetaljer' });
+    await user.click(expandButton);
+
+    const detail = await screen.findByRole('region', { name: selectedCase.title });
+    const heading = await within(detail).findByRole('heading', { name: selectedCase.title });
+    expect(heading).toHaveFocus();
+
+    await user.click(within(detail).getByRole('button', { name: 'Fäll ihop ärendet' }));
+
+    expect(screen.queryByRole('region', { name: selectedCase.title })).not.toBeInTheDocument();
+    expect(within(item).getByRole('button', { name: 'Visa ärendedetaljer' })).toHaveFocus();
+  });
+
   it('[CASE-DETAIL-004] and [CASE-EDIT-003] expands to show full details in read-only mode', async () => {
     const selectedCase = { ...cases[1], note: 'Intern information.' };
     vi.stubGlobal(
