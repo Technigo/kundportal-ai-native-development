@@ -19,6 +19,7 @@
 - After the "note is gone" case, the actions refresh all ticket pages. Whether other open tabs on other tickets also refresh is not tested.
 - Keyboard focus is lost when the "Delete" button is replaced by "Confirm delete".
 - Text typed in a comment form and not sent is lost when the comments are closed. After a failed send, only the text from that send comes back.
+- A form error message is hidden as soon as the textarea loses focus. With the mouse, the submit button can move up before the mouse is released (tested by hand, accepted). Switching to another window also hides the message, and a slow error that arrives after the comments were closed still shows when they are opened again. A slow error can also move focus back to the form that sent it.
 
 ## Risks
 
