@@ -19,6 +19,10 @@ In short: the agent proposes and a human decides, tests come first, and humans m
 
 A project skill at [.claude/skills/ticket-change/SKILL.md](../../.claude/skills/ticket-change/SKILL.md). It turns one acceptance criterion into a small, reviewed change: failing test, minimal code, checks, verification row. Anyone on the team can run it with `/ticket-change`.
 
+## Reusable step: `test-cases`
+
+A project skill at [.claude/skills/test-cases/SKILL.md](../../.claude/skills/test-cases/SKILL.md). It turns one acceptance criterion into a numbered table of proposed test cases (happy path, error path, edge cases) with assumptions and questions. It writes no test code and changes no files. The owners choose the cases, and the building is done with `ticket-change`. Anyone on the team can run it with `/test-cases`.
+
 ### Examples of use
 
 **Ticket details (AC4.1–AC4.6), 2026-11-05, owner Marie Flem Honningdalnes, reviewer Alexandra Petersson**
@@ -44,3 +48,16 @@ A project skill at [.claude/skills/ticket-change/SKILL.md](../../.claude/skills/
 - What the checks found: `npm run typecheck` failed on `button.form` in T7, which Vitest does not type-check. The e2e server did not start either, because the build type-checks. The test was changed to `alert.closest("form")`.
 - Manual check in Firefox with VoiceOver: [report](../test-reports/ac1-8-manual-check.md).
 - Result: left uncommitted for review, then committed by the owner (commits `e3584eb`, `bb994b0`, `7c8af02`, `cc2a2fd`). Commit `e3584eb` holds both the first tests and the change to `actions.ts`, so the failing step is recorded here, not in the git history.
+**Internal notes (AC6.1–AC6.10), 2026-11-10 to 2026-11-11, owner Marie Flem Honningdalnes, reviewer Alexandra Petersson**
+
+- Criterion: section 6 of [project-brief.md](../project-brief.md).
+- Plan: [internal-notes.md](../specs/internal-notes.md), nine steps, each approved separately. Decision: [08](../decisions/08-internal-notes.md).
+- Each criterion first went through `/test-cases`. The owner chose the cases, then `ticket-change` built them test-first: the agent showed the exact test code, the owner approved it, the test was run and shown failing, then the minimal code was approved and written.
+  - Schemas, repository, server actions and components (note form, comments toggle, delete) in `src/tickets/`, `src/app/(portal)/tickets/` and `src/components/`, with Vitest tests next to the code.
+  - Tables in `src/db/schema.ts`. The owner ran `npm run db:generate`; the agent did not touch `drizzle/`.
+  - Seed data and Playwright tests in `e2e/notes.spec.ts`.
+- Two failures were reported and decided by the owner instead of being fixed by the agent: the zod length rule (code points, not UTF-16 units, so the spec was corrected) and the cursor position after focus (put the cursor at the end).
+- Later changes asked for by the owner, each with a failing test first: form errors that go away when the comments are closed, when the field loses focus or when typing, and an alert area that is kept when a later form fails validation.
+- Checked by AI: a manual mutation check of the notes (2 of 4 mutations caught, see [verification.md](../verification.md)), a two-axis code review (standards and spec) run twice, and a security review (no findings at confidence 8 or higher). The review files were deleted at the owner's request; the owner decided which points to accept.
+- Checked by hand by the owner: the pages in `npm run dev`, including the click on "Add note" after an error (accepted as it is).
+- Result: left uncommitted for review, then committed by the owner.

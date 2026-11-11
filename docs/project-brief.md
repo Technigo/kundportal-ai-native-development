@@ -81,12 +81,12 @@ Detailed specification: [docs/specs/ticket-list-and-details.md](specs/ticket-lis
 
 Detailed specification: [docs/specs/status-change.md](specs/status-change.md)
 
-### 6. Internal notes (Planned)
+### 6. Internal notes (Done)
 
 - AC6.1: Given a ticket, when the handler writes a note on the detail page and adds it, then the note is saved and shown on the ticket with its created date and time, and the form is emptied.
 - AC6.2: Each note shows a "Comments (N)" button that shows or hides its comments and a comment form. Given an open note, when the handler writes a comment and adds it, then the comment is saved and shown under that note with its created date and time, and the count is updated.
 - AC6.3: Notes are shown newest first and the comments under a note oldest first. A new comment does not change the order of the notes. Notes and comments remain after the application restarts.
-- AC6.4: Note and comment text is validated on the server (1–500 characters after trimming). Given invalid text, nothing is saved, an error is shown next to the form and the entered text is kept.
+- AC6.4: Note and comment text is validated on the server (1–500 characters after trimming). Given invalid text, nothing is saved, an error is shown next to the form and the entered text is kept. The error goes away when the handler closes the comments, leaves the field or starts typing.
 - AC6.5: Given a ticket id or note id that does not exist or is malformed, when a note or comment is sent for it, then nothing is saved and a message says it no longer exists.
 - AC6.6: Given a note, when the handler deletes it and confirms in a second step, then the note and all its comments are removed. The confirm step warns when the note has comments. If the handler cancels, nothing changes.
 - AC6.7: Given a comment, when the handler deletes it and confirms in a second step, then only that comment is removed.
@@ -96,10 +96,17 @@ Detailed specification: [docs/specs/status-change.md](specs/status-change.md)
 
 Detailed specification: [docs/specs/internal-notes.md](specs/internal-notes.md)
 
+### 7. Persist tickets (Done)
+
+- AC7.1: Given a saved ticket, when the application is stopped and started again, then the ticket is still in the list with the same details.
+- AC7.2: Tickets are stored in a local SQLite file (`DATABASE_URL`, default `data/dev.db`) that is not committed to git.
+
+Decision: [docs/decisions/08-ticket-persistence.md](decisions/08-ticket-persistence.md) (status: Proposed). "Done" means the implementation and its tests are complete; the decision itself is still waiting for review before it can be accepted.
+
 ## Milestones
 
 1. Boilerplate: UI, server logic and storage connected (done).
 2. Register and list tickets, tested (done).
 3. Ticket details, tested (done).
 4. Status tracking with history (next).
-5. Internal notes with comments and delete, tested (planned).
+5. Internal notes with comments and delete, tested (done).
