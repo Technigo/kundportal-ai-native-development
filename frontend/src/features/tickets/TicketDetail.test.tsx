@@ -11,6 +11,9 @@ import { ApiError } from '../../api/client'
 import { getTicket } from '../../api/tickets'
 import type { Ticket } from '../../domain/ticket'
 import { TicketDetail } from './TicketDetail'
+import { IDLE_UPDATE } from './useUpdateStatus'
+
+const idleStatusUpdate = { ...IDLE_UPDATE, save: vi.fn(), verify: vi.fn() }
 
 vi.mock('../../api/tickets', () => ({ getTicket: vi.fn() }))
 const getTicketMock = vi.mocked(getTicket)
@@ -44,7 +47,7 @@ function deferredTicket() {
 it('shows every field of the chosen ticket', async () => {
   getTicketMock.mockResolvedValue(TICKET)
 
-  render(<TicketDetail ticketId={42} onClose={() => {}} />)
+  render(<TicketDetail statusUpdate={idleStatusUpdate} ticketId={42} onClose={() => {}} />)
 
   expect(
     await screen.findByRole('heading', { name: 'Fråga om faktura' }),
@@ -74,7 +77,7 @@ it('shows a clear message when the ticket does not exist', async () => {
     new ApiError(404, 'not_found', 'Ärendet kunde inte hittas.'),
   )
 
-  render(<TicketDetail ticketId={999} onClose={() => {}} />)
+  render(<TicketDetail statusUpdate={idleStatusUpdate} ticketId={999} onClose={() => {}} />)
 
   expect(await screen.findByRole('alert')).toHaveTextContent(
     'Ärendet kunde inte hittas',
@@ -90,7 +93,7 @@ it('shows an error and fetches again when the user retries', async () => {
       new ApiError(503, 'storage_unavailable', 'Lagringen är tillfälligt otillgänglig.'),
     )
     .mockResolvedValueOnce(TICKET)
-  render(<TicketDetail ticketId={42} onClose={() => {}} />)
+  render(<TicketDetail statusUpdate={idleStatusUpdate} ticketId={42} onClose={() => {}} />)
 
   const alert = await screen.findByRole('alert')
   expect(alert).toHaveTextContent('Ärendet kunde inte hämtas. Försök igen.')
@@ -105,7 +108,7 @@ it('shows an error and fetches again when the user retries', async () => {
 it('moves focus to the panel when it opens', async () => {
   getTicketMock.mockResolvedValue(TICKET)
 
-  render(<TicketDetail ticketId={42} onClose={() => {}} />)
+  render(<TicketDetail statusUpdate={idleStatusUpdate} ticketId={42} onClose={() => {}} />)
 
   expect(screen.getByRole('region', { name: 'Ärendedetaljer' })).toHaveFocus()
   await screen.findByRole('heading', { name: 'Fråga om faktura' })
@@ -116,7 +119,7 @@ it('lets the user go back to the list when the ticket does not exist', async () 
     new ApiError(404, 'not_found', 'Ärendet kunde inte hittas.'),
   )
   const onClose = vi.fn()
-  render(<TicketDetail ticketId={999} onClose={onClose} />)
+  render(<TicketDetail statusUpdate={idleStatusUpdate} ticketId={999} onClose={onClose} />)
   await screen.findByRole('alert')
 
   fireEvent.click(screen.getByRole('button', { name: 'Stäng' }))
@@ -130,9 +133,9 @@ it('never shows a previously chosen ticket after the user picks another', async 
   getTicketMock
     .mockReturnValueOnce(first.promise)
     .mockReturnValueOnce(second.promise)
-  const { rerender } = render(<TicketDetail ticketId={1} onClose={() => {}} />)
+  const { rerender } = render(<TicketDetail statusUpdate={idleStatusUpdate} ticketId={1} onClose={() => {}} />)
 
-  rerender(<TicketDetail ticketId={2} onClose={() => {}} />)
+  rerender(<TicketDetail statusUpdate={idleStatusUpdate} ticketId={2} onClose={() => {}} />)
   // Det nya ärendet svarar först, det gamla svaret kommer sent
   await act(async () => {
     second.resolve({ ...TICKET, id: 2, title: 'Det senast valda ärendet' })
@@ -150,7 +153,7 @@ it('never shows a previously chosen ticket after the user picks another', async 
 it('lets the user go back to the list', async () => {
   getTicketMock.mockResolvedValue(TICKET)
   const onClose = vi.fn()
-  render(<TicketDetail ticketId={42} onClose={onClose} />)
+  render(<TicketDetail statusUpdate={idleStatusUpdate} ticketId={42} onClose={onClose} />)
   await screen.findByRole('heading', { name: 'Fråga om faktura' })
 
   screen.getByRole('button', { name: 'Stäng' }).click()

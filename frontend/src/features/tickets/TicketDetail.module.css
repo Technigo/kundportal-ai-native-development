@@ -52,10 +52,14 @@
   margin: 0 0 var(--space-5);
 }
 
-.facts div {
+.facts > div {
   padding: var(--space-3);
   border-radius: var(--radius-control);
   background: var(--color-surface-muted);
+}
+
+.status {
+  grid-column: 1 / -1;
 }
 
 .facts dt {

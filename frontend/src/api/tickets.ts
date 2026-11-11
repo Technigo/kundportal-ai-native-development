@@ -1,4 +1,4 @@
-import type { Category, Priority, StatusFilter, Ticket } from '../domain/ticket'
+import type { Category, Priority, StatusFilter, Ticket, TicketStatus } from '../domain/ticket'
 import { request } from './client'
 
 // Nyast först enligt API-kontraktet. null = Alla.
@@ -27,4 +27,12 @@ export function createTicket(ticket: NewTicket): Promise<Ticket> {
 
 export function getTicket(id: number): Promise<Ticket> {
   return request<Ticket>(`/tickets/${id}`)
+}
+
+export function updateTicketStatus(id: number, status: TicketStatus): Promise<Ticket> {
+  return request<Ticket>(`/tickets/${id}/status`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status }),
+  })
 }

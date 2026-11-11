@@ -108,6 +108,15 @@ Den 6 november 2026 gav den lokala körningen på [`afab9e7`](https://github.com
 
 Den 9 november 2026 gav den lokala körningen på branchen `feature/ticket-detail` ([`8c13d6a`](https://github.com/danielleven/kundportal-ai-native-development-grupp-1/commit/8c13d6ab749d3bfff4f5368e6d9cb7cd6c23b6f1)) 27 godkända backendtester mot den separata MySQL-testdatabasen, bland annat T07 och T09, och 17 godkända frontendtester. Typkontroll och bygge gick igenom. Daniel kontrollerade tangentbordsnavigering och detaljdelen av M01 manuellt i webbläsaren. CI kördes inte, eftersom GitHub-kontot var spärrat. Se [arbetsloggen](arbetslogg.md#verifiering-issue-12) för kommandon, begränsningar och de bekräftade punkterna.
 
+### Issue #13 – Statusändring i detaljpanelen (K3, K6, K7, K8)
+
+Kontrollerat lokalt den 11 november 2026 av Codex på Windows med Node.js 24.16.0, Python 3.12.14 och den separata MySQL-testdatabasen. Branch `feature/status-change` baserad på `8b18114`.
+
+- **Frontend:** `npm.cmd test` gav 70 godkända, 0 misslyckade och 0 överhoppade tester. `npm.cmd run build` klarade typkontroll och bygge. [Flödestesterna](../frontend/src/App.status.test.tsx) täcker statusval, tangentbordsnavigation, oförändrad status under sparandet, bekräftad status i lista och detaljpanel, valt filter samt återhämtning efter fel och okänt sparutfall (T09, T10, T12, T14 och T15 på klientsidan). [API-klientens test](../frontend/src/api/tickets.test.ts) kontrollerar att PATCH skickar endast status.
+- **Backend:** `python -m pytest -q` kördes med projektets virtuella miljö och den isolerade MySQL-testdatabasen. Resultat: 47 godkända, 0 misslyckade och 0 överhoppade tester. Den befintliga testsviten täcker bland annat T09–T12 och T14.
+- **Manuell kontroll i Chrome:** Ett påhittat ärende ändrades från Nytt till Avslutat och den sparade statusen syntes i lista och detaljpanel efter omstart av backend och omladdning av klienten (del av M03). Med filtret Avslutat aktivt återöppnades ärendet som Pågående med piltangenter och Enter. Detaljpanelen visade Pågående och den filtrerade listan visade tomläget (M04).
+- Omstart av MySQL, framkallat lagringsfel via webbläsaren (M05) och GitHub Actions återstår för denna branch.
+
 ## 7. Begränsningar
 
 - Backendtester verifierar beteenden mot testdatabasen. De visar inte att frontendens ärendegränssnitt fungerar.

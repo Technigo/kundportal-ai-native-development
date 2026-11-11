@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 import { ApiError } from '../../api/client'
 import { createTicket, type NewTicket } from '../../api/tickets'
+import { STORAGE_UNAVAILABLE_MESSAGE, UNKNOWN_OUTCOME_MESSAGE } from '../../domain/saveErrors'
 import type { Ticket } from '../../domain/ticket'
 
 export type CreateTicketError =
@@ -9,10 +10,6 @@ export type CreateTicketError =
   | { kind: 'unknown_outcome'; message: string }
   | { kind: 'other'; message: string }
 
-const STORAGE_UNAVAILABLE_MESSAGE =
-  'Ändringen kunde inte sparas. Försök igen.'
-const UNKNOWN_OUTCOME_MESSAGE =
-  'Det gick inte att bekräfta att ändringen sparades. Uppdatera listan och kontrollera innan du försöker igen.'
 const OTHER_MESSAGE = 'Något gick fel. Försök igen.'
 
 function toCreateTicketError(error: unknown): CreateTicketError {
