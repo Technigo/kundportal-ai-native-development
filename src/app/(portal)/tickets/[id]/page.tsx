@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { cache, Suspense } from "react";
+import { InternalNotes } from "@/components/InternalNotes";
 import { TicketDetails } from "@/components/TicketDetails";
 import { getDb } from "@/db/client";
 import { parseTicketId } from "@/tickets/parseTicketId";
-import { getTicket, listStatusChanges } from "@/tickets/ticketRepository";
-import { changeStatus } from "../actions";
+import { getTicket, listNotesWithComments, listStatusChanges } from "@/tickets/ticketRepository";
+import { addNote, addNoteComment, changeStatus, deleteNote, deleteNoteComment } from "../actions";
 
 const loadTicket = cache(async (rawId: string) => {
   // Ticket data is per request: render it at request time, never at build time.
@@ -24,7 +25,19 @@ async function SelectedTicket({ params }: { params: Promise<{ id: string }> }) {
   const ticket = await loadTicket((await params).id);
   if (!ticket) redirect("/tickets?notice=ticket-not-found");
   const changes = await listStatusChanges(getDb(), ticket.id);
-  return <TicketDetails ticket={ticket} changes={changes} statusAction={changeStatus} />;
+  const notes = await listNotesWithComments(getDb(), ticket.id);
+  return (
+    <TicketDetails ticket={ticket} changes={changes} statusAction={changeStatus}>
+      <InternalNotes
+        ticketId={ticket.id}
+        notes={notes}
+        addNote={addNote}
+        addNoteComment={addNoteComment}
+        deleteNote={deleteNote}
+        deleteNoteComment={deleteNoteComment}
+      />
+    </TicketDetails>
+  );
 }
 
 export default function TicketPage({ params }: { params: Promise<{ id: string }> }) {

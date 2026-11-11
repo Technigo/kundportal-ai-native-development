@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { newTicketSchema, ticketStatusSchema, ticketStatuses } from "./ticketSchema";
+import { newNoteCommentSchema, newNoteSchema, newTicketSchema, ticketStatusSchema, ticketStatuses } from "./ticketSchema";
 
 const valid = { requesterName: "Ada Lovelace", subject: "Cannot download invoice", description: "The PDF link returns an error.", category: "Billing" };
 
@@ -140,5 +140,45 @@ describe("ticketStatusSchema", () => {
     const result = ticketStatusSchema.safeParse(status);
     expect(result.success).toBe(false);
     expect(result.error?.issues).toEqual([expect.objectContaining({ message: "Invalid status." })]);
+  });
+});
+
+describe.each([
+  ["newNoteSchema", newNoteSchema, "Please write a note.", "Note must be at most 500 characters."],
+  ["newNoteCommentSchema", newNoteCommentSchema, "Please write a comment.", "Comment must be at most 500 characters."],
+])("%s", (_name, schema, emptyMessage, tooLongMessage) => {
+  it("accepts valid text and trims the start and end", () => {
+    expect(schema.safeParse({ body: "  Called the customer  " }).data).toEqual({ body: "Called the customer" });
+  });
+
+  it.each([
+    ["empty", ""],
+    ["only whitespace", "  \n\t "],
+  ])("rejects text that is %s", (_label, body) => {
+    expect(schema.safeParse({ body }).error?.issues).toEqual([
+      expect.objectContaining({ path: ["body"], message: emptyMessage }),
+    ]);
+  });
+
+  it("accepts 500 characters, also with spaces around, and rejects 501", () => {
+    expect(schema.safeParse({ body: "x".repeat(500) }).success).toBe(true);
+    expect(schema.safeParse({ body: ` ${"x".repeat(500)} ` }).success).toBe(true);
+    expect(schema.safeParse({ body: "x".repeat(501) }).error?.issues).toEqual([
+      expect.objectContaining({ path: ["body"], message: tooLongMessage }),
+    ]);
+  });
+
+  it("keeps the inside as typed", () => {
+    const body = "first\r\n\r\nsecond   word";
+    expect(schema.safeParse({ body: `  ${body}  ` }).data?.body).toBe(body);
+  });
+
+  it("counts length in code points, so an emoji counts as 1", () => {
+    expect(schema.safeParse({ body: "😀".repeat(500) }).success).toBe(true);
+    expect(schema.safeParse({ body: "😀".repeat(501) }).error?.issues[0]?.message).toBe(tooLongMessage);
+  });
+
+  it("strips unknown fields", () => {
+    expect(schema.safeParse({ body: "Hi", ticketId: "1" }).data).not.toHaveProperty("ticketId");
   });
 });

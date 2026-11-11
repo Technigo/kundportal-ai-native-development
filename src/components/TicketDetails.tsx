@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import type { Ticket, TicketStatusChange } from "@/db/schema";
 import type { ChangeStatusState } from "@/tickets/changeStatusState";
 import { StatusForm } from "./StatusForm";
@@ -23,9 +24,10 @@ type TicketDetailsProps = {
   ticket: Ticket;
   changes: TicketStatusChange[];
   statusAction: (state: ChangeStatusState, formData: FormData) => Promise<ChangeStatusState>;
+  children?: ReactNode;
 };
 
-export function TicketDetails({ ticket, changes, statusAction }: TicketDetailsProps) {
+export function TicketDetails({ ticket, changes, statusAction, children }: TicketDetailsProps) {
   return (
     <article className="max-w-3xl space-y-6">
       <Link
@@ -75,6 +77,7 @@ export function TicketDetails({ ticket, changes, statusAction }: TicketDetailsPr
           </ol>
         )}
       </section>
+      {children}
     </article>
   );
 }

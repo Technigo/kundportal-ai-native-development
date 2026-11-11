@@ -37,6 +37,15 @@ const mutations = [
     vitest: { files: [ACTIONS_TEST], mustFail: ["saves a valid ticket with its requester, revalidates the list and redirects to it"] },
     // No e2e: the ticket list does not show the category, so only the action test can catch this.
   },
+  {
+    // redirect throws to work, so inside the try it is caught and shown as a database error.
+    name: "redirect is called inside the try, so the redirect is caught as a save error (AC1.8)",
+    file: ACTIONS,
+    from: "  } catch (error) {",
+    to: '    redirect("/tickets");\n  } catch (error) {',
+    vitest: { files: [ACTIONS_TEST], mustFail: ["saves the ticket and redirects when the same values are sent again after a failure"] },
+    // No e2e: AC1.8 has no e2e test (decision 07).
+  },
 ];
 
 const withE2e = process.argv.includes("--e2e");

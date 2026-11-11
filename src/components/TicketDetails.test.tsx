@@ -104,4 +104,15 @@ describe("TicketDetails", () => {
     expect(within(section).getByText("No status changes yet.")).toBeInTheDocument();
     expect(within(section).queryByRole("listitem")).not.toBeInTheDocument();
   });
+
+  it("shows its children after the status and history section", () => {
+    render(
+      <TicketDetails ticket={ticket({})} changes={[]} statusAction={vi.fn()}>
+        <p>Notes go here</p>
+      </TicketDetails>,
+    );
+
+    const status = screen.getByRole("region", { name: "Status and history" });
+    expect(status.compareDocumentPosition(screen.getByText("Notes go here")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
 });

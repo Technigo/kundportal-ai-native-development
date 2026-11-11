@@ -42,3 +42,32 @@ export const ticketStatusChanges = sqliteTable(
 );
 
 export type TicketStatusChange = typeof ticketStatusChanges.$inferSelect;
+
+export const ticketNotes = sqliteTable(
+  "ticket_notes",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    ticketId: integer("ticket_id")
+      .notNull()
+      .references(() => tickets.id),
+    body: text("body").notNull(),
+    createdAt: createdAt(),
+  },
+  (table) => [index("ticket_notes_ticket_created_idx").on(table.ticketId, table.createdAt)],
+);
+
+export const ticketNoteComments = sqliteTable(
+  "ticket_note_comments",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    noteId: integer("note_id")
+      .notNull()
+      .references(() => ticketNotes.id),
+    body: text("body").notNull(),
+    createdAt: createdAt(),
+  },
+  (table) => [index("ticket_note_comments_note_created_idx").on(table.noteId, table.createdAt)],
+);
+
+export type TicketNote = typeof ticketNotes.$inferSelect;
+export type TicketNoteComment = typeof ticketNoteComments.$inferSelect;
