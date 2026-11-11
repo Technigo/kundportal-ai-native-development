@@ -31,3 +31,4 @@ Each file has:
 | [06](06-category-free-text.md) | Category is free text | Accepted |
 | [07](07-save-failure-handling.md) | Handling a failed save when registering a ticket | Proposed |
 | [08](08-ticket-persistence.md) | Tickets persist in a local SQLite file | Proposed |
+| [09](09-internal-notes.md) | Internal notes and comments | Accepted |

@@ -19,12 +19,5 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
-      - name: Install Playwright Chromium (retries if a download hangs)
-        run: |
-          for attempt in 1 2 3; do
-            timeout 240 npx playwright install --with-deps chromium && exit 0
-            echo "Attempt $attempt failed or timed out, retrying in 20 s"
-            sleep 20
-          done
-          exit 1
+      - run: npx playwright install chromium
       - run: npm run test:e2e
