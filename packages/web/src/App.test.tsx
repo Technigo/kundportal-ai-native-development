@@ -73,6 +73,36 @@ describe('App', () => {
       .not.toHaveAttribute('aria-current');
   });
 
+  it('[ACCESSIBILITY-FORMS-006] focuses the create view heading and updates the page title after menu navigation', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse([existingCase])));
+    const user = userEvent.setup();
+    render(<App />);
+
+    await screen.findByRole('list', { name: 'Alla ärenden' });
+    const navigation = screen.getByRole('navigation', { name: 'Huvudmeny' });
+    await user.click(within(navigation).getByRole('button', { name: 'Skapa ärende' }));
+
+    const heading = screen.getByRole('heading', { name: 'Skapa ärende', level: 1 });
+    expect.soft(heading).toHaveFocus();
+    expect.soft(document.title).toContain('Skapa ärende');
+  });
+
+  it('[ACCESSIBILITY-FORMS-006] focuses the list view heading and updates the page title after returning through the main menu', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse([existingCase])));
+    const user = userEvent.setup();
+    render(<App />);
+
+    await screen.findByRole('list', { name: 'Alla ärenden' });
+    const navigation = screen.getByRole('navigation', { name: 'Huvudmeny' });
+    await user.click(within(navigation).getByRole('button', { name: 'Skapa ärende' }));
+    await screen.findByRole('heading', { name: 'Skapa ärende', level: 1 });
+    await user.click(within(navigation).getByRole('button', { name: 'Alla ärenden' }));
+
+    const heading = await screen.findByRole('heading', { name: 'Alla ärenden', level: 1 });
+    expect.soft(heading).toHaveFocus();
+    expect.soft(document.title).toContain('Alla ärenden');
+  });
+
   it('[CASE-WORKSPACE-001] opens on the list with all cases', async () => {
     const fetchMock = vi.fn().mockImplementation((input: RequestInfo | URL) => {
       return Promise.resolve(jsonResponse([existingCase]));
