@@ -29,4 +29,5 @@ Each file has:
 | [04](04-status-change-and-history.md) | Status change rules and status history | Proposed |
 | [05](05-ticket-list-and-details.md) | Ticket list and ticket details | Accepted |
 | [06](06-category-free-text.md) | Category is free text | Accepted |
-| [07](07-ticket-persistence.md) | Tickets persist in a local SQLite file | Proposed |
+| [07](07-save-failure-handling.md) | Handling a failed save when registering a ticket | Proposed |
+| [08](08-ticket-persistence.md) | Tickets persist in a local SQLite file | Proposed |
