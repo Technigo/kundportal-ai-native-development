@@ -66,7 +66,7 @@ Green tests only show that code and tests agree. To show that the tests fail for
 | Category not saved, the database default `General` hides it (AC1.7) | "saves a valid ticket…" (expects `Billing`) | Caught | Not run: the list does not show the category |
 | redirect inside the try (AC1.8) | "saves the ticket and redirects when the same values are sent again after a failure" | Caught | Not run: AC1.8 has no e2e test |
 
-Run on 2026-11-11. `git diff` showed `actions.ts` unchanged afterwards.
+Vitest run on 2026-11-11, with `git diff` showing `actions.ts` unchanged afterwards. The E2E column is from 2026-11-07, before AC1.8; `-- --e2e` was not run again.
 
 **What the check found.** The first version removed the category line in mutation 2. TypeScript then stopped `npm run build`, so no e2e test ran, and the script wrongly reported "missed". The script now reports ERROR when no tests ran, and mutation 2 uses a misspelled field name that still builds. Running the old mutation again gave "ERROR, the tests did not run" instead of "missed".
 
@@ -104,7 +104,7 @@ Automated tests cannot see layout or real browser behaviour. These checks are do
 | `/tickets/01`, `/tickets/1e0`, `/tickets/0x1` | AC4.4 | Redirect to the list with the message | Failed on 2026-11-08 (Alexandra), fixed on 2026-11-09, passed on re-check 2026-11-10 (Alexandra) |
 | `?notice=hej`, `?notice=`, `?notice=<b>x</b>`, `?notice=toString` | AC4.5 | No message, no tags rendered | Passed (Alexandra, 2026-11-08) |
 | Keyboard only: list, ticket, Back to tickets | AC4.6, AC3.2 | All reachable, focus visible | Passed (Alexandra, 2026-11-08) |
-| Screen reader | All | Pages are announced in a sensible order | Not done |
+| Screen reader | All | Pages are announced in a sensible order | Not done for whole pages. Only the AC1.8 save error message was checked with VoiceOver (see above) |
 
 ## Limitations of the verification
 
@@ -114,4 +114,4 @@ Automated tests cannot see layout or real browser behaviour. These checks are do
 - e2e tests share one seeded database, so they depend on the seed data order.
 - The AC1 tests added after the code (blank fields, limits, email, priority, `maxlength`, missing name) passed on their first run, because the behaviour already existed. They were not seen failing first; the mutation check covers `submitTicket` only.
 - The ticket list does not show the category, so e2e cannot show that it is saved. The action test covers it, and mutation 3 shows that the test catches it.
-- The mutation check tries three hand-picked mutations in `submitTicket`, not every possible fault.
+- The mutation check tries four hand-picked mutations in `submitTicket`, not every possible fault.

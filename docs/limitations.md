@@ -10,6 +10,7 @@
 - End-to-end tests run in Chrome only.
 - No pagination: the ticket list loads every ticket.
 - The category is only entered in the New ticket form. It is not shown in the ticket list or on the ticket details page yet.
+- The manual check of the save error message (AC1.8) was done in Firefox on macOS only. The Windows steps (`attrib`) have not been tried yet.
 
 ## Risks
 

@@ -33,8 +33,8 @@ Each rule has an id (R1–R12). The [Verification](#verification) table shows wh
 - **R4:** The handler is not redirected. The page is still `/tickets/new`, and the Next.js default error page is not shown.
 - **R5:** All entered values are kept, including email and priority, in the same way as for field errors.
 - **R6:** No field is marked with `aria-invalid`, because the error is not caused by a field.
-- **R7:** The message has `role="alert"`, so screen readers announce it. It uses the same red text colour as the field errors (`text-red-700`).
-- **R8:** The message is inside the form and comes directly before the **Register ticket** button in DOM order.
+- **R7:** The message has `role="alert"`, so screen readers announce it. It uses the same red text colour as the field errors (`text-red-700`). The colour is checked in the manual check, not in T7.
+- **R8:** The message is inside the form and comes before the **Register ticket** button in DOM order.
 - **R9:** Focus is not moved to the message. The message is announced through `role="alert"`.
 - **R10:** The button returns to **Register ticket** and is enabled again when the response has arrived.
 - **R11:** The message is shown only when no attempt is pending (`!pending && state?.formError`). On the next attempt it disappears as soon as the button is clicked. If saving succeeds, the handler is sent to the ticket list. If it fails again, the message is shown again and is announced again, because the element is added anew. If the input is now invalid, only the field errors are shown.
@@ -78,7 +78,7 @@ AC1.8 is verified with Vitest, a mutation and a manual check, not with e2e. The 
 | T4 | Action test | `src/app/(portal)/tickets/actions.test.ts` | A value that is not an `Error` is thrown (the string `"boom"`): `formError` is returned, and the log is `{ name: "string", cause: undefined, code: undefined }` | R2, R12 |
 | T5 | Action test | `src/app/(portal)/tickets/actions.test.ts` | The first call fails and the second call with the same values succeeds: the ticket is saved once, and `redirect("/tickets")` is called | R3, R11 |
 | T6 | Action test | `src/app/(portal)/tickets/actions.test.ts` | Invalid input: add `expect(state?.formError).toBeUndefined()` to the existing test for invalid input | R1 |
-| T7 | Component test | `src/components/TicketForm.test.tsx` | `formError` is shown with `role="alert"`, inside the form and before the button in DOM order (`compareDocumentPosition`). The values are kept, no field has `aria-invalid`, the alert is not `document.activeElement`, and the button says **Register ticket** and is enabled | R5, R6, R7, R8, R9, R10 |
+| T7 | Component test | `src/components/TicketForm.test.tsx` | `formError` is shown with `role="alert"`, inside the form and before the button in DOM order (`compareDocumentPosition`). The values are kept, no field has `aria-invalid`, the alert is not `document.activeElement`, and the button says **Register ticket** and is enabled. For R7 only `role="alert"` is tested; the class `text-red-700` was removed from T7 after the review, so the colour is covered by MC | R5, R6, R7 (`role="alert"`), R8, R9, R10 |
 | T8 | Component test | `src/components/TicketForm.test.tsx` | Two failed attempts in a row with the same values: the alert is gone while the second attempt is pending, and it is shown again when the response arrives | R11 |
 | M4 | Mutation | `scripts/mutation-check.mjs` | Mutation 4: move `redirect("/tickets")` inside the `try`. Must fail: T5, because the redirect error is caught and returned as `formError` | R3 |
 | MC | Manual check | [verification.md](../verification.md) | See [Manual check](#manual-check) below | R4, R7, R9 (red text, announcement, focus in a real browser) |
@@ -97,9 +97,11 @@ Use the database file that `DATABASE_URL` points to. By default it is `data/dev.
 | 6. Start the server and click **Register ticket** again | `npm run dev` | `npm run dev` |
 | 7. Check | The ticket is saved and the ticket list is shown | Same |
 
-On 2026-11-10 the `chmod` behaviour was checked on a copy of the database with libSQL directly, not yet with `npm run dev`: a connection opened while the file is read-only fails with `SQLITE_READONLY`, and `chmod` on an open connection has no effect. The Windows steps have not been tried yet.
+On 2026-11-10 the `chmod` behaviour was checked on a copy of the database with libSQL directly, not yet with `npm run dev`: a connection opened while the file is read-only fails with `SQLITE_READONLY`, and `chmod` on an open connection has no effect. On 2026-11-11 the whole check was done with `npm run dev` in Firefox on macOS: see the [test report](../test-reports/ac1-8-manual-check.md). The Windows steps have not been tried yet.
 
 ## Steps (test-first, following `ticket-change`)
+
+All steps were done by 2026-11-11, except the Windows steps of the manual check.
 
 1. **Spec:** Jessica reviews this spec and [decision 07](../decisions/07-save-failure-handling.md).
 2. **Action:** change the `getDb` mock to `vi.fn`, write T1–T6 and see them fail. Then add `formError`, `try`/`catch` and the logging to `submitTicket`.

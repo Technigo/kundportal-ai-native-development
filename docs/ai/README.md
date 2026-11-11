@@ -43,4 +43,4 @@ A project skill at [.claude/skills/ticket-change/SKILL.md](../../.claude/skills/
   - Mutation: M4 moves `redirect` inside the `try` and is caught by T5.
 - What the checks found: `npm run typecheck` failed on `button.form` in T7, which Vitest does not type-check. The e2e server did not start either, because the build type-checks. The test was changed to `alert.closest("form")`.
 - Manual check in Firefox with VoiceOver: [report](../test-reports/ac1-8-manual-check.md).
-- Result: left uncommitted for review, then committed by the owner (commits `e3584eb`, `bb994b0`, `7c8af02`).
+- Result: left uncommitted for review, then committed by the owner (commits `e3584eb`, `bb994b0`, `7c8af02`, `cc2a2fd`). Commit `e3584eb` holds both the first tests and the change to `actions.ts`, so the failing step is recorded here, not in the git history.
