@@ -195,7 +195,7 @@ Felprovningen använde en separat FastAPI-process med en tillfällig sessionsers
 | 20 | Q2 · Automatiserade lyckade fall, fel och gränsfall | Delvis uppfyllt | Båda sviterna passerade. Issue #13:s efterfrågade Vitest-fall för återöppning täcktes manuellt i Chrome. |
 | 21 | Q2 · Testkommandon och testlänkar | Uppfyllt | Dokumentgranskat mot den körda versionen och länkat ovan. |
 | 22 | Q3 · Planerade, automatiserade och manuella kontroller framgår | Uppfyllt | Dokumentgranskat. Planerade kontroller och faktiska körningar har separata avsnitt. |
-| 23 | Q3 · Faktiska resultat och begränsningar är spårbara | Delvis uppfyllt | Vid avstämningen väntade den nya posten på punktbekräftelsen. Bekräftelsen och testunderlaget är nu införda här. |
+| 23 | Q3 · Faktiska resultat och begränsningar är spårbara | Uppfyllt | Vid avstämningen väntade den nya posten på punktbekräftelsen. Bekräftelsen och testunderlaget är nu införda här. |
 | 24 | Leveransvillkor · Oberoende granskning | Ej verifierat | Lokal verifiering genomförd. PR och oberoende granskning saknades i det tillgängliga underlaget för `ccba1df`. |
 
 ## 7. Begränsningar
