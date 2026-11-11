@@ -159,6 +159,30 @@ describe('CaseDetail', () => {
     expect(await screen.findByText('Ange en rubrik.')).toBeInTheDocument();
     expect(document.activeElement).toBe(title);
   });
+
+  it('[ACCESSIBILITY-FORMS-008] focuses the title field when editing starts', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(caseItem)));
+    const user = userEvent.setup();
+    render(<CaseDetail caseId={7} />);
+
+    await user.click(await screen.findByRole('button', { name: 'Redigera ärende' }));
+
+    expect(screen.getByRole('textbox', { name: 'Rubrik' })).toHaveFocus();
+  });
+
+  it('[ACCESSIBILITY-FORMS-008] returns focus to the edit toggle when editing is cancelled', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(caseItem)));
+    const user = userEvent.setup();
+    render(<CaseDetail caseId={7} />);
+
+    const editButton = await screen.findByRole('button', { name: 'Redigera ärende' });
+    await user.click(editButton);
+    await user.click(screen.getByRole('button', { name: 'Avbryt redigering' }));
+
+    expect(screen.queryByRole('textbox', { name: 'Rubrik' })).not.toBeInTheDocument();
+    expect(editButton).toHaveFocus();
+  });
+
   it('[CASE-EDIT-010] displays the internal note in the read-only detail', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(
       jsonResponse({ ...caseItem, note: 'Privat anteckning.' })
