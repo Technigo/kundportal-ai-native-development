@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { cache, Suspense } from "react";
+import { InternalNotes } from "@/components/InternalNotes";
 import { TicketDetails } from "@/components/TicketDetails";
 import { getDb } from "@/db/client";
 import { parseTicketId } from "@/tickets/parseTicketId";
-import { getTicket } from "@/tickets/ticketRepository";
+import { getTicket, listNotesWithComments } from "@/tickets/ticketRepository";
+import { addNote, addNoteComment, deleteNote, deleteNoteComment } from "../actions";
 
 const loadTicket = cache(async (rawId: string) => {
   // Ticket data is per request: render it at request time, never at build time.
@@ -22,7 +24,19 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 async function SelectedTicket({ params }: { params: Promise<{ id: string }> }) {
   const ticket = await loadTicket((await params).id);
   if (!ticket) redirect("/tickets?notice=ticket-not-found");
-  return <TicketDetails ticket={ticket} />;
+  const notes = await listNotesWithComments(getDb(), ticket.id);
+  return (
+    <TicketDetails ticket={ticket}>
+      <InternalNotes
+        ticketId={ticket.id}
+        notes={notes}
+        addNote={addNote}
+        addNoteComment={addNoteComment}
+        deleteNote={deleteNote}
+        deleteNoteComment={deleteNoteComment}
+      />
+    </TicketDetails>
+  );
 }
 
 export default function TicketPage({ params }: { params: Promise<{ id: string }> }) {

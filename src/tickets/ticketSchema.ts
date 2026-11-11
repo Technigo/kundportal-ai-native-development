@@ -38,3 +38,14 @@ export const newTicketSchema = z.object({
 });
 
 export type NewTicket = z.infer<typeof newTicketSchema>;
+
+export const newNoteSchema = z.object({
+  body: z.string().trim().min(1, "Please write a note.").max(500, "Note must be at most 500 characters."),
+});
+
+export const newNoteCommentSchema = z.object({
+  body: z.string().trim().min(1, "Please write a comment.").max(500, "Comment must be at most 500 characters."),
+});
+
+export type NewNote = z.infer<typeof newNoteSchema>;
+export type NewNoteComment = z.infer<typeof newNoteCommentSchema>;

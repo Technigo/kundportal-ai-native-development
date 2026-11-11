@@ -30,3 +30,4 @@ Each file has:
 | [05](05-ticket-list-and-details.md) | Ticket list and ticket details | Accepted |
 | [06](06-category-free-text.md) | Category is free text | Accepted |
 | [07](07-save-failure-handling.md) | Handling a failed save when registering a ticket | Proposed |
+| [08](08-internal-notes.md) | Internal notes and comments | Accepted |
