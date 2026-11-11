@@ -45,6 +45,7 @@ export function CaseDetail({ caseId, onCollapse, onUpdated, onDeleted }: CaseDet
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const editFormRef = useRef<HTMLFormElement>(null);
+  const titleFieldRef = useRef<HTMLInputElement>(null);
   const cancelDeleteButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -58,6 +59,12 @@ export function CaseDetail({ caseId, onCollapse, onUpdated, onDeleted }: CaseDet
     focusFirstInvalidField(editFormRef.current);
     setFocusInvalidField(false);
   }, [focusInvalidField]);
+
+  useEffect(() => {
+    if (editing) {
+      titleFieldRef.current?.focus();
+    }
+  }, [editing]);
 
   useEffect(() => {
     if (confirmDelete) {
@@ -247,6 +254,7 @@ export function CaseDetail({ caseId, onCollapse, onUpdated, onDeleted }: CaseDet
                       ? (
                         <div className="case-edit-field">
                           <input
+                            ref={titleFieldRef}
                             className="form-control"
                             id={`case-title-${caseId}`}
                             name="title"
