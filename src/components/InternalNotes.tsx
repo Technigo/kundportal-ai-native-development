@@ -30,7 +30,9 @@ export function InternalNotes({ ticketId, notes, addNote, addNoteComment, delete
     (action: Action): Action =>
     async (prev, formData) => {
       const next = await action(prev, formData);
-      setAlert(next?.alert);
+      // A new alert replaces the old one, a failed validation leaves it, a success clears it.
+      if (next?.alert) setAlert(next.alert);
+      else if (!next?.error) setAlert(undefined);
       return next;
     };
   const [state, formAction, pending] = useActionState(withAlert(addNote), undefined);

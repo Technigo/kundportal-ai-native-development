@@ -721,3 +721,54 @@ describe("InternalNotes error messages go away", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(alert);
   });
 });
+
+describe("InternalNotes alert area and validation errors", () => {
+  const gone = "This note no longer exists.";
+  const other = "This comment no longer exists.";
+
+  it("keeps an alert when the next note fails validation", async () => {
+    const addNote = vi
+      .fn<AddNote>()
+      .mockResolvedValueOnce({ value: "x", alert: gone })
+      .mockResolvedValueOnce({ value: "x", error: "Please write a note." });
+    setup([], addNote);
+    await userEvent.type(screen.getByLabelText("Note"), "x");
+    await userEvent.click(addButton());
+    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent(gone));
+
+    await userEvent.click(addButton());
+
+    expect(await screen.findByText("Please write a note.")).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent(gone);
+  });
+
+  it("keeps an alert when the next comment fails validation", async () => {
+    const addNote = vi.fn<AddNote>(async () => ({ value: "x", alert: gone }));
+    const addNoteComment = vi.fn<AddNote>(async () => ({ value: "", error: "Please write a comment." }));
+    setup([note({ body: "Parent" })], addNote, addNoteComment);
+    await userEvent.type(screen.getByLabelText("Note"), "x");
+    await userEvent.click(addButton());
+    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent(gone));
+
+    await openNote("Parent");
+    await userEvent.click(within(noteItem("Parent")).getByRole("button", { name: "Add comment" }));
+
+    expect(await screen.findByText("Please write a comment.")).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent(gone);
+  });
+
+  it("replaces an alert with a newer one", async () => {
+    const addNote = vi
+      .fn<AddNote>()
+      .mockResolvedValueOnce({ value: "x", alert: gone })
+      .mockResolvedValueOnce({ value: "x", alert: other });
+    setup([], addNote);
+    await userEvent.type(screen.getByLabelText("Note"), "x");
+    await userEvent.click(addButton());
+    await waitFor(() => expect(screen.getByRole("alert")).toHaveTextContent(gone));
+
+    await userEvent.click(addButton());
+
+    await waitFor(() => expect(screen.getByRole("alert").textContent).toBe(other));
+  });
+});

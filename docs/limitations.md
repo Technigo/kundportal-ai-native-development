@@ -18,6 +18,7 @@
 - Foreign keys are not enforced in the database. The code checks that a note or ticket exists before it saves a note or comment.
 - After the "note is gone" case, the actions refresh all ticket pages. Whether other open tabs on other tickets also refresh is not tested.
 - Keyboard focus is lost when the "Delete" button is replaced by "Confirm delete".
+- Text typed in a comment form and not sent is lost when the comments are closed. After a failed send, only the text from that send comes back.
 
 ## Risks
 
