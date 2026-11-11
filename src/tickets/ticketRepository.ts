@@ -73,3 +73,17 @@ export async function deleteNoteComment(db: Db, commentId: number): Promise<bool
     .returning({ id: ticketNoteComments.id });
   return deleted.length > 0;
 }
+
+export async function getNoteTicketId(db: Db, noteId: number): Promise<number | undefined> {
+  const [note] = await db.select({ ticketId: ticketNotes.ticketId }).from(ticketNotes).where(eq(ticketNotes.id, noteId));
+  return note?.ticketId;
+}
+
+export async function getCommentTicketId(db: Db, commentId: number): Promise<number | undefined> {
+  const [row] = await db
+    .select({ ticketId: ticketNotes.ticketId })
+    .from(ticketNoteComments)
+    .innerJoin(ticketNotes, eq(ticketNoteComments.noteId, ticketNotes.id))
+    .where(eq(ticketNoteComments.id, commentId));
+  return row?.ticketId;
+}
