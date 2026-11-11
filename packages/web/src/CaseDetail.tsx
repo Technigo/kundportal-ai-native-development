@@ -43,8 +43,15 @@ export function CaseDetail({ caseId, onCollapse, onUpdated, onDeleted }: CaseDet
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
   const editFormRef = useRef<HTMLFormElement>(null);
   const cancelDeleteButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (state.status === 'loaded') {
+      headingRef.current?.focus();
+    }
+  }, [state.status, caseId]);
 
   useEffect(() => {
     if (!focusInvalidField) return;
@@ -210,7 +217,7 @@ export function CaseDetail({ caseId, onCollapse, onUpdated, onDeleted }: CaseDet
                 <ChevronUp aria-hidden="true" size={18} strokeWidth={2} />
               </button>
             )}
-            <h2>{state.caseItem.title}</h2>
+            <h2 ref={headingRef} tabIndex={-1}>{state.caseItem.title}</h2>
             <button
               className="case-edit-button"
               type="button"
