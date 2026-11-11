@@ -47,6 +47,7 @@ export function CaseDetail({ caseId, onCollapse, onUpdated, onDeleted }: CaseDet
   const editFormRef = useRef<HTMLFormElement>(null);
   const titleFieldRef = useRef<HTMLInputElement>(null);
   const cancelDeleteButtonRef = useRef<HTMLButtonElement>(null);
+  const deleteOpenerButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (state.status === 'loaded') {
@@ -71,6 +72,22 @@ export function CaseDetail({ caseId, onCollapse, onUpdated, onDeleted }: CaseDet
       cancelDeleteButtonRef.current?.focus();
     }
   }, [confirmDelete]);
+
+  useEffect(() => {
+    if (!confirmDelete) return;
+
+    function handleDeleteDialogKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape' && !deleting) {
+        event.preventDefault();
+        setConfirmDelete(false);
+        setDeleteError(null);
+        deleteOpenerButtonRef.current?.focus();
+      }
+    }
+
+    document.addEventListener('keydown', handleDeleteDialogKeyDown);
+    return () => document.removeEventListener('keydown', handleDeleteDialogKeyDown);
+  }, [confirmDelete, deleting]);
 
   function clearFieldError(field: CaseFieldName) {
     setFieldErrors((current) => ({ ...current, [field]: undefined }));
@@ -419,6 +436,7 @@ export function CaseDetail({ caseId, onCollapse, onUpdated, onDeleted }: CaseDet
                     className="case-edit-button button--danger-outline"
                     type="button"
                     disabled={saving || deleting}
+                    ref={deleteOpenerButtonRef}
                     onClick={() => {
                       setDeleteError(null);
                       setConfirmDelete(true);
@@ -448,6 +466,7 @@ export function CaseDetail({ caseId, onCollapse, onUpdated, onDeleted }: CaseDet
                         onClick={() => {
                           setConfirmDelete(false);
                           setDeleteError(null);
+                          deleteOpenerButtonRef.current?.focus();
                         }}
                       >
                         Avbryt

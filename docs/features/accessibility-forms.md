@@ -24,8 +24,7 @@ Interaktiva kontroller kan identifieras och användas, och användaren får veta
 - ACCESSIBILITY-FORMS-006 har kravmärkta tester här.
 - ACCESSIBILITY-FORMS-007 har kravmärkt test här.
 - ACCESSIBILITY-FORMS-008 har kravmärkta tester här.
-- ACCESSIBILITY-FORMS-009 saknar ännu kravmärkta testtitlar här och är därför inte verifierat som klart.
-- Att beteendet finns i koden eller täcks av tester märkta med andra krav-ID:n räknas inte som verifierad kravtäckning för 009.
+- ACCESSIBILITY-FORMS-009 har kravmärkta tester här.
 
 ## Testmappning
 
@@ -39,7 +38,7 @@ Interaktiva kontroller kan identifieras och användas, och användaren får veta
 | ACCESSIBILITY-FORMS-006 | [App.test.tsx](../../packages/web/src/App.test.tsx) | **Kört**, efter menybyte får vyns rubrik fokus och sidtiteln uppdateras. |
 | ACCESSIBILITY-FORMS-007 | [CaseList.test.tsx](../../packages/web/src/CaseList.test.tsx) | **Kört**, fokus går till detaljrubriken vid expandering och tillbaka till knappen vid hopfällning. |
 | ACCESSIBILITY-FORMS-008 | [CaseDetail.test.tsx](../../packages/web/src/CaseDetail.test.tsx) | **Kört**, Rubrik får fokus när redigering startar och fokus återgår till knappen när den avbryts. |
-| ACCESSIBILITY-FORMS-009 | Inga kravmärkta tester ännu. | **Återstår.** |
+| ACCESSIBILITY-FORMS-009 | [CaseDetail.test.tsx](../../packages/web/src/CaseDetail.test.tsx), [CaseList.test.tsx](../../packages/web/src/CaseList.test.tsx), [App.test.tsx](../../packages/web/src/App.test.tsx) | **Kört**, dialogstängning, fokusretur och fokusmål efter borttagning kontrolleras. |
 
 ## Definition av färdig
 
@@ -57,8 +56,9 @@ Kört 2026-11-11:
 - `npm test --workspace @kundportal/web -- src/App.test.tsx` — 1 testfil passerade, 9 tester godkända.
 - `npm test --workspace @kundportal/web -- src/CaseList.test.tsx` — 1 testfil passerade, 13 tester godkända.
 - `npm test --workspace @kundportal/web -- src/CaseDetail.test.tsx` efter ACCESSIBILITY-FORMS-008 — 1 testfil passerade, 34 tester godkända.
-- `npm test` efter ACCESSIBILITY-FORMS-008 — API: 106 tester och webb: 105 tester passerade.
-- `npm run build` efter ACCESSIBILITY-FORMS-008 — API TypeScript-build och Vite-produktionsbygge passerade.
-- `npm run check:requirements -- origin/main` — **underkänd**: ACCESSIBILITY-FORMS-009 saknar matchande testtitel och nytt testfall.
+- `npm test --workspace @kundportal/web -- src/CaseDetail.test.tsx src/CaseList.test.tsx src/App.test.tsx` efter ACCESSIBILITY-FORMS-009 — 3 testfiler passerade, 61 tester godkända.
+- `npm test` efter ACCESSIBILITY-FORMS-009 — API: 106 tester och webb: 110 tester passerade.
+- `npm run build` efter ACCESSIBILITY-FORMS-009 — API TypeScript-build och Vite-produktionsbygge passerade.
+- `npm run check:requirements -- origin/main` — passerade: 89 krav har testtitlar; 9 nya krav har nya tester.
 
 Manuell kontroll med tangentbord och hjälpmedel är inte dokumenterad.

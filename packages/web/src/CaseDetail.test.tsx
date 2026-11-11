@@ -257,6 +257,42 @@ describe('CaseDetail', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
+  it('[ACCESSIBILITY-FORMS-009] closes the deletion dialog with Escape without deleting and returns focus to its opener', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(caseItem));
+    vi.stubGlobal('fetch', fetchMock);
+    const user = userEvent.setup();
+    render(<CaseDetail caseId={7} onDeleted={vi.fn()} />);
+
+    const detail = await screen.findByRole('region', { name: caseItem.title });
+    await user.click(within(detail).getByRole('button', { name: 'Redigera ärende' }));
+    const deleteButton = within(detail).getByRole('button', { name: 'Ta bort ärende' });
+    await user.click(deleteButton);
+    expect(screen.getByRole('alertdialog', { name: 'Ta bort ärende?' })).toBeInTheDocument();
+
+    await user.keyboard('{Escape}');
+
+    expect(screen.queryByRole('alertdialog', { name: 'Ta bort ärende?' })).not.toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalledWith('/api/cases/7', { method: 'DELETE' });
+    expect(deleteButton).toHaveFocus();
+  });
+
+  it('[ACCESSIBILITY-FORMS-009] returns focus to the deletion opener when Avbryt is clicked', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(caseItem));
+    vi.stubGlobal('fetch', fetchMock);
+    const user = userEvent.setup();
+    render(<CaseDetail caseId={7} onDeleted={vi.fn()} />);
+
+    const detail = await screen.findByRole('region', { name: caseItem.title });
+    await user.click(within(detail).getByRole('button', { name: 'Redigera ärende' }));
+    const deleteButton = within(detail).getByRole('button', { name: 'Ta bort ärende' });
+    await user.click(deleteButton);
+    const confirmation = screen.getByRole('alertdialog', { name: 'Ta bort ärende?' });
+    await user.click(within(confirmation).getByRole('button', { name: 'Avbryt' }));
+
+    expect(screen.queryByRole('alertdialog', { name: 'Ta bort ärende?' })).not.toBeInTheDocument();
+    expect(deleteButton).toHaveFocus();
+  });
+
   it('[CASE-DELETE-008] shows a confirmation dialog with cancel and confirm actions', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(caseItem)));
     const user = userEvent.setup();

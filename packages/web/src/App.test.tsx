@@ -180,4 +180,31 @@ describe('App', () => {
       ([url, options]) => url === '/api/cases' && options?.method !== 'POST'
     )).toHaveLength(2);
   });
+
+  it('[ACCESSIBILITY-FORMS-009] focuses the case list heading after deleting its only case', async () => {
+    const fetchMock = vi.fn().mockImplementation((input: RequestInfo | URL, options?: RequestInit) => {
+      const url = String(input);
+      if (url === '/api/cases/2' && options?.method === 'DELETE') {
+        return Promise.resolve(new Response(null, { status: 204 }));
+      }
+      if (url === '/api/cases/2') {
+        return Promise.resolve(jsonResponse(existingCase));
+      }
+      return Promise.resolve(jsonResponse([existingCase]));
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const user = userEvent.setup();
+    render(<App />);
+
+    const list = await screen.findByRole('list', { name: 'Alla ärenden' });
+    const item = within(list).getByRole('listitem');
+    await user.click(within(item).getByRole('button', { name: 'Visa ärendedetaljer' }));
+    await user.click(await screen.findByRole('button', { name: 'Redigera ärende' }));
+    await user.click(screen.getByRole('button', { name: 'Ta bort ärende' }));
+    await user.click(within(screen.getByRole('alertdialog', { name: 'Ta bort ärende?' }))
+      .getByRole('button', { name: 'Ta bort på riktigt' }));
+
+    await screen.findByText('Du har inga ärenden ännu.');
+    expect(screen.getByRole('heading', { name: 'Alla ärenden', level: 1 })).toHaveFocus();
+  });
 });
