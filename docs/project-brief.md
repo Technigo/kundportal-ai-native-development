@@ -73,7 +73,7 @@ Detailed specification: [docs/specs/register-ticket.md](specs/register-ticket.md
 
 Detailed specification: [docs/specs/ticket-list-and-details.md](specs/ticket-list-and-details.md)
 
-### 5. Change status and track history (Planned)
+### 5. Change status and track history (Done)
 
 - AC5.1: The handler can change a ticket's status between `open`, `in_progress` and `closed`.
 - AC5.2: Each status change is stored with a timestamp and shown on the ticket.
@@ -108,5 +108,5 @@ Decision: [docs/decisions/08-ticket-persistence.md](decisions/08-ticket-persiste
 1. Boilerplate: UI, server logic and storage connected (done).
 2. Register and list tickets, tested (done).
 3. Ticket details, tested (done).
-4. Status tracking with history (next).
+4. Status tracking with history (done).
 5. Internal notes with comments and delete, tested (done).

@@ -39,6 +39,9 @@ export const newTicketSchema = z.object({
 
 export type NewTicket = z.infer<typeof newTicketSchema>;
 
+// The ticket id is parsed with parseTicketId, so only the status needs a schema.
+export const ticketStatusSchema = z.enum(ticketStatuses, { error: "Invalid status." });
+
 export const newNoteSchema = z.object({
   body: z.string().trim().min(1, "Please write a note.").max(500, "Note must be at most 500 characters."),
 });

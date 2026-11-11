@@ -26,7 +26,7 @@ Each file has:
 | [01](01-nextjs-16.md) | Next.js 16 with App Router | Accepted |
 | [02](02-libsql-drizzle.md) | libSQL (SQLite) with Drizzle ORM | Accepted |
 | [03](03-vitest-playwright.md) | Vitest and Playwright, test-first | Accepted |
-| [04](04-status-change-and-history.md) | Status change rules and status history | Proposed |
+| [04](04-status-change-and-history.md) | Status change rules and status history | Accepted |
 | [05](05-ticket-list-and-details.md) | Ticket list and ticket details | Accepted |
 | [06](06-category-free-text.md) | Category is free text | Accepted |
 | [07](07-save-failure-handling.md) | Handling a failed save when registering a ticket | Accepted |

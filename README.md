@@ -59,6 +59,13 @@ There's no sign-in yet: anyone who opens the app is treated as a case handler an
 | `npm run db:seed` | Insert demo tickets, with notes and comments on two of them |
 | `npm run db:reset` | Delete the local database file, then migrate and seed (local files only) |
 
+### Troubleshooting
+
+| Problem | Fix |
+|---|---|
+| `no such table` (for example `ticket_status_changes`) after pulling | Someone added a migration in `drizzle/`. Run `npm run db:migrate`. Do it after every pull that changes `drizzle/`. |
+| The local database is in a bad state | `npm run db:reset` deletes `data/dev.db` and creates it again with the demo tickets. Tickets you added yourself are lost. |
+
 ### Test-driven development
 
 Every change starts with a failing test:

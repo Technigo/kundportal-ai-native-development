@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { newNoteCommentSchema, newNoteSchema, newTicketSchema } from "./ticketSchema";
+import { newNoteCommentSchema, newNoteSchema, newTicketSchema, ticketStatusSchema, ticketStatuses } from "./ticketSchema";
 
 const valid = { requesterName: "Ada Lovelace", subject: "Cannot download invoice", description: "The PDF link returns an error.", category: "Billing" };
 
@@ -122,6 +122,24 @@ describe("newTicketSchema", () => {
   it("strips unknown fields such as status", () => {
     const result = newTicketSchema.safeParse({ ...valid, status: "closed" });
     expect(result.data).not.toHaveProperty("status");
+  });
+});
+
+describe("ticketStatusSchema", () => {
+  it.each(ticketStatuses)("accepts the status %s", (status) => {
+    const result = ticketStatusSchema.safeParse(status);
+    expect(result.success).toBe(true);
+    expect(result.data).toBe(status);
+  });
+
+  it.each([
+    ["resolved", "resolved"],
+    ["an empty string", ""],
+    ["a missing value", null],
+  ])('rejects %s with "Invalid status."', (_case, status) => {
+    const result = ticketStatusSchema.safeParse(status);
+    expect(result.success).toBe(false);
+    expect(result.error?.issues).toEqual([expect.objectContaining({ message: "Invalid status." })]);
   });
 });
 
