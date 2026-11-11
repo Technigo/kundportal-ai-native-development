@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import type { StatusFilter, Ticket } from './domain/ticket'
 import { TicketDetail } from './features/tickets/TicketDetail'
 import { TicketForm } from './features/tickets/TicketForm'
@@ -8,6 +8,8 @@ import { useUpdateStatus } from './features/tickets/useUpdateStatus'
 import './App.css'
 
 type CheckState = 'checking' | 'available' | 'unavailable'
+
+const AWNING_SCALLOPS = 9
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
 
@@ -75,6 +77,12 @@ function App() {
   return (
     <div className="app-shell">
       <aside className="sidebar">
+        {/* Dekor: markisen överst i designförslaget. --i styr när varje båge gungar */}
+        <div className="awning" aria-hidden="true">
+          {Array.from({ length: AWNING_SCALLOPS }, (_, index) => (
+            <span key={index} style={{ '--i': index } as CSSProperties} />
+          ))}
+        </div>
         <div className="brand">
           <span className="logo" aria-hidden="true">
             J
