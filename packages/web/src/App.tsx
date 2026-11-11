@@ -81,7 +81,11 @@ export function App() {
                   Ärende #{createdCase.id} sparades med status {createdCase.status}.
                 </p>
               )}
-              <CaseList refreshKey={listRefresh} onCreateCase={() => setView('create')} />
+              <CaseList
+                refreshKey={listRefresh}
+                onCreateCase={() => setView('create')}
+                onEmptyAfterDelete={() => headingRef.current?.focus()}
+              />
             </>
           )}
         </div>

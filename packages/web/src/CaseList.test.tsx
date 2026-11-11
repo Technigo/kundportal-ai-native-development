@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest';
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { CaseList } from './CaseList';
@@ -191,6 +191,51 @@ describe('CaseList', () => {
     expect(screen.queryByText('Nyare ärende')).not.toBeInTheDocument();
     expect(within(list).getAllByRole('listitem')).toHaveLength(1);
     expect(fetchMock).toHaveBeenLastCalledWith('/api/cases/2', { method: 'DELETE' });
+  });
+
+  it('[ACCESSIBILITY-FORMS-009] focuses the next case expander after deleting the first case', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify(cases)))
+      .mockResolvedValueOnce(new Response(JSON.stringify(cases[0])))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }));
+    vi.stubGlobal('fetch', fetchMock);
+    const user = userEvent.setup();
+    render(<CaseList />);
+
+    const list = await screen.findByRole('list', { name: 'Alla ärenden' });
+    const firstItem = within(list).getAllByRole('listitem')[0];
+    await user.click(within(firstItem).getByRole('button', { name: 'Visa ärendedetaljer' }));
+    await user.click(await screen.findByRole('button', { name: 'Redigera ärende' }));
+    await user.click(screen.getByRole('button', { name: 'Ta bort ärende' }));
+    await user.click(within(screen.getByRole('alertdialog', { name: 'Ta bort ärende?' }))
+      .getByRole('button', { name: 'Ta bort på riktigt' }));
+
+    await waitFor(() => expect(within(list).getAllByRole('listitem')).toHaveLength(1));
+    const nextItem = within(list).getAllByRole('listitem')[0];
+    expect(within(nextItem).getByRole('button', { name: 'Visa ärendedetaljer' })).toHaveFocus();
+  });
+
+  it('[ACCESSIBILITY-FORMS-009] focuses the previous case expander after deleting the last case', async () => {
+    const lastCase = cases[1];
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify(cases)))
+      .mockResolvedValueOnce(new Response(JSON.stringify(lastCase)))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }));
+    vi.stubGlobal('fetch', fetchMock);
+    const user = userEvent.setup();
+    render(<CaseList />);
+
+    const list = await screen.findByRole('list', { name: 'Alla ärenden' });
+    const lastItem = within(list).getAllByRole('listitem')[1];
+    await user.click(within(lastItem).getByRole('button', { name: 'Visa ärendedetaljer' }));
+    await user.click(await screen.findByRole('button', { name: 'Redigera ärende' }));
+    await user.click(screen.getByRole('button', { name: 'Ta bort ärende' }));
+    await user.click(within(screen.getByRole('alertdialog', { name: 'Ta bort ärende?' }))
+      .getByRole('button', { name: 'Ta bort på riktigt' }));
+
+    await waitFor(() => expect(within(list).getAllByRole('listitem')).toHaveLength(1));
+    const previousItem = within(list).getAllByRole('listitem')[0];
+    expect(within(previousItem).getByRole('button', { name: 'Visa ärendedetaljer' })).toHaveFocus();
   });
 
   it('[CASE-LIST-001] and [ACCESSIBILITY-FORMS-003] displays the status as text in the case summary', async () => {

@@ -6,9 +6,10 @@ import { isCaseSummary, type CaseSummary } from './caseTypes';
 interface CaseListProps {
   refreshKey?: number;
   onCreateCase?: () => void;
+  onEmptyAfterDelete?: () => void;
 }
 
-export function CaseList({ refreshKey = 0, onCreateCase }: CaseListProps) {
+export function CaseList({ refreshKey = 0, onCreateCase, onEmptyAfterDelete }: CaseListProps) {
   const [cases, setCases] = useState<CaseSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -99,6 +100,15 @@ export function CaseList({ refreshKey = 0, onCreateCase }: CaseListProps) {
                       setSelectedCaseId(null);
                     }}
                     onDeleted={() => {
+                      const deletedIndex = cases.findIndex((item) => item.id === caseItem.id);
+                      const focusTarget = cases[deletedIndex + 1] ?? cases[deletedIndex - 1];
+
+                      if (focusTarget) {
+                        setFocusCaseButtonId(focusTarget.id);
+                      } else {
+                        onEmptyAfterDelete?.();
+                      }
+
                       setCases((current) => current.filter((item) => item.id !== caseItem.id));
                       setSelectedCaseId(null);
                     }}
