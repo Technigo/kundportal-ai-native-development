@@ -171,7 +171,9 @@ test("changing the status on the detail page shows it there, in the history and 
     new RegExp(`^${statusLabels[from]} → ${statusLabels[to]} · [A-Z][a-z]{2} \\d{1,2}, \\d{4}$`),
   );
   await expect(section.getByLabel("Status")).toHaveValue(to);
-  await expect(page.getByRole("definition").first()).toHaveText(statusLabels[to]);
+  // The value next to the "Status" term, wherever that row is in the list.
+  const statusValue = page.locator("dt", { hasText: /^Status$/ }).locator("xpath=following-sibling::dd[1]");
+  await expect(statusValue).toHaveText(statusLabels[to]);
 
   await page.getByRole("link", { name: "Back to tickets" }).click();
   await expect(page).toHaveURL("/tickets");
