@@ -28,4 +28,5 @@ Använd detta som arbetsunderlag för kursens G- och VG-kriterier. Det visar vad
 - [Chattexcerpt och sessionsindex](./conversation-log.md)
 - [Verifieringsplan och faktiska resultat](./verification-plan.md)
 - [AI-arbetsflöde och reflektionslogg](./ai-workflow.md)
+- [Veckostatus v5–8](./weekly-status.md)
 - [Veckostatusmall](./weekly-status-template.md)
