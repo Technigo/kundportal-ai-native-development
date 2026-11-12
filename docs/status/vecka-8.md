@@ -1,6 +1,7 @@
 # Veckostatus vecka 8: demo och slutleverans
 
-> Läget torsdag 2026-11-12 efter demon (Azalea). Slutläget fylls i fredag 13/11. Jämför med veckans förväntningar i
+> Läget torsdag 2026-11-12 efter demon (Azalea). *Verifierat* ifyllt torsdag kväll 2026-11-12 på `e01f69a`
+> (Mustafa, med Claude Code). Slutläget fylls i fredag 13/11. Jämför med veckans förväntningar i
 > Disco. Id förklaras kort: **KSP-xx** är ärenden i
 > [Linear: Kundserviceportalen](https://linear.app/grupp6/project/kundserviceportalen-be4a4840b5ef),
 > **CORE-xx** är kraven för kärnan ([SPEC-karna.md](../specs/SPEC-karna.md)) och **HIST-xx**
@@ -59,8 +60,29 @@ Teamets plan för veckan (enligt Linear):
 
 ## Verifierat
 
-- *(fylls i: körresultat för hela sviten på slutversionen, backend och frontend)*
-- *(fylls i: kontroll för hand av demoflödet, med commit)*
+Körda 2026-11-12 på `e01f69a` (merge av PR #118, veckostatus V8 torsdag), samma kommandon som CI:
+
+- **Backend:** `python -m pytest -q` gav 192 passed.
+- **Frontend:** `pnpm lint` utan fel, `pnpm build` lyckades och `pnpm test:run` gav 101 passed i 11 testfiler.
+- **CI på `main`:** `tests` grön för `e01f69a`.
+- **Demoflödet i webbläsaren** på `e01f69a`, backend på port 8010 med en tom tillfällig databas och
+  `pnpm dev`. Genomgånget av Claude Code via Playwright på Mustafas uppdrag, inte för hand av en människa:
+  1. Tom lista visar "Inga ärenden än" (CORE-15, tom lista är inget fel).
+  2. Tomt formulär ger "Rubrik måste fyllas i. Beskrivning måste fyllas i. Välj en giltig kategori. Välj en
+     giltig prioritet." (CORE-18, alla meddelanden i fältordning, och CORE-06, CORE-07 och CORE-08: rubrik saknas,
+     beskrivning saknas, okänd kategori eller prioritet).
+  3. Ett påhittat ärende (Faktura och betalning, Hög) registreras och syns i listan som #1 med status Nytt
+     (CORE-01, ärendet skapas med status `new`).
+  4. Detaljvyn visar de sparade uppgifterna och tidslinjen med "Ärendet skapades" (CORE-04, ärendet
+     hämtas med sitt id).
+  5. Status Nytt till Pågående sparas. Tidslinjen visar "Nytt → till Pågående (aktuell status)" överst
+     (HIST-05, tidslinjen i detaljvyn).
+  6. `/tickets/999` visar "Ärendet finns inte." och en länk tillbaka (CORE-10, okänt ärende ger 404).
+  7. Efter omstart av backend mot samma databas ger API:t ärendet med `in_progress` och två
+     historikposter äldst först, `created` och `status_changed` (CORE-02, ärendet finns kvar efter omstart,
+     och HIST-03, historiken äldst först).
+
+  Webbläsarens konsol visade bara 422- och 404-svaren från steg 2 och 6, inga fel i appen.
 
 ## Osäkert eller ofärdigt
 
@@ -75,4 +97,4 @@ Teamets plan för veckan (enligt Linear):
 | --- | --- |
 | Markera slutversionen och länka den i Technigo#2 (KSP-56) | Mustafa |
 | Lämna in individuella redovisningar i Disco senast 13/11 kl. 23.59 | Alla |
-| Veckostatus V8: slutläget, körresultat på slutversionen (KSP-55) | Azalea |
+| Veckostatus V8: slutläget, med demovideon (KSP-78) och länken till slutversionen (KSP-55) | Azalea |
