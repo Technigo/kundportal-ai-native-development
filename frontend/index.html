@@ -653,7 +653,6 @@
           <button type="submit" class="submit-btn">Registrera</button>
         </form>
 
-        
         <!--
         Kontrakt för formuläret:
           - fältnamn (name=…): rubrik, beskrivning, kategori, prioritet, status, deadline
@@ -802,13 +801,13 @@
        Ägare: se docs/ARBETSFORDELNING.md. Rör bara det här blocket.
        ================================================================ */
 
-       function fillSelect(select, values) {
-        const empty = document.createElement("option");
-        empty.value = "";
-        empty.textContent = "Välj…";
+      function fillSelect(select, values) {
+        const empty = document.createElement('option');
+        empty.value = '';
+        empty.textContent = 'Välj…';
         select.append(empty);
         for (const value of values) {
-          const option = document.createElement("option");
+          const option = document.createElement('option');
           option.value = String(value);
           option.textContent = String(value);
           select.append(option);
@@ -816,20 +815,11 @@
       }
 
       function initNewCaseView() {
-        const form = document.getElementById("new-case-form");
-        fillSelect(
-          form.querySelector('[name="kategori"]'),
-          PORTAL_CONFIG.KATEGORIER,
-        );
-        fillSelect(
-          form.querySelector('[name="prioritet"]'),
-          PORTAL_CONFIG.PRIORITETER,
-        );
-        fillSelect(
-          form.querySelector('[name="status"]'),
-          PORTAL_CONFIG.STATUSAR,
-        );
-        form.addEventListener("submit", onSubmitNewCase);
+        const form = document.getElementById('new-case-form');
+        fillSelect(form.querySelector('[name="kategori"]'), PORTAL_CONFIG.KATEGORIER);
+        fillSelect(form.querySelector('[name="prioritet"]'), PORTAL_CONFIG.PRIORITETER);
+        fillSelect(form.querySelector('[name="status"]'), PORTAL_CONFIG.STATUSAR);
+        form.addEventListener('submit', onSubmitNewCase);
       }
 
       async function onSubmitNewCase(event) {
@@ -841,34 +831,38 @@
         // Allt skickas som användaren skrev det. Servern avgör vad som är giltigt.
         // Prioritet skickas som tal (docs/API.md), men ett tomt val skickas tomt.
         const data = {
-          rubrik: value("rubrik"),
-          beskrivning: value("beskrivning"),
-          kategori: value("kategori"),
-          prioritet: value("prioritet") === "" ? "" : Number(value("prioritet")),
-          status: value("status"),
-          deadline: value("deadline"),
+          rubrik: value('rubrik'),
+          beskrivning: value('beskrivning'),
+          kategori: value('kategori'),
+          prioritet: value('prioritet') === '' ? '' : Number(value('prioritet')),
+          status: value('status'),
+          deadline: value('deadline'),
         };
 
         clearGlobalMessage();
         button.disabled = true;
-        const res = await api("POST", "/api/arenden", data);
+        const res = await api('POST', '/api/arenden', data);
         button.disabled = false;
 
         if (res.ok) {
           form.reset();
           clearFieldErrors(form);
-          showGlobalMessage(
-            `Ärende ${res.data.arendenummer} är registrerat.`,
-            "ok",
-          );
+          showGlobalMessage(`Ärende ${res.data.arendenummer} är registrerat.`, 'ok');
+          scrollMessageIntoView();
           return;
         }
         showFieldErrors(form, res.data?.faltfel);
-        showGlobalMessage(res.data?.fel || "Något gick fel. Försök igen.");
+        showGlobalMessage(res.data?.fel || 'Något gick fel. Försök igen.');
+        scrollMessageIntoView();
+      }
+
+      function scrollMessageIntoView() {
+        // Meddelanderutan ligger överst på sidan. Scrolla dit så att användaren ser svaret.
+        document.getElementById('global-message').scrollIntoView?.({ block: 'nearest' });
       }
 
       function onShowNewView() {
-        const form = document.getElementById("new-case-form");
+        const form = document.getElementById('new-case-form');
         form.reset();
         clearFieldErrors(form);
       }
