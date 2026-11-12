@@ -797,6 +797,12 @@
           width: 6rem;
         }
       }
+            .field-hint {
+        display: block;
+        margin-top: 0.25rem;
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
     </style>
   </head>
   <body>
@@ -833,7 +839,8 @@
           </div>
           <div class="form-row">
             <label for="f-prioritet">Prioritet</label>
-            <select id="f-prioritet" name="prioritet"></select>
+            <select id="f-prioritet" name="prioritet" aria-describedby="hint-prioritet"></select>
+            <span class="field-hint" id="hint-prioritet">1 = lägst, 5 = högst</span>
             <span class="field-error" data-error-for="prioritet"></span>
           </div>
           <div class="form-row">
