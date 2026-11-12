@@ -59,7 +59,6 @@ underlag. Här samlas det som tidigare stod utspritt i specarna, ADR:erna och ve
 | En PR mergas med röda tester | Låg | Medel | CI kör backend och frontend på varje PR, och rulesetet för `main` kräver att båda kontrollerna är gröna före merge (KSP-17, CI för backend). Kvar: ett krav som saknar test fångas inte av CI |
 | AI:s påståenden tas för sanna utan kontroll | Medel | Medel till hög: fel test eller fel förklaring | Tester före koden, mutationer, och regler i misstagsloggarna efter en människas ja ([arbetssättet](ai/arbetssatt.md)) |
 | Ett godkännande gäller inte längre efter nya commits | Medel | Medel: kod mergas utan granskning | Granskaren godkänner igen efter nya commits. Hände med PR #56 (HIST-raderna i verifieringsplanen): https://github.com/desiboli/kundportal-ai-native-development/pull/56 och PR #81 (HIST-09 grön i verifieringsplanen): https://github.com/desiboli/kundportal-ai-native-development/pull/81 |
-| *(fylls i av övriga)* | | | |
 
 ## 3. Förslag på vidareutveckling
 
@@ -70,4 +69,3 @@ underlag. Här samlas det som tidigare stod utspritt i specarna, ADR:erna och ve
 | Loggning av databasfel vid 503 | Felsökning | Logga `__cause__` där vägen fångar `StatusNotSaved` (`backend/app/api/tickets.py`) |
 | Sök och filter i API:t i stället för i webbläsaren | När ärendena blir många går det inte att hämta alla på en gång | Parametrar för sökord, status, prioritet och kategori på `GET /tickets`, med samma regler som filtret i klienten (KSP-77) |
 | Automatisk mutationsprövning, till exempel `pytest-gremlins` | Fler mutationer än för hand | Som komplement, eftersom inget verktyg tar bort en ensam `commit()` |
-| *(fylls i av övriga)* | | |
