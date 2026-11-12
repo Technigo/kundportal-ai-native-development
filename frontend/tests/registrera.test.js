@@ -1,4 +1,3 @@
-
 // ÄGARE: Del 3 (Frontend – registreringsformuläret)   AK1–AK8, gränssnittssidan
 // Laddar index.html i jsdom med en låtsas-fetch (samma sätt som smoke.test.js).
 import { describe, it, expect, vi } from 'vitest';
@@ -79,9 +78,7 @@ function fillForm(window) {
 }
 
 function submit(window, form) {
-  form.dispatchEvent(
-    new window.Event('submit', { bubbles: true, cancelable: true }),
-  );
+  form.dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }));
 }
 
 describe('Registreringsformuläret', () => {
