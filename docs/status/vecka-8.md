@@ -83,6 +83,10 @@ Körda 2026-11-12 på `e01f69a` (merge av PR #118, veckostatus V8 torsdag), samm
      och HIST-03, historiken äldst först).
 
   Webbläsarens konsol visade bara 422- och 404-svaren från steg 2 och 6, inga fel i appen.
+- **Kontroll för hand** av hela avsnitt 3 i [verifieringsplanen](../verifiering.md), Mustafa 2026-11-12 på
+  `319a3eb` (samma kod som `e01f69a`), den första efter KSP-79 (gemensam felhantering för API-anrop). Allt
+  godkänt: listan, felmeddelandena, svenska tecken och emoji, kontrasten i ljust och mörkt läge, en backend
+  som inte svarar, statusbytet med tidslinjen och omstarten. Raden står i verifieringsplanen, avsnitt 4.
 
 ## Osäkert eller ofärdigt
 
