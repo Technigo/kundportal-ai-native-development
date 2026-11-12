@@ -23,7 +23,7 @@ Teamets plan för veckan (enligt Linear):
 | Tidslinjen i detaljvyn (HIST-05) och felmeddelanden i UI (UI-delen av HIST-14) | KSP-37, KSP-38 | Amalia |
 | Header, gemensam bredd, sök och filter i listan | KSP-75, KSP-76, KSP-77 | Mustafa |
 | Demon: flöde, beslut och verifiering, cirka fem minuter | KSP-57 | Mustafa |
-| Demovideo | KSP-78 | Mustafa |
+| Demovideo, till demon 2026-11-12. Utgår, ingår inte i slutleveransen | KSP-78 | Mustafa |
 | Kända begränsningar, risker och vidareutveckling | KSP-61 | Azalea samordnar, alla |
 | Utvärdering av arbetssättet | KSP-62 | Nicklas |
 | Verifieringsplanen: Verifierat för urvalet | KSP-47, KSP-48 | Nicklas, Azalea |
@@ -88,7 +88,6 @@ Körda 2026-11-12 på `e01f69a` (merge av PR #118, veckostatus V8 torsdag), samm
 
 | Vad | Varför | Plan |
 | --- | --- | --- |
-| Demovideon (KSP-78) | In Progress i Linear 2026-11-12 | Mustafa |
 | Frågan på demon varför 16 av 18 nya tester föll för KSP-37 (tidslinjen) | Vi hade inget tydligt svar direkt. Svaret: testerna skrevs före koden mot ett tomt skal (`9970983`), så 16 föll av rätt anledning. De 2 gröna var HIST-08-testerna (okänt ärende ger 404 och ingen historik), och mutationen TL1 visar att de skyddar 404-fallet (`docs/verifiering.md`, avsnitt 4 och 5) | Förklaringen fanns bara i commit-meddelandet. Lärdom: skriv varför ett test är grönt före koden där resultatet redovisas |
 
 ## Nästa steg
@@ -97,4 +96,4 @@ Körda 2026-11-12 på `e01f69a` (merge av PR #118, veckostatus V8 torsdag), samm
 | --- | --- |
 | Markera slutversionen och länka den i Technigo#2 (KSP-56) | Mustafa |
 | Lämna in individuella redovisningar i Disco senast 13/11 kl. 23.59 | Alla |
-| Veckostatus V8: slutläget, med demovideon (KSP-78) och länken till slutversionen (KSP-55) | Azalea |
+| Veckostatus V8: slutläget, med länken till slutversionen (KSP-55) | Azalea |
