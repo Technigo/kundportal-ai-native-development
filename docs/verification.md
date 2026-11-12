@@ -7,9 +7,9 @@ How we check that the acceptance criteria in [project-brief.md](project-brief.md
 | Level | Tool | Used for | Why |
 |---|---|---|---|
 | Unit | Vitest | zod schema, navigation data | Fast, no UI or database needed |
-| Data | Vitest + in-memory SQLite per test | `createTicket`, `getTicket`, `listTickets` | Real queries against a real schema, isolated and fast |
+| Data | Vitest + in-memory SQLite per test | `createTicket`, `getTicket`, `listTickets`, `changeTicketStatus`, `listStatusChanges` | Real queries against a real schema, isolated and fast |
 | Persistence | Vitest + a temporary SQLite file per test | A ticket saved through one connection is read through a new one | Shows the ticket is written to the file, which an in-memory database cannot show. It does not restart a process; the manual restart check covers that |
-| Server action | Vitest | `submitTicket` | Checks validation, saving, revalidation and redirect without a browser |
+| Server action | Vitest | `submitTicket`, `changeStatus` | Checks validation, saving, revalidation and redirect without a browser |
 | Component | Vitest + React Testing Library | `TicketForm`, `TicketList`, `TicketDetails`, `TicketNotice`, `PortalShell` | Checks labels, errors and states the user sees |
 | End-to-end | Playwright (Chrome) against a production build and `data/e2e.db` | Full flows, keyboard navigation, async Server Components | Async Server Components cannot be unit-tested with Vitest |
 
@@ -24,11 +24,11 @@ How we check that the acceptance criteria in [project-brief.md](project-brief.md
 | AC1.5 | `newTicketSchema` trimming and limits: subject 3 and 120, name 120, description 5000, category 50, email 254 accepted, one more rejected with exact messages; `TicketForm` `maxlength` on every text field |
 | AC1.6 | `newTicketSchema` strips unknown fields; `submitTicket` ignores a status |
 | AC1.7 | `newTicketSchema` requires and trims the category with exact messages; `submitTicket` saves the trimmed category; `createTicket` gives a ticket without a category `General`; `TicketForm` category field; e2e missing category; manual migration check (below) |
+| AC1.8 | `submitTicket` returns a form error with the values and logs only `name`, `cause` and `code` for an unmigrated database, a read-only error, a failing `getDb()` and a thrown value that is not an `Error`, and saves the ticket on the next attempt; `TicketForm` shows the form error with `role="alert"` before the button and hides it while an attempt is pending; mutation M4; manual check with VoiceOver ([report](test-reports/ac1-8-manual-check.md)). No e2e test ([decision 07](decisions/07-save-failure-handling.md)) |
 | AC2.1 | `TicketList` renders a row per ticket; e2e list shows requester |
 | AC2.2 | `listTickets` newest first; e2e newest first |
 | AC2.3 | `TicketList` empty state |
 | AC3.1, AC3.2 | `PortalShell`, `navItems`; e2e redirect and keyboard navigation |
-| AC4.x, AC5.x | Not built, no tests yet |
 | AC7.1 | [persistence.test.ts](../src/db/persistence.test.ts) "keeps a saved ticket when the database file is opened through a new connection" (the ticket is in the file and a new connection reads it); manual restart check (below) (the ticket survives a real dev server restart) |
 | AC7.2 | [gitignore.test.ts](../src/db/gitignore.test.ts) "are ignored by git" (`data/dev.db`, `data/e2e.db` and the `-wal` file are ignored and not tracked); manual restart check uses `data/dev.db` (below) |
 | AC4.1, AC4.2 | `TicketDetails` shows subject, requester name and email, "No email given", description with line breaks, status, priority and date; `getTicket` returns the ticket or `undefined`; e2e "opens a ticket from the list, shows its details and goes back"; manual check for long words (below) |
@@ -36,7 +36,12 @@ How we check that the acceptance criteria in [project-brief.md](project-brief.md
 | AC4.4 | `parseTicketId` accepts plain positive numbers and rejects `0`, `01`, `1e0`, `0x1` and similar; e2e redirect from invalid ids to the list with a message; manual check for `/tickets/01`, `/tickets/1e0`, `/tickets/0x1` (below) |
 | AC4.5 | `TicketNotice` shows the message for the known code and nothing for an unknown or missing code; e2e "shows no message for an unknown notice code" |
 | AC4.6 | `TicketList` links each subject to `/tickets/[id]`; manual keyboard check (below) |
-| AC5.x | Not built, no tests yet |
+| AC5.1 (AC-S1, AC-S2) | `StatusForm` offers every status in `ticketStatuses`, starts on the current status and sends the ticket id and new status only on Save; `TicketDetails` has the status form in the "Status and history" section; `changeStatus` saves the new status, revalidates `/tickets` and `/tickets/[id]` and does not redirect; open → closed, closed → in_progress, in_progress → open; e2e "changing the status on the detail page shows it there, in the history and in the list" |
+| AC5.2 (AC-S6) | `changeTicketStatus` stores previous status, new status and timestamp; `listStatusChanges` newest first, `id` as tie-break for the same timestamp, only the given ticket, empty for a new ticket; `changeStatus` saves one history entry per change; `TicketDetails` shows the history in the order given as "Open → In progress · Nov 9, 2026" under "Status history", and "No status changes yet." when it is empty; e2e "changing the status on the detail page…"; manual checks "Change the status on the detail page" and "Status still saved after restarting the server" (below) |
+| AC5.3 (AC-S3) | `ticketStatusSchema` accepts every status in `ticketStatuses`; rejects "resolved", "" and a missing value with "Invalid status."; `changeStatus` returns "Invalid status." and changes nothing; `StatusForm` shows "Invalid status." next to the dropdown, linked with `aria-describedby` |
+| AC-S4 | `changeTicketStatus` returns `not_found` and saves nothing; `changeStatus` redirects to `/tickets?notice=ticket-not-found` for an unknown id, a malformed id ("abc", "0", "01", "") and an unknown id with an invalid status, and changes nothing. The redirect when the ticket disappears between the check and the change has no test |
+| AC-S5 | `changeTicketStatus` returns `unchanged`; `changeStatus` gives no error, no revalidation and no history entry for the same status |
+| AC-S7 | `TicketList` "shows the status without any control to change it" (no dropdown, button or form) |
 | AC6.4 (schema part) | `newNoteSchema` and `newNoteCommentSchema` in `ticketSchema.test.ts`: trimming, empty and whitespace-only, 500 accepted and 501 rejected, inner whitespace kept, length counted in code points, unknown fields stripped. The action and component parts are in the rows below. |
 | AC6.1–AC6.3, AC6.5–AC6.7, AC6.9 (data part) | `addNote`, `addNoteComment`, `listNotesWithComments`, `deleteNote` and `deleteNoteComment` in `ticketRepository.test.ts`: notes and comments are saved, same text saved twice, a missing ticket or note returns `undefined`, notes newest first and comments oldest first with id as tie-breaker, a new comment keeps the note order, a comment stays under its own note, `deleteNote` removes the comments too, `deleteNoteComment` removes one comment, a missing or already deleted row returns `false`, a deleted note stays gone and its id is not reused. Not tested: that `deleteNote` is atomic. The action, component and e2e parts are in the rows below. |
 | AC6.1, AC6.2, AC6.4, AC6.5, AC6.9 (server action part) | `addNote`, `addNoteComment`, `deleteNote` and `deleteNoteComment` in `actions.test.ts`: saved text is trimmed and the ticket page is revalidated; empty, whitespace-only and 501-character text gives the exact message, keeps the text and saves nothing; a missing or malformed ticket, note or comment id gives the alert message and saves or deletes nothing; the "no longer exists" alert wins over a text error; a missing note or comment revalidates all ticket pages; a successful call clears an earlier alert. Not tested: that `revalidatePath("/tickets/[id]", "page")` works without the `(portal)` group name in the real app (only the call arguments are checked), and the case where a note disappears between the check and the write. The component and e2e parts are in the next rows. |
@@ -77,8 +82,9 @@ Green tests only show that code and tests agree. To show that the tests fail for
 | Saving is disconnected (AC1.1) | "saves a valid ticket…"; e2e "submitting a valid ticket…" | Caught | Caught |
 | Category read from a misspelled field (AC1.1, AC1.7) | "returns a category error…"; e2e "submitting a valid ticket…" | Caught | Caught |
 | Category not saved, the database default `General` hides it (AC1.7) | "saves a valid ticket…" (expects `Billing`) | Caught | Not run: the list does not show the category |
+| redirect inside the try (AC1.8) | "saves the ticket and redirects when the same values are sent again after a failure" | Caught | Not run: AC1.8 has no e2e test |
 
-Run on 2026-11-07. The file was identical before and after (`shasum`).
+Vitest run on 2026-11-11, with `git diff` showing `actions.ts` unchanged afterwards. The E2E column is from 2026-11-07, before AC1.8; `-- --e2e` was not run again.
 
 **What the check found.** The first version removed the category line in mutation 2. TypeScript then stopped `npm run build`, so no e2e test ran, and the script wrongly reported "missed". The script now reports ERROR when no tests ran, and mutation 2 uses a misspelled field name that still builds. Running the old mutation again gave "ERROR, the tests did not run" instead of "missed".
 
@@ -111,27 +117,19 @@ Done by hand on 2026-11-11 with `npx playwright test e2e/notes.spec.ts`. Each mu
 | The persistence test cleans up its temporary database on Windows (AC7.1) | macOS and Linux can delete a file that is still open, so the EBUSY error only shows on Windows, and CI runs on `ubuntu-latest` only | Skipped | Not run on Windows. Listed as a known limitation in [limitations.md](limitations.md) and under "Limitations of the verification" (below) |
 | The gitignore test fails when database files are not ignored (AC7.2) | The test passed on its first run because the rule already existed, so it was never seen failing | Done 2026-11-11 (Ariadna Villar, with an AI agent) | `/data/*.db` removed from `.gitignore` by hand: the `data/dev.db` and `data/e2e.db` cases failed (`git check-ignore` exited with an error), the `-wal` case still passed because `/data/*.db-*` covers it. File restored and identical (`shasum`) |
 | Error messages for registering a ticket are understandable | Judging clarity needs a person | Done 2026-11-07 by Alexandra Petersson with `npm run dev` | Invalid email (`Alex@hej`) and an empty category, with the other fields valid and priority `low`: both errors shown next to their fields, the other fields accepted. After correcting the email (`alec@hej.se`) and the category the ticket was saved. The messages were judged clear. Not judged by hand: an empty form, a name with only spaces and a too-short subject (covered by automated tests) |
+| A valid ticket cannot be saved because the database is read-only (AC1.8) | The e2e tests share one database, and the server must be restarted around the change ([decision 07](decisions/07-save-failure-handling.md)) | Done 2026-11-11 by Alexandra Petersson in Firefox on macOS with `npm run dev`, `chmod 444` and `chmod 644` on `data/dev.db` | The message was shown in red directly above **Register ticket**. The page stayed on `/tickets/new`, all values were kept, no field was marked invalid and focus did not move to the message. VoiceOver announced the message, hid it while the next attempt was pending and announced it again when that attempt also failed. The server logged `Failed to save ticket { name: 'Error', cause: 'LibsqlError', code: 'SQLITE_READONLY' }` without the entered values. After `chmod 644` and a restart the ticket was saved and the list was shown. On 2026-11-11 Jessica Swahn did the same steps on Windows with `attrib +R` and `attrib -R`, with the same result (without a screen reader). Screenshots: [browser](images/ac1-8-save-failure-browser.png), [terminal](images/ac1-8-save-failure-terminal.png), [browser on Windows](images/ac1-8-save-failure-browser-windows.png), [terminal on Windows](images/ac1-8-save-failure-terminal-windows.png). Full report: [ac1-8-manual-check.md](test-reports/ac1-8-manual-check.md) |
 
 ## Latest run results
 
-Run on 2026-11-11 on branch `ariadna/db-persistance`, with the review fixes for PR #12 (not yet committed).
+Run on 2026-11-11 on branch `jessica/status-change-backend`, after the review fixes for PR #13.
 
 | Command | Result |
 |---|---|
-| `npm test` | 12 files, 82 tests passed |
+| `npm test` | 11 files, 109 tests passed |
 | `npm run lint` | No errors |
 | `npm run typecheck` | No errors |
-| `npm run test:e2e` | 17 tests passed |
-| `npm run test:mutation -- --e2e` | 5 of 5 caught (3 Vitest, 2 e2e) |
-
-Run on 2026-11-11 on branch `marie/add-internal-notes-feature` (internal notes).
-
-| Command | Result |
-|---|---|
-| `npm test` | 11 files, 207 tests passed |
-| `npm run lint` | No errors |
-| `npm run typecheck` | No errors |
-| `npm run test:e2e` | 26 tests passed (9 new for notes, 17 existing) |
+| `npm run test:e2e` | 18 tests passed |
+| `npm run test:mutation -- --e2e` | Not rerun. Last run 2026-11-09: 5 of 5 caught (3 Vitest, 2 e2e) |
 
 `npm run test:mutation -- --e2e` was not run on 2026-11-11. The mutation check for the notes is the manual one above.
 
@@ -147,12 +145,22 @@ Automated tests cannot see layout or real browser behaviour. These checks are do
 | `/tickets/01`, `/tickets/1e0`, `/tickets/0x1` | AC4.4 | Redirect to the list with the message | Failed on 2026-11-08 (Alexandra), fixed on 2026-11-09, passed on re-check 2026-11-10 (Alexandra) |
 | `?notice=hej`, `?notice=`, `?notice=<b>x</b>`, `?notice=toString` | AC4.5 | No message, no tags rendered | Passed (Alexandra, 2026-11-08) |
 | Keyboard only: list, ticket, Back to tickets | AC4.6, AC3.2 | All reachable, focus visible | Passed (Alexandra, 2026-11-08) |
-| Screen reader | All | Pages are announced in a sensible order | Not done |
+| Screen reader | All | Pages are announced in a sensible order | Not done for whole pages. Only the AC1.8 save error message was checked with VoiceOver (see above) |
+| Change the status on the detail page | AC-S1 | After choosing a new status and clicking Save, the status badge, the history and the ticket list all show the new status | Passed (Jessica, 2026-11-10) |
+| Status still saved after restarting the server | AC-S6 | After stopping and starting `npm run dev`, the ticket list and the detail page still show the changed status, and the history row is still there | Passed (Jessica, 2026-11-10): the ticket changed before still had the new status in the list, and its detail page still showed the history row |
 
 ## Limitations of the verification
 
-- No tests for AC5.x because the feature is not built.
+- "Still there after a restart" (AC-S6) is a manual check only.
+- "Invalid status." on the detail page is tested at component level only. The dropdown cannot send an unknown value, so e2e cannot reach it.
+- Two status tests passed on their first run, because the code already existed: the AC-S7 list test and the e2e test for AC-S1. They were seen failing with temporary changes that were then removed: a button in the list, and the detail page passing an empty history.
+- The history shows the date only, so the e2e test checks the date format, not the exact date.
 - End-to-end tests cover Chrome only.
+- No accessibility audit beyond the keyboard navigation test and labelled form fields. The only screen reader test is the VoiceOver check of the save error message (AC1.8).
+- e2e tests share one seeded database, so they depend on the seed data order.
+- The AC1 tests added after the code (blank fields, limits, email, priority, `maxlength`, missing name) passed on their first run, because the behaviour already existed. They were not seen failing first; the mutation check covers `submitTicket` only.
+- The ticket list does not show the category, so e2e cannot show that it is saved. The action test covers it, and mutation 3 shows that the test catches it.
+- The mutation check tries four hand-picked mutations in `submitTicket`, not every possible fault.
 - The persistence test's cleanup has not been run on Windows. The test closes each database client before deleting its temporary folder, which should prevent the EBUSY error Windows gives for an open file, but this was only run on macOS, and CI runs on `ubuntu-latest`.
 - No accessibility audit beyond the keyboard navigation test and labelled form fields. No screen reader test.
 - e2e tests share one seeded database, so they depend on the seed data order.

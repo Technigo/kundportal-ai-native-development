@@ -1,10 +1,19 @@
 // @vitest-environment node
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { Db } from "@/db/client";
-import { ticketNoteComments, ticketNotes, tickets } from "@/db/schema";
+import { LibsqlError } from "@libsql/client";
+import { DrizzleQueryError } from "drizzle-orm";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { createDb, getDb, type Db } from "@/db/client";
+import { ticketNoteComments, ticketNotes, ticketStatusChanges, tickets } from "@/db/schema";
 import { createTestDb } from "@/test-utils/testDb";
-import { addNote as saveNote, addNoteComment as saveComment, createTicket } from "@/tickets/ticketRepository";
-import { addNote, addNoteComment, deleteNote, deleteNoteComment, submitTicket } from "./actions";
+import {
+  addNote as saveNote,
+  addNoteComment as saveComment,
+  changeTicketStatus,
+  createTicket,
+  getTicket,
+  listStatusChanges,
+} from "@/tickets/ticketRepository";
+import { addNote, addNoteComment, changeStatus, deleteNote, deleteNoteComment, submitTicket } from "./actions";
 
 const mocks = vi.hoisted(() => ({
   db: undefined as unknown,
@@ -18,8 +27,18 @@ vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
 vi.mock("next/navigation", () => ({ redirect: mocks.redirect }));
 vi.mock("@/db/client", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/db/client")>()),
-  getDb: () => mocks.db,
+  getDb: vi.fn(() => mocks.db),
 }));
+
+const SAVE_ERROR = "Could not save the ticket to the database. Please try again.";
+const validFields = {
+  requesterName: "Ada Lovelace",
+  requesterEmail: "ada@example.com",
+  subject: "Broken invoice",
+  description: "Totals are wrong",
+  category: "Billing",
+  priority: "high",
+};
 
 function formData(fields: Record<string, string>) {
   const data = new FormData();
@@ -35,6 +54,10 @@ beforeEach(async () => {
   mocks.db = db;
 });
 
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
 describe("submitTicket", () => {
   it("returns field errors and the submitted values when input is invalid, and saves nothing", async () => {
     const state = await submitTicket(undefined, formData({ requesterName: "Ada", subject: "", description: "Help", priority: "low" }));
@@ -48,6 +71,7 @@ describe("submitTicket", () => {
       category: "",
       priority: "low",
     });
+    expect(state?.formError).toBeUndefined();
     expect(await db.select().from(tickets)).toHaveLength(0);
     expect(mocks.redirect).not.toHaveBeenCalled();
   });
@@ -135,6 +159,159 @@ describe("submitTicket", () => {
 
     const [saved] = await db.select().from(tickets);
     expect(saved).toMatchObject({ status: "open" });
+  });
+});
+
+describe("changeStatus", () => {
+  const notFound = "NEXT_REDIRECT:/tickets?notice=ticket-not-found";
+  let existingId: number;
+
+  beforeEach(async () => {
+    const ticket = await createTicket(db, { requesterName: "Ada Lovelace", subject: "Login fails", description: "d", category: "General", priority: "normal" });
+    existingId = ticket.id;
+  });
+
+  it("redirects to the list with a notice and changes nothing when the ticket does not exist", async () => {
+    await expect(changeStatus(undefined, formData({ ticketId: "999", status: "closed" }))).rejects.toThrow(notFound);
+
+    expect((await getTicket(db, existingId))?.status).toBe("open");
+    expect(await db.select().from(ticketStatusChanges)).toEqual([]);
+    expect(mocks.revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it.each(["abc", "0", "01", ""])("treats the malformed ticket id %j as a missing ticket", async (ticketId) => {
+    await expect(changeStatus(undefined, formData({ ticketId, status: "closed" }))).rejects.toThrow(notFound);
+
+    expect((await getTicket(db, existingId))?.status).toBe("open");
+    expect(await db.select().from(ticketStatusChanges)).toEqual([]);
+  });
+
+  it("redirects for a missing ticket even when the status is also invalid", async () => {
+    await expect(changeStatus(undefined, formData({ ticketId: "999", status: "resolved" }))).rejects.toThrow(notFound);
+    expect(mocks.redirect).toHaveBeenCalledWith("/tickets?notice=ticket-not-found");
+  });
+
+  it.each(["resolved", ""])('returns "Invalid status." for the status %j and changes nothing', async (status) => {
+    const state = await changeStatus(undefined, formData({ ticketId: String(existingId), status }));
+
+    expect(state).toEqual({ error: "Invalid status." });
+    expect((await getTicket(db, existingId))?.status).toBe("open");
+    expect(await db.select().from(ticketStatusChanges)).toEqual([]);
+    expect(mocks.redirect).not.toHaveBeenCalled();
+    expect(mocks.revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it("saves the new status and revalidates the list and the detail page", async () => {
+    const state = await changeStatus(undefined, formData({ ticketId: String(existingId), status: "in_progress" }));
+
+    expect(state).toBeUndefined();
+    expect((await getTicket(db, existingId))?.status).toBe("in_progress");
+    expect(await listStatusChanges(db, existingId)).toHaveLength(1);
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/tickets");
+    expect(mocks.revalidatePath).toHaveBeenCalledWith(`/tickets/${existingId}`);
+    expect(mocks.redirect).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["open", "closed"],
+    ["closed", "in_progress"],
+    ["in_progress", "open"],
+  ] as const)("changes the status from %s to %s", async (from, to) => {
+    if (from !== "open") await changeTicketStatus(db, existingId, from);
+
+    await changeStatus(undefined, formData({ ticketId: String(existingId), status: to }));
+
+    expect((await getTicket(db, existingId))?.status).toBe(to);
+    expect(mocks.revalidatePath).toHaveBeenCalledWith(`/tickets/${existingId}`);
+  });
+
+  it("ignores a change to the same status without an error or a revalidation", async () => {
+    await changeTicketStatus(db, existingId, "in_progress");
+
+    const state = await changeStatus(undefined, formData({ ticketId: String(existingId), status: "in_progress" }));
+
+    expect(state).toBeUndefined();
+    expect((await getTicket(db, existingId))?.status).toBe("in_progress");
+    expect(await listStatusChanges(db, existingId)).toHaveLength(1);
+    expect(mocks.revalidatePath).not.toHaveBeenCalled();
+    expect(mocks.redirect).not.toHaveBeenCalled();
+  });
+});
+
+describe("submitTicket when the ticket cannot be saved", () => {
+  function readOnlyError() {
+    return new DrizzleQueryError(
+      "insert into tickets ...",
+      ["Ada Lovelace", "ada@example.com"],
+      new LibsqlError("attempt to write a readonly database", "SQLITE_READONLY"),
+    );
+  }
+
+  it("returns a form error with the values and logs a real database error without its message", async () => {
+    mocks.db = createDb(":memory:");
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const state = await submitTicket(undefined, formData(validFields));
+
+    expect(state).toEqual({ errors: {}, values: validFields, formError: SAVE_ERROR });
+    expect(log).toHaveBeenCalledTimes(1);
+    expect(log).toHaveBeenCalledWith("Failed to save ticket", { name: "Error", cause: "LibsqlError", code: "SQLITE_ERROR" });
+  });
+
+  it("does not redirect or save, and keeps the values and the error message out of the log, when the database is read-only", async () => {
+    vi.spyOn(db, "insert").mockImplementationOnce(() => {
+      throw readOnlyError();
+    });
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const state = await submitTicket(undefined, formData(validFields));
+
+    expect(state).toEqual({ errors: {}, values: validFields, formError: SAVE_ERROR });
+    expect(await db.select().from(tickets)).toHaveLength(0);
+    expect(mocks.redirect).not.toHaveBeenCalled();
+    expect(mocks.revalidatePath).not.toHaveBeenCalled();
+    expect(log).toHaveBeenCalledTimes(1);
+    expect(log).toHaveBeenCalledWith("Failed to save ticket", { name: "Error", cause: "LibsqlError", code: "SQLITE_READONLY" });
+    const logged = JSON.stringify(log.mock.calls);
+    for (const text of ["Ada Lovelace", "ada@example.com", "Broken invoice", "readonly database"]) expect(logged).not.toContain(text);
+  });
+
+  it("returns a form error when the database cannot be opened", async () => {
+    vi.mocked(getDb).mockImplementationOnce(() => {
+      throw new Error("Unable to open connection");
+    });
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const state = await submitTicket(undefined, formData(validFields));
+
+    expect(state?.formError).toBe(SAVE_ERROR);
+    expect(log).toHaveBeenCalledWith("Failed to save ticket", { name: "Error", cause: undefined, code: undefined });
+  });
+
+  it("returns a form error when something that is not an Error is thrown", async () => {
+    vi.spyOn(db, "insert").mockImplementationOnce(() => {
+      throw "boom";
+    });
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const state = await submitTicket(undefined, formData(validFields));
+
+    expect(state?.formError).toBe(SAVE_ERROR);
+    expect(log).toHaveBeenCalledWith("Failed to save ticket", { name: "string", cause: undefined, code: undefined });
+  });
+
+  it("saves the ticket and redirects when the same values are sent again after a failure", async () => {
+    vi.spyOn(db, "insert").mockImplementationOnce(() => {
+      throw readOnlyError();
+    });
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await submitTicket(undefined, formData(validFields));
+    await expect(submitTicket(undefined, formData(validFields))).rejects.toThrow("NEXT_REDIRECT:/tickets");
+
+    expect(await db.select().from(tickets)).toHaveLength(1);
+    expect(mocks.redirect).toHaveBeenCalledTimes(1);
+    expect(mocks.redirect).toHaveBeenCalledWith("/tickets");
   });
 });
 

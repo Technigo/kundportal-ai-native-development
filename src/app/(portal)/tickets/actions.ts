@@ -3,10 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getDb } from "@/db/client";
+import type { ChangeStatusState } from "@/tickets/changeStatusState";
 import { parseTicketId } from "@/tickets/parseTicketId";
 import {
   addNote as saveNote,
   addNoteComment as saveComment,
+  changeTicketStatus,
   createTicket,
   deleteNote as removeNote,
   deleteNoteComment as removeComment,
@@ -14,7 +16,7 @@ import {
   getNoteTicketId,
   getTicket,
 } from "@/tickets/ticketRepository";
-import { newNoteCommentSchema, newNoteSchema, newTicketSchema } from "@/tickets/ticketSchema";
+import { newNoteCommentSchema, newNoteSchema, newTicketSchema, ticketStatusSchema } from "@/tickets/ticketSchema";
 
 type TicketFormValues = { requesterName: string; requesterEmail: string; subject: string; description: string; category: string; priority: string };
 
@@ -22,8 +24,20 @@ export type SubmitTicketState =
   | {
       errors: Partial<Record<keyof TicketFormValues, string[]>>;
       values: TicketFormValues;
+      formError?: string;
     }
   | undefined;
+
+// Only the error type is logged: Drizzle's message contains the entered values.
+function errorSummary(error: unknown) {
+  const cause = error instanceof Error ? error.cause : undefined;
+  const code = (cause as { code?: unknown } | undefined)?.code;
+  return {
+    name: error instanceof Error ? error.name : typeof error,
+    cause: cause instanceof Error ? cause.name : undefined,
+    code: typeof code === "string" && code ? code : undefined,
+  };
+}
 
 export async function submitTicket(_prev: SubmitTicketState, formData: FormData): Promise<SubmitTicketState> {
   const values: TicketFormValues = {
@@ -41,10 +55,33 @@ export async function submitTicket(_prev: SubmitTicketState, formData: FormData)
     return { errors: fieldErrors, values };
   }
 
-  await createTicket(getDb(), parsed.data);
+  try {
+    await createTicket(getDb(), parsed.data);
+  } catch (error) {
+    console.error("Failed to save ticket", errorSummary(error));
+    return { errors: {}, values, formError: "Could not save the ticket to the database. Please try again." };
+  }
 
   revalidatePath("/tickets");
   redirect("/tickets");
+}
+
+export async function changeStatus(_prev: ChangeStatusState, formData: FormData): Promise<ChangeStatusState> {
+  // A missing ticket wins over an invalid status (see Decisions in docs/specs/status-change.md).
+  const id = parseTicketId(String(formData.get("ticketId") ?? ""));
+  if (id === undefined || !(await getTicket(getDb(), id))) redirect("/tickets?notice=ticket-not-found");
+
+  const parsed = ticketStatusSchema.safeParse(formData.get("status"));
+  if (!parsed.success) return { error: "Invalid status." };
+
+  const result = await changeTicketStatus(getDb(), id, parsed.data);
+  // The ticket can disappear between the check and the change.
+  if (result === "not_found") redirect("/tickets?notice=ticket-not-found");
+  if (result === "changed") {
+    revalidatePath("/tickets");
+    revalidatePath(`/tickets/${id}`);
+  }
+  return undefined;
 }
 
 export type NoteActionState = { value?: string; error?: string; alert?: string; saved?: boolean } | undefined;

@@ -1,7 +1,7 @@
 # 04: Status change rules and status history
 
 - **Status:** Accepted
-- **Deciders:** Jessica Swahn (owner of AC5), to be confirmed by the team after review
+- **Deciders:** Jessica Swahn (owner of AC5), reviewed by Ariadna Villar (reviewer of AC5) in PR #13
 
 ## Context
 

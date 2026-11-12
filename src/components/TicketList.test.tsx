@@ -1,6 +1,8 @@
 import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import type { Ticket } from "@/db/schema";
+import { statusLabels } from "@/tickets/statusLabels";
+import { ticketStatuses } from "@/tickets/ticketSchema";
 import { TicketList } from "./TicketList";
 
 function ticket(overrides: Partial<Ticket>): Ticket {
@@ -43,6 +45,16 @@ describe("TicketList", () => {
     render(<TicketList tickets={[ticket({ id: 7, subject: "Invoice missing" })]} />);
 
     expect(screen.getByRole("link", { name: "Invoice missing" })).toHaveAttribute("href", "/tickets/7");
+  });
+
+  it("shows the status without any control to change it", () => {
+    const status = ticketStatuses[1];
+    render(<TicketList tickets={[ticket({ status })]} />);
+
+    expect(screen.getByText(statusLabels[status])).toBeInTheDocument();
+    expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    expect(document.querySelector("form")).toBeNull();
   });
 
   it("shows an empty state when there are no tickets", () => {

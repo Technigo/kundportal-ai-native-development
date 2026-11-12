@@ -6,8 +6,8 @@ import { InternalNotes } from "@/components/InternalNotes";
 import { TicketDetails } from "@/components/TicketDetails";
 import { getDb } from "@/db/client";
 import { parseTicketId } from "@/tickets/parseTicketId";
-import { getTicket, listNotesWithComments } from "@/tickets/ticketRepository";
-import { addNote, addNoteComment, deleteNote, deleteNoteComment } from "../actions";
+import { getTicket, listNotesWithComments, listStatusChanges } from "@/tickets/ticketRepository";
+import { addNote, addNoteComment, changeStatus, deleteNote, deleteNoteComment } from "../actions";
 
 const loadTicket = cache(async (rawId: string) => {
   // Ticket data is per request: render it at request time, never at build time.
@@ -24,9 +24,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 async function SelectedTicket({ params }: { params: Promise<{ id: string }> }) {
   const ticket = await loadTicket((await params).id);
   if (!ticket) redirect("/tickets?notice=ticket-not-found");
+  const changes = await listStatusChanges(getDb(), ticket.id);
   const notes = await listNotesWithComments(getDb(), ticket.id);
   return (
-    <TicketDetails ticket={ticket}>
+    <TicketDetails ticket={ticket} changes={changes} statusAction={changeStatus}>
       <InternalNotes
         ticketId={ticket.id}
         notes={notes}

@@ -2,15 +2,15 @@
 
 ## Limitations
 
-- No status change yet. Tickets always stay `open`.
-- No status history is stored.
 - The status history does not record who made a change, because there is no sign-in.
+- The status history shows the date of each change, not the time. Changes made on the same day show the same date; the order (newest first) shows which came last.
 - No email is sent to the requester.
 - Data is stored in a local SQLite file. The app is meant to run locally only.
 - End-to-end tests run in Chrome only.
 - The persistence test (`src/db/persistence.test.ts`) has not been run on Windows. Windows cannot delete a file that is still open (EBUSY), so the test closes each database client before it deletes its temporary folder. This fix is untested on Windows: it has only run on macOS and in CI on Linux.
 - No pagination: the ticket list loads every ticket.
 - The category is only entered in the New ticket form. It is not shown in the ticket list or on the ticket details page yet.
+- The manual check of the save error message (AC1.8) was done in Firefox with VoiceOver on macOS, and on Windows (`attrib`) by Jessica Swahn on 2026-11-11 without a screen reader. Other browsers and screen readers have not been tried.
 - If saving a ticket fails in the database, the handler sees the default error page instead of a clear message.
 - If the local database has not been set up (no `data/dev.db`, or an empty file with no tables), the Tickets page shows the default error page with `Failed query: select ... from "tickets"` instead of a message saying how to set it up. The fix is in the README under "Troubleshooting".
 - Notes and comments cannot be edited. A typo is fixed by deleting the note (and its comments) and writing it again.
@@ -37,13 +37,13 @@
 ## Proposed further development
 
 
-1. Status change with a stored history table.
+1. Show the time of each status change in the history.
 2. Sign-in and roles (handler, admin).
 3. Customer view of their own tickets.
 4. Email notification on status change.
 5. Pagination, search and filters in the list.
 6. A CI pipeline for lint, typecheck and tests.
-7. A clear message to the handler when a ticket cannot be saved.
-8. Show the category in the ticket list and on the ticket details page.
-9. Edit notes and comments, and show the author once sign-in exists.
-10. Soft delete or undo for notes.
+7. Show the category in the ticket list and on the ticket details page.
+8. Edit notes and comments, and show the author once sign-in exists.
+9. Soft delete or undo for notes.
+10. A fourth status, "Waiting for customer". See the Decisions table in [specs/status-change.md](specs/status-change.md) for what it takes.
