@@ -23,7 +23,7 @@ Teamets plan för veckan (enligt Linear):
 | Tidslinjen i detaljvyn (HIST-05) och felmeddelanden i UI (UI-delen av HIST-14) | KSP-37, KSP-38 | Amalia |
 | Header, gemensam bredd, sök och filter i listan | KSP-75, KSP-76, KSP-77 | Mustafa |
 | Demon: flöde, beslut och verifiering, cirka fem minuter | KSP-57 | Mustafa |
-| Demovideo, till demon 2026-11-12. Utgår, ingår inte i slutleveransen | KSP-78 | Mustafa |
+| Demovideo till demon 2026-11-12. **Gjord** (Done i Linear 2026-11-12), ingår inte i slutleveransen | KSP-78 | Mustafa |
 | Kända begränsningar, risker och vidareutveckling | KSP-61 | Azalea samordnar, alla |
 | Utvärdering av arbetssättet | KSP-62 | Nicklas |
 | Verifieringsplanen: Verifierat för urvalet | KSP-47, KSP-48 | Nicklas, Azalea |
