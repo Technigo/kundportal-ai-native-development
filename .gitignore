@@ -1,0 +1,7 @@
+node_modules/
+dist/
+coverage/
+data/
+.DS_Store
+
+1_misael_berrios_salas.md

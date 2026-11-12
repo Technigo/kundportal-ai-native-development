@@ -1,9 +1,54 @@
-# Kundserviceportalen
+# Kundserviceportalen Grupp 7
 
 Här samlar ni teamets arbete med Kundserviceportalen i kursen AI Native Development. Ni väljer teknik och bygger en mindre fullstacklösning med AI-stöd. Använd bara påhittade kunduppgifter.
 
 **Uppgift, betygskriterier, veckoförväntningar och deadline finns under Kursexamination i Disco.** Börja där och återvänd dit under arbetet.
 [Länk till Disco](https://technigo.disco.co/p/fall-2026-ai-native-development/collection/Q29sbGVjdGlvbjozNzg3Ng==?u=25dab1f8-7abb-463e-a19e-d379efb7caae&drawerTab=comments)
+
+## Om projektet
+
+Kundserviceportalen är ett lokalt internt verktyg för att samla och följa kundärenden. Handläggare kan registrera ärenden med rubrik, beskrivning, kategori och prioritet samt se sparade ärenden. Välj ett ärendes rubrik i listan för att visa dess fullständiga uppgifter. I detaljvyn kan status ändras till Nytt, Pågående, Väntar på kund eller Avslutat och sparas med Spara status. Där kan också en intern anteckning på högst 2 000 tecken läggas till eller redigeras. Töm texten och välj Spara anteckning för att radera den.
+
+## Kör lokalt
+
+Kräver Node.js 22 eller senare.
+
+```sh
+npm install
+npm run dev
+```
+
+Öppna frontend på <http://127.0.0.1:5173>. API:ets anslutningskontroll finns på <http://127.0.0.1:3001/api/health>. Lokal SQLite-fil skapas i `data/kundportal.sqlite`.
+
+## Tester och verifiering
+
+Kör alla automatiserade tester:
+
+```sh
+npm test
+```
+
+Kör testerna separat för API eller webb:
+
+```sh
+npm run test --workspace @kundportal/api
+npm run test --workspace @kundportal/web
+```
+
+Kontrollera kravens testmappning:
+
+```sh
+npm run test:requirements
+npm run check:requirements -- <bas-commit>
+```
+
+`check:requirements` jämför krav och nya tester med bas-commiten, till exempel PR:ens målbranch. Skapa produktionsbyggen med `npm run build`.
+
+## MVP-specifikationer
+
+MVP:ns vertikala featuretickets, krav-ID:n och testmappning finns i [docs/features](./docs/features/README.md).
+Planerade delsteg och aktuell status finns i [plan.md](./plan.md).
+Kursens G/VG-evidens, verifieringsplan och veckostatus finns i [docs/examination](./docs/examination/README.md).
 
 ## Kom igång
 

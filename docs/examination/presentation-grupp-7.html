@@ -1,0 +1,695 @@
+<!doctype html>
+<html lang="sv">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#FEF3E2">
+    <title>Från idé till testbart MVP — Grupp 7</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --page: #FEF3E2;
+        --accent: #F4AE52;
+        --action: #D4621A;
+        --ink: #2A1A0E;
+        --muted: #645348;
+        --paper: #FFFAF1;
+        --line: rgb(42 26 14 / 16%);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: var(--ink);
+        background: var(--page);
+        font-synthesis: none;
+        text-rendering: optimizeLegibility;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        min-width: 320px;
+        min-height: 100vh;
+        margin: 0;
+        background:
+          radial-gradient(ellipse at 86% 9%, rgb(244 174 82 / 22%), transparent 27rem),
+          var(--page);
+      }
+
+      button, a { font: inherit; }
+      button:focus-visible, a:focus-visible, summary:focus-visible {
+        outline: 3px solid var(--action);
+        outline-offset: 4px;
+      }
+
+      .deck-shell {
+        display: grid;
+        min-height: 100vh;
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto 1fr auto;
+      }
+
+      .topbar, .controls {
+        display: flex;
+        min-width: 0;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        width: 100%;
+        max-width: 76rem;
+        padding-inline: 1.5rem;
+        margin-inline: auto;
+      }
+
+      .topbar {
+        padding-block: 1.25rem;
+        color: var(--muted);
+        font-size: 0.875rem;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.7rem;
+        color: var(--ink);
+        font-weight: 750;
+        letter-spacing: -0.02em;
+      }
+
+      .brand-mark {
+        display: grid;
+        width: 2rem;
+        aspect-ratio: 1;
+        place-items: center;
+        border-radius: 0.6rem;
+        background: var(--ink);
+        color: var(--page);
+      }
+
+      .top-meta { text-align: right; }
+
+      main {
+        display: grid;
+        min-width: 0;
+        width: 100%;
+        max-width: 76rem;
+        margin-inline: auto;
+        align-items: center;
+      }
+
+      .slide {
+        display: none;
+        position: relative;
+        width: 100%;
+        min-width: 0;
+        min-height: min(72vh, 43rem);
+        padding: clamp(1.5rem, 5vw, 4.5rem);
+        overflow: auto;
+        border: 1px solid var(--line);
+        border-radius: 1.25rem;
+        background: rgb(255 250 241 / 92%);
+        box-shadow: 0 1.5rem 4rem rgb(42 26 14 / 8%);
+        animation: enter 220ms ease-out;
+      }
+
+      .compact-slide { padding-block: clamp(1.1rem, 3vw, 2.5rem); }
+      .compact-slide .flow { margin-top: 0.9rem; }
+      .compact-slide .grid-2 { margin-top: 0.8rem; }
+
+      .slide.active { display: flex; flex-direction: column; justify-content: center; }
+
+      @keyframes enter {
+        from { opacity: 0; transform: translateY(0.35rem); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .eyebrow {
+        margin: 0 0 1.1rem;
+        color: #77400F;
+        font-size: 0.78rem;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      h1, h2, h3, p { margin-top: 0; }
+      h1, h2 {
+        max-width: 17ch;
+        margin-bottom: 1rem;
+        font-size: clamp(2.2rem, 6vw, 4.5rem);
+        line-height: 1.02;
+        letter-spacing: -0.055em;
+      }
+
+      h2 { font-size: clamp(2rem, 4.6vw, 3.5rem); }
+      h3 { margin-bottom: 0.45rem; font-size: 1.08rem; }
+      p, li { color: var(--muted); font-size: clamp(1rem, 1.6vw, 1.18rem); line-height: 1.55; }
+      strong { color: var(--ink); }
+      a { color: #713508; text-underline-offset: 0.2em; }
+      code {
+        padding: 0.12em 0.35em;
+        border: 1px solid var(--line);
+        border-radius: 0.3rem;
+        background: #fff;
+        color: var(--ink);
+        font-size: 0.88em;
+      }
+
+      .lede { max-width: 53rem; font-size: clamp(1.15rem, 2vw, 1.5rem); }
+      .title-slide { background: linear-gradient(132deg, #FFFAF1 54%, #F8D49E); }
+      .title-slide h1 { max-width: 13ch; }
+      .title-footer { margin-top: 2rem; font-weight: 700; }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        width: fit-content;
+        padding: 0.48rem 0.8rem;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: #fffaf1;
+        color: var(--ink);
+        font-size: 0.85rem;
+        font-weight: 700;
+      }
+
+      .grid-2, .grid-3, .palette, .trace {
+        display: grid;
+        gap: 1rem;
+        margin-top: 1.3rem;
+      }
+
+      .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .card {
+        padding: 1.15rem;
+        border: 1px solid var(--line);
+        border-radius: 0.85rem;
+        background: #fff;
+      }
+
+      .card p, .card li { margin-bottom: 0; font-size: 0.98rem; }
+      .card ul { margin: 0.5rem 0 0; padding-left: 1.15rem; }
+
+      .palette { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .swatch {
+        display: flex;
+        min-height: 9.5rem;
+        flex-direction: column;
+        justify-content: flex-end;
+        gap: 0.25rem;
+        padding: 1rem;
+        border: 1px solid rgb(42 26 14 / 14%);
+        border-radius: 0.9rem;
+      }
+
+      .swatch b { font-size: 1rem; }
+      .swatch code { width: fit-content; }
+      .swatch-page { background: #FEF3E2; }
+      .swatch-accent { background: #F4AE52; }
+      .swatch-action { background: #D4621A; }
+      .swatch-ink { background: #2A1A0E; color: #FEF3E2; }
+      .swatch-action b, .swatch-action code { color: #fff; }
+      .swatch-ink code { border-color: rgb(255 255 255 / 28%); background: #3B2A20; color: #fff; }
+
+      .flow {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        align-items: stretch;
+        gap: 0.55rem;
+        margin-top: 1.5rem;
+      }
+
+      .flow-step {
+        position: relative;
+        padding: 1rem 0.85rem;
+        border: 1px solid var(--line);
+        border-radius: 0.8rem;
+        background: #fff;
+      }
+
+      .flow-step:not(:last-child)::after {
+        position: absolute;
+        top: 50%;
+        right: -0.65rem;
+        z-index: 1;
+        width: 0.75rem;
+        height: 0.75rem;
+        border-top: 2px solid var(--action);
+        border-right: 2px solid var(--action);
+        background: var(--paper);
+        content: "";
+        transform: translateY(-50%) rotate(45deg);
+      }
+
+      .flow-step b { display: block; margin-bottom: 0.4rem; }
+      .flow-step span { color: var(--muted); font-size: 0.9rem; line-height: 1.4; }
+
+      .trace {
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1.15fr);
+        align-items: center;
+      }
+
+      .trace-card {
+        min-height: 10rem;
+        padding: 1rem;
+        border: 1px solid var(--line);
+        border-radius: 0.85rem;
+        background: #fff;
+      }
+
+      .trace-card p, .trace-card li { margin-bottom: 0; font-size: 0.92rem; }
+      .trace-arrow { color: var(--action); font-size: 1.7rem; font-weight: 800; }
+      .test-title {
+        display: block;
+        margin-top: 0.55rem;
+        padding: 0.65rem;
+        border-left: 4px solid var(--accent);
+        border-radius: 0.25rem;
+        background: var(--page);
+        color: var(--ink);
+        font-size: 0.88rem;
+        line-height: 1.45;
+      }
+
+      .result-strip {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.65rem;
+        margin-top: 1.2rem;
+      }
+
+      .metric {
+        min-width: 8rem;
+        padding: 0.8rem 1rem;
+        border-radius: 0.7rem;
+        background: var(--page);
+      }
+
+      .metric strong { display: block; font-size: 1.35rem; }
+      .metric span { color: var(--muted); font-size: 0.82rem; }
+      .callout {
+        margin-top: 1.1rem;
+        padding: 0.9rem 1rem;
+        border-left: 4px solid var(--action);
+        border-radius: 0.3rem;
+        background: #fff;
+        color: var(--muted);
+      }
+
+      .demo-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.5rem;
+        margin-top: 1rem;
+        padding: clamp(1.2rem, 3vw, 2rem);
+        border-radius: 1rem;
+        background: var(--ink);
+        color: var(--page);
+      }
+
+      .demo-card h3, .demo-card p { color: var(--page); }
+      .demo-card p { margin-bottom: 0; }
+      .demo-link, .control-button {
+        display: inline-flex;
+        min-height: 2.8rem;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.65rem 1rem;
+        border: 1px solid var(--ink);
+        border-radius: 0.6rem;
+        background: var(--accent);
+        color: var(--ink);
+        font-weight: 800;
+        text-decoration: none;
+        cursor: pointer;
+      }
+
+      .demo-link:hover, .control-button:hover { background: #f7c77f; }
+      .demo-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.65rem; margin-top: 1rem; }
+      .demo-step { padding: 0.75rem; border: 1px solid var(--line); border-radius: 0.65rem; background: #fff; }
+      .demo-step b { display: block; margin-bottom: 0.25rem; }
+      .demo-step span { color: var(--muted); font-size: 0.84rem; }
+
+      .sources { margin-top: 1.2rem; font-size: 0.86rem; }
+      .sources a { margin-right: 0.75rem; }
+      .speaker-notes {
+        display: none;
+        margin-top: 1.4rem;
+        padding: 0.9rem 1rem;
+        border: 1px dashed rgb(42 26 14 / 35%);
+        border-radius: 0.65rem;
+        background: rgb(244 174 82 / 16%);
+      }
+
+      .speaker-notes.open { display: block; }
+      .speaker-notes p { margin: 0; font-size: 0.94rem; }
+      .notes-toggle[aria-pressed="true"] { background: var(--accent); }
+
+      .controls { padding-block: 1rem 1.25rem; }
+      .control-group { display: flex; align-items: center; gap: 0.65rem; }
+      .control-button { background: var(--ink); color: var(--page); }
+      .control-button:hover { background: #473325; }
+      .control-button:disabled { opacity: 0.45; cursor: not-allowed; }
+      .progress-wrap { display: flex; min-width: min(35vw, 20rem); align-items: center; gap: 0.75rem; }
+      .progress-track { height: 0.45rem; flex: 1; overflow: hidden; border-radius: 1rem; background: rgb(42 26 14 / 16%); }
+      .progress { height: 100%; width: 11.11%; background: var(--action); transition: width 180ms ease; }
+      .counter { min-width: 4.5rem; color: var(--muted); font-size: 0.86rem; text-align: right; }
+      .key-hint { color: var(--muted); font-size: 0.78rem; }
+
+      @media (max-width: 760px) {
+        .topbar, .controls { padding-inline: 0.625rem; }
+        .topbar { flex-wrap: wrap; padding-block: 0.8rem; }
+        .controls { flex-wrap: wrap; }
+        .control-group { flex-wrap: wrap; }
+        .control-button { padding: 0.5rem 0.65rem; font-size: 0.82rem; }
+        .top-meta { max-width: 11rem; font-size: 0.76rem; }
+        .slide { min-height: 70vh; padding: 1.25rem; border-radius: 0.85rem; }
+        .grid-2, .grid-3 { grid-template-columns: 1fr; }
+        .palette { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .swatch { min-height: 7rem; }
+        .flow { grid-template-columns: 1fr; gap: 0.55rem; }
+        .flow-step:not(:last-child)::after { top: auto; right: 50%; bottom: -0.68rem; transform: translateX(50%) rotate(135deg); }
+        .trace { grid-template-columns: 1fr; }
+        .trace-arrow { transform: rotate(90deg); text-align: center; }
+        .demo-card { align-items: flex-start; flex-direction: column; }
+        .demo-steps { grid-template-columns: repeat(2, 1fr); }
+        .key-hint { display: none; }
+        .progress-wrap { min-width: 0; width: 100%; flex: 1 0 100%; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+      }
+
+      @media print {
+        @page { size: landscape; margin: 0.35in; }
+        body { background: white; }
+        .deck-shell { display: block; }
+        .topbar, .controls, .notes-toggle { display: none !important; }
+        main { display: block; width: auto; margin: 0; }
+        .slide, .slide.active {
+          display: flex !important;
+          min-height: 7.1in;
+          max-height: 7.1in;
+          justify-content: center;
+          margin: 0;
+          padding: 0.45in;
+          overflow: hidden;
+          border: 0;
+          border-radius: 0;
+          box-shadow: none;
+          break-after: page;
+          page-break-after: always;
+          animation: none;
+        }
+        .speaker-notes { display: block !important; }
+        .slide h1 { font-size: 35pt; }
+        .slide h2 { font-size: 27pt; }
+        .slide p, .slide li { font-size: 12pt; }
+        .swatch { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="deck-shell">
+      <header class="topbar">
+        <div class="brand"><span class="brand-mark" aria-hidden="true">7</span><span>Grupp 7 · AI Native Development</span></div>
+        <div class="top-meta">Cirka 8 min presentation · 1,5 min demo<br>Totalt: cirka 9,5 min</div>
+      </header>
+
+      <main id="deck" aria-live="polite">
+        <section class="slide title-slide active" aria-label="Bild 1 av 9">
+          <p class="eyebrow">Från idé till testbart MVP</p>
+          <h1>En kundserviceportal byggd steg för steg med AI-stöd</h1>
+          <p class="lede">Så formade vi arbetssättet, kravspårningen och granskningen — och vad vi faktiskt kan visa att testerna fångar.</p>
+          <p class="title-footer">Kundserviceportalen · Grupp 7</p>
+          <div class="speaker-notes"><p><strong>0:35.</strong> Öppna med målet: en lokal portal där handläggare kan registrera och följa ärenden. Säg att det här är en kort berättelse om arbetssätt och verifiering, inte en genomgång av all kod.</p></div>
+        </section>
+
+        <section class="slide" aria-label="Bild 2 av 9">
+          <p class="eyebrow">01 · Ramar först</p>
+          <h2>Vad bad vi AI:n att göra — och inte göra?</h2>
+          <p class="lede">Vi satte projektets mål och begränsningar innan implementationen tog fart.</p>
+          <div class="grid-2">
+            <article class="card">
+              <h3>Projektets ramar</h3>
+              <ul>
+                <li>Kör lokalt; använd bara påhittade kunduppgifter.</li>
+                <li>TypeScript, React/Vite, Express och SQLite.</li>
+                <li>Små, vertikala features med egna krav och tester.</li>
+              </ul>
+            </article>
+            <article class="card">
+              <h3>AI:n som assistent</h3>
+              <ul>
+                <li>Be om förslag när något är oklart — inte tysta antaganden.</li>
+                <li>Vi sparade gemensamma instruktioner samt TDD- och UI-skills för återanvändning.</li>
+                <li>Vi avgör om förslaget matchar kravet; AI:n ersätter inte granskning.</li>
+              </ul>
+            </article>
+          </div>
+          <div class="callout"><strong>Valideringsavvägning:</strong> enligt Carters minnesbild valde vi egen React/TypeScript- och API-validering i MVP:n i stället för ett särskilt valideringspaket.</div>
+          <div class="speaker-notes"><p><strong>1:05.</strong> Beskriv gruppens upplägg: lokalt verktyg, fiktiva data och uppdelning i features. AI:n gav förslag, medan vi tillsammans formade kraven och arbetssättet. Nämn att vi skapade gemensamma instruktioner och TDD-/UI-skills så kunskap inte bara låg i enskilda prompts. Carter minns att vi diskuterade valideringspaket och valde att hålla MVP:n enkel; kodbasen visar egen valideringskod, men själva diskussionen är Carters minnesbild. Modellen valdes automatiskt av Copilot; vår upplevelse var att det ofta blev GPT-6 Luna.</p></div>
+          <p class="sources"><a href="./underlag_grupp_7.md">Gruppens processunderlag</a><a href="./decision-log.md">Beslutslogg</a><a href="../../.github/skills/requirement-driven-tdd/SKILL.md">TDD-skill</a><a href="../../.github/skills/ui-consistency/SKILL.md">UI-skill</a><a href="../../plan.md">MVP-plan</a></p>
+        </section>
+
+        <section class="slide" aria-label="Bild 3 av 9">
+          <p class="eyebrow">02 · Visuell riktning</p>
+          <h2>En varm palett — med tydliga roller</h2>
+          <p class="lede">Vi bad om Color Hunt-paletten som bas. Färgerna återkommer i portalen, med kontrast i åtanke.</p>
+          <div class="palette" aria-label="Projektets fyra färger">
+            <div class="swatch swatch-page"><b>Sidbakgrund</b><code>#FEF3E2</code></div>
+            <div class="swatch swatch-accent"><b>Accent</b><code>#F4AE52</code></div>
+            <div class="swatch swatch-action"><b>Åtgärd</b><code>#D4621A</code></div>
+            <div class="swatch swatch-ink"><b>Text</b><code>#2A1A0E</code></div>
+          </div>
+          <div class="callout">Paletten är en startpunkt, inte ett krav att använda varje färg överallt. Text och kontroller måste förbli läsbara.</div>
+          <div class="speaker-notes"><p><strong>0:50.</strong> Peka ut färgerna och deras roller. Varm beige bär stora ytor; orange markerar accent och handling; mörkbrun ger textkontrast. Vi valde inte färgerna från grunden — vi bad AI:n utgå från en palette och gav UI:t en egen känsla. Färgkoderna är verifierade mot webbens CSS och UI-skillen.</p></div>
+          <p class="sources"><a href="../../packages/web/src/styles.css">Färger i webbens CSS</a><a href="../../.github/skills/ui-consistency/SKILL.md">UI-riktlinjer</a></p>
+        </section>
+
+        <section class="slide compact-slide" aria-label="Bild 4 av 9">
+          <p class="eyebrow">03 · Vertikala features</p>
+          <h2>Bygg en användbar bit i taget</h2>
+          <p class="lede">I stället för en stor kravlista delade vi MVP:t i flöden som går genom hela systemet.</p>
+          <div class="flow" aria-label="Process för en feature">
+            <div class="flow-step"><b>1 · Feature</b><span>Skapa, lista, visa, redigera, status, anteckning …</span></div>
+            <div class="flow-step"><b>2 · Krav</b><span>Observerbart beteende med stabilt krav-ID.</span></div>
+            <div class="flow-step"><b>3 · Test</b><span>API-, UI- eller båda där kravet behöver det.</span></div>
+            <div class="flow-step"><b>4 · Kod</b><span>Frontend, API och lokal lagring.</span></div>
+            <div class="flow-step"><b>5 · Kontroll</b><span>Granska utfallet och kör relevanta tester.</span></div>
+          </div>
+          <div class="grid-2">
+            <article class="card"><h3>Varför vertikalt?</h3><p>Varje delsteg går att läsa, testa och följa från användarbeteende till lagring.</p></article>
+            <article class="card"><h3>Omstart för gemensam grund</h3><p>Misael tog initiativ till GitHub och första kodbasen; han och Carter började sedan om tillsammans.</p></article>
+          </div>
+          <div class="speaker-notes"><p><strong>1:10.</strong> Misael berättar att flera personer föll bort, så till slut var det han och Carter kvar. Det var svårt att få till första mötet; han tog initiativ till GitHub-upplägget och började en första kodbas. De valde sedan att börja om gemensamt så Carter också skulle förstå grunden och vara med från start. Var noga med tidslinjen: PR #22 hann mergeas den 2 november och revertades några minuter senare i commit a386dbf4. Säg därför att koden inte behölls som fortsatt grund, inte att den aldrig mergeades. Gå sedan vidare till featureindexet och hur arbetet följdes upp per ticket.</p></div>
+          <p class="sources"><a href="https://github.com/misael86/kundportal-ai-native-development/pull/22">Första MVP:n · PR #22</a><a href="https://github.com/misael86/kundportal-ai-native-development/commit/a386dbf4e6f0e6133bd51fc8cdf3fd924b2c00db">Revert av första MVP:n</a><a href="../features/README.md">Featureindex</a><a href="../../plan.md">Plan och delsteg</a></p>
+        </section>
+
+        <section class="slide" aria-label="Bild 5 av 9">
+          <p class="eyebrow">04 · Från krav till test</p>
+          <h2>Ett konkret spår: CASE-EDIT-005</h2>
+          <p class="lede">Ett krav ska gå att hitta i både specifikation och automatiserat test.</p>
+          <div class="trace">
+            <article class="trace-card">
+              <h3>Krav i specen</h3>
+              <p><code>CASE-EDIT-005</code></p>
+              <p>Om obligatoriska fält saknas ska uppdateringen stoppas och användaren få ett specifikt fel för varje fält.</p>
+            </article>
+            <div class="trace-arrow" aria-hidden="true">→</div>
+            <article class="trace-card">
+              <h3>Kravmärkt test</h3>
+              <p><code>CaseDetail.test.tsx</code></p>
+              <span class="test-title">[CASE-EDIT-002] and [CASE-EDIT-005] explains required fields that block an update</span>
+            </article>
+            <div class="trace-arrow" aria-hidden="true">→</div>
+            <article class="trace-card">
+              <h3>Vad testet kontrollerar</h3>
+              <ul>
+                <li>Felmeddelande visas för tom rubrik.</li>
+                <li>Fältet markeras som ogiltigt.</li>
+                <li>Uppdateringsanrop skickas inte.</li>
+              </ul>
+            </article>
+          </div>
+          <div class="callout">Krav-ID:t gör kopplingen sökbar. Själva testets innehåll måste ändå granskas.</div>
+          <div class="speaker-notes"><p><strong>1:25.</strong> Följ pekaren från kravtabell till testtitel och sedan till assertionerna: feltexten visas, fältet får aria-invalid och API-anropet görs inte. Testet täcker också CASE-EDIT-002; det är tillåtet att ett test täcker flera krav. Det här är konkret evidens, inte ett påstående att en titel ensam bevisar kvalitet.</p></div>
+          <p class="sources"><a href="../features/case-edit.md">CASE-EDIT-specifikation</a><a href="../../packages/web/src/CaseDetail.test.tsx">Testet</a></p>
+        </section>
+
+        <section class="slide" aria-label="Bild 6 av 9">
+          <p class="eyebrow">05 · CI och kritisk granskning</p>
+          <h2>CI gör kravtestningen synlig i varje pull request</h2>
+          <div class="grid-2">
+            <article class="card">
+              <h3>Pull request-kontrollen</h3>
+              <ul>
+                <li>Krav-ID:n jämförs med kravmärkta testtitlar.</li>
+                <li>Nya krav ska ha nya tester i samma PR.</li>
+                <li>CI kör checker, API-/webbtester och build.</li>
+              </ul>
+            </article>
+            <article class="card">
+              <h3>Vad kontrollen säkerställer</h3>
+              <p>Varje krav-ID i kravtabellerna ska finnas i minst en automatiserad testtitel. Nya krav ska få nya tester i samma PR.</p>
+              <p><strong>Projektresultat:</strong> 84 krav-ID:n hade matchande testtitlar.</p>
+            </article>
+          </div>
+          <div class="result-strip">
+            <div class="metric"><strong>106</strong><span>API-tester · godkänt</span></div>
+            <div class="metric"><strong>95</strong><span>webbtester · godkänt</span></div>
+            <div class="metric"><strong>6</strong><span>checker-tester · godkänt</span></div>
+          </div>
+          <p class="sources">Automatiserade resultat dokumenterade för projektet.</p>
+          <div class="callout"><strong>Begränsning:</strong> checker hittar ID:n i titlar, men vet inte om testet faktiskt bevisar kravet.</div>
+          <div class="speaker-notes"><p><strong>1:25.</strong> Förklara att CI körs vid pull request och kontrollerar krav-ID:n i testtitlar samt kräver nya tester för nya krav. Presentera testantal och 84 krav som dokumenterade projektresultat. Var tydliga med begränsningen: om en testtitel nämner ett ID utan att testa rätt sak, eller listar flera ID:n som testet inte täcker, räcker inte checker. Därför behövs gruppens granskning av testinnehållet också.</p></div>
+          <p class="sources"><a href="./verification-plan.md">Verifieringsresultat och begränsningar</a><a href="../../.github/workflows/ci.yml">CI-workflow</a></p>
+        </section>
+
+        <section class="slide" aria-label="Bild 7 av 9">
+          <p class="eyebrow">06 · Verktyg och plan</p>
+          <h2>Vad kunde vi testa — och vad var ännu bara planerat?</h2>
+          <div class="grid-3">
+            <article class="card">
+              <h3>Webbläsaren i VS Code</h3>
+              <p>I den här miljön kan assistenten läsa och använda en öppen sida. För att prova appens flöden måste appen vara igång.</p>
+            </article>
+            <article class="card">
+              <h3>Playwright var planerat</h3>
+              <p>På grenen <code>docs/project-plan-and-specs</code> planerades Playwright E2E och CI. CI-designen var ännu inte implementerad.</p>
+            </article>
+            <article class="card">
+              <h3>GitHub med tydliga gränser</h3>
+              <p><code>gh</code> kan läsa PR:er och skriva med rätt behörighet. Push kräver också en uttrycklig begäran.</p>
+            </article>
+          </div>
+          <div class="callout"><strong>Vad historiken visar:</strong> PR #21 stängdes utan merge. Branchen planerade Playwright E2E men saknade körbart E2E-kommando.</div>
+          <div class="speaker-notes"><p><strong>0:40.</strong> Skilj på assistentens webbläsarverktyg i den här VS Code-miljön och projektets automatiserade tester. På grenen docs/project-plan-and-specs föreslogs Playwright E2E och CI, men planfilen säger att CI-designen ännu inte implementerats och package.json saknar Playwright/test:e2e. PR #21 stängdes utan merge. Misael uppger att han gjorde hela branchen själv med Copilot som stöd; GitHub visar honom som PR-författare och huvudsaklig commitförfattare. Instruktionerna tillåter commits efter godkända kontroller men säger uttryckligen att inte pusha utan begäran.</p></div>
+          <p class="sources"><a href="https://github.com/misael86/kundportal-ai-native-development/pull/21">PR #21</a><a href="https://github.com/misael86/kundportal-ai-native-development/blob/docs/project-plan-and-specs/docs/plan.md">Planen på branchen</a><a href="https://github.com/misael86/kundportal-ai-native-development/blob/docs/project-plan-and-specs/.github/copilot-instructions.md">Copilot-instruktioner på branchen</a><a href="./underlag_grupp_7.md">Gruppens processunderlag</a></p>
+        </section>
+
+        <section class="slide" aria-label="Bild 8 av 9">
+          <p class="eyebrow">07 · Vad vi tar med oss</p>
+          <h2>AI ökar farten — men ansvaret ligger kvar hos oss</h2>
+          <div class="grid-3">
+            <article class="card">
+              <h3>Det som hjälpte</h3>
+              <p>Små features, tydliga krav-ID:n och återkommande tester gav spårbarhet genom arbetet.</p>
+            </article>
+            <article class="card">
+              <h3>Det som krävde granskning</h3>
+              <p>AI-förslag kunde missa relaterade ytor, felvägar eller ge tester med begränsat bevisvärde.</p>
+            </article>
+            <article class="card">
+              <h3>Vår lärdom</h3>
+              <p>Vi granskade de första features mer noggrant än senare delar. En jämnare, återkommande kodgranskning hade stärkt processen.</p>
+            </article>
+          </div>
+          <div class="callout">Framåt: mindre ändringssteg och återkommande granskning — även om det tar längre tid — samt mer genomarbetad state- och routehantering.</div>
+          <div class="speaker-notes"><p><strong>0:55.</strong> Lyft den gemensamma lärdomen från underlaget: vi granskade de två första features mer noggrant och fortsatte senare med lättare kodgranskning och mer manuell testning. Det gav fart, men sänkte insynen. Berätta att mindre commits och jämnare code review vore ett bättre nästa arbetssätt. Avgränsningen är en lokal MVP, inte en produktionssatt tjänst.</p></div>
+          <p class="sources"><a href="./underlag_grupp_7.md">Framtida arbete</a><a href="./criteria-matrix.md">G/VG-evidensmatris</a></p>
+        </section>
+
+        <section class="slide" aria-label="Bild 9 av 9">
+          <p class="eyebrow">08 · Slutresultat · live-demo · cirka 1:30</p>
+          <h2>Från krav och tester till ett fungerande ärendeflöde</h2>
+          <p class="lede">Visa portalen lokalt med ett fiktivt ärende — från lista till uppdatering.</p>
+          <div class="demo-card">
+            <div>
+              <h3>Kundserviceportalen</h3>
+              <p>React/Vite · Express · lokal SQLite</p>
+            </div>
+            <a class="demo-link" href="http://127.0.0.1:5173" target="_blank" rel="noreferrer">Öppna portalen ↗</a>
+          </div>
+          <div class="demo-steps">
+            <div class="demo-step"><b>1 · Skapa</b><span>Registrera ett fiktivt ärende.</span></div>
+            <div class="demo-step"><b>2 · Visa</b><span>Öppna ärendet från listan.</span></div>
+            <div class="demo-step"><b>3 · Ändra</b><span>Uppdatera status eller anteckning.</span></div>
+            <div class="demo-step"><b>4 · Spara</b><span>Visa att ändringen finns kvar.</span></div>
+          </div>
+          <div class="callout">Före presentationen: kör <code>npm run dev</code>. Använd endast påhittade uppgifter. Portalen öppnas på <code>127.0.0.1:5173</code>.</div>
+          <div class="speaker-notes"><p><strong>1:30.</strong> Avsluta med live-appen. Skapa ett fiktivt ärende, öppna detaljen, ändra status eller intern anteckning och visa sparat läge. Håll dig till ett enda ärende och ett par interaktioner för att hålla tiden. Avsluta med en mening om att den demonstrerade MVP:n är lokal och använder SQLite.</p></div>
+          <p class="sources"><a href="http://127.0.0.1:5173" target="_blank" rel="noreferrer">Lokal frontend</a><a href="http://127.0.0.1:3001/api/health" target="_blank" rel="noreferrer">API health check</a><a href="../../README.md">Startinstruktioner</a></p>
+        </section>
+      </main>
+
+      <footer class="controls">
+        <div class="control-group">
+          <button class="control-button" id="previous" type="button" aria-label="Föregående bild">← Tillbaka</button>
+          <button class="control-button" id="next" type="button" aria-label="Nästa bild">Nästa →</button>
+          <button class="control-button notes-toggle" id="notesToggle" type="button" aria-pressed="false">Visa talarstöd</button>
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-track" role="progressbar" aria-label="Presentationens förlopp" aria-valuemin="1" aria-valuemax="9" aria-valuenow="1">
+            <div class="progress" id="progress"></div>
+          </div>
+          <span class="counter" id="counter">1 / 9</span>
+        </div>
+        <span class="key-hint">← → navigera · N talarstöd · Home/End</span>
+      </footer>
+    </div>
+    <script>
+      (() => {
+        const slides = [...document.querySelectorAll('.slide')];
+        const previous = document.querySelector('#previous');
+        const next = document.querySelector('#next');
+        const progress = document.querySelector('#progress');
+        const progressBar = document.querySelector('[role="progressbar"]');
+        const counter = document.querySelector('#counter');
+        const notesToggle = document.querySelector('#notesToggle');
+        let current = 0;
+        let notesVisible = false;
+
+        function show(index) {
+          current = Math.max(0, Math.min(slides.length - 1, index));
+          slides.forEach((slide, slideIndex) => {
+            const active = slideIndex === current;
+            slide.classList.toggle('active', active);
+            slide.setAttribute('aria-hidden', String(!active));
+          });
+          previous.disabled = current === 0;
+          next.disabled = current === slides.length - 1;
+          counter.textContent = `${current + 1} / ${slides.length}`;
+          progress.style.width = `${((current + 1) / slides.length) * 100}%`;
+          progressBar.setAttribute('aria-valuenow', String(current + 1));
+          updateNotes();
+        }
+
+        function updateNotes() {
+          const note = slides[current].querySelector('.speaker-notes');
+          note.classList.toggle('open', notesVisible);
+          notesToggle.setAttribute('aria-pressed', String(notesVisible));
+          notesToggle.textContent = notesVisible ? 'Dölj talarstöd' : 'Visa talarstöd';
+        }
+
+        previous.addEventListener('click', () => show(current - 1));
+        next.addEventListener('click', () => show(current + 1));
+        notesToggle.addEventListener('click', () => {
+          notesVisible = !notesVisible;
+          updateNotes();
+        });
+
+        document.addEventListener('keydown', (event) => {
+          if (event.altKey || event.ctrlKey || event.metaKey) return;
+          if (event.key === 'ArrowRight' || event.key === 'PageDown' || event.key === ' ') {
+            event.preventDefault();
+            show(current + 1);
+          } else if (event.key === 'ArrowLeft' || event.key === 'PageUp') {
+            event.preventDefault();
+            show(current - 1);
+          } else if (event.key === 'Home') {
+            show(0);
+          } else if (event.key === 'End') {
+            show(slides.length - 1);
+          } else if (event.key.toLowerCase() === 'n') {
+            notesVisible = !notesVisible;
+            updateNotes();
+          }
+        });
+
+        show(0);
+      })();
+    </script>
+  </body>
+</html>
