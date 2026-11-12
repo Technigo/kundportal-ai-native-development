@@ -73,6 +73,31 @@ Detailed rules: [specs/register-ticket.md](specs/register-ticket.md).
 | Edge case | Email with only spaces | 1.3 | ticketSchema.test.ts "rejects an invalid email with a clear message and treats one with only spaces as no email" | No email |
 | Edge case | Form limits | 1.5 | TicketForm.test.tsx "limits each text field to its documented length" | `maxlength` 120 / 254 / 120 / 5000 / 50 |
 
+## Change status (AC5): test cases by type
+
+Detailed rules: [specs/status-change.md](specs/status-change.md). The AC column uses the spec's ids (AC-S1 to AC-S7).
+
+| Type | Behaviour | AC | Test | Expected result |
+|---|---|---|---|---|
+| Happy path | Change the status on the detail page | S1 | [tickets.spec.ts](../e2e/tickets.spec.ts) "changing the status on the detail page shows it there, in the history and in the list" | New status in the badge, a history row and the new status in the list |
+| Happy path | The form offers every status and sends only on Save | S1 | [StatusForm.test.tsx](../src/components/StatusForm.test.tsx) "offers every status, starts on the current one…" | All statuses in `ticketStatuses`, current one selected, ticket id and status sent on Save |
+| Happy path | A valid change is saved | S1 | [actions.test.ts](../src/app/%28portal%29/tickets/actions.test.ts) "saves the new status and revalidates the list and the detail page" | No error; status saved; one history entry; `/tickets` and `/tickets/[id]` revalidated; no redirect |
+| Happy path | Changes in other directions, including back to an earlier status | S2 | actions.test.ts "changes the status from %s to %s" (open → closed, closed → in_progress, in_progress → open) | The new status is saved |
+| Happy path | Each change is stored in the history | S6 | [ticketRepository.test.ts](../src/tickets/ticketRepository.test.ts) "stores the previous status, the new status and a timestamp…", "lists the changes newest first", "lists only the changes of the given ticket" | From, to and timestamp saved; newest first; only that ticket's changes |
+| Happy path | The history is shown on the ticket | S6 | [TicketDetails.test.tsx](../src/components/TicketDetails.test.tsx) "shows the status history in the order given, with from, to and date" | "Open → In progress · Nov 9, 2026" under "Status history" |
+| Error path | Unknown, empty or missing status | S3 | [ticketSchema.test.ts](../src/tickets/ticketSchema.test.ts) "accepts the status %s" and 'rejects %s with "Invalid status."' | Every status in `ticketStatuses` accepted; "resolved", "" and a missing value give "Invalid status." |
+| Error path | Invalid status sent to the server | S3 | actions.test.ts 'returns "Invalid status." for the status %j and changes nothing' | "Invalid status."; status and history unchanged |
+| Error path | The error is shown next to the dropdown | S3 | StatusForm.test.tsx "shows Invalid status. next to the dropdown when the action returns it" | Message linked to the dropdown with `aria-describedby` |
+| Error path | The ticket does not exist | S4 | actions.test.ts "redirects to the list with a notice and changes nothing when the ticket does not exist"; ticketRepository.test.ts "returns not_found and saves nothing…" | Redirect to `/tickets?notice=ticket-not-found`; nothing saved |
+| Edge case | Malformed ticket id | S4 | actions.test.ts "treats the malformed ticket id %j as a missing ticket" ("abc", "0", "01", "") | Same redirect as a missing ticket |
+| Edge case | Missing ticket and invalid status at once | S4 | actions.test.ts "redirects for a missing ticket even when the status is also invalid" | The redirect wins over "Invalid status." |
+| Edge case | Save the status the ticket already has | S5 | ticketRepository.test.ts "ignores a change to the status the ticket already has"; actions.test.ts "ignores a change to the same status without an error or a revalidation" | `unchanged`; no error, no history entry, no revalidation |
+| Edge case | Two changes with the same timestamp | S6 | ticketRepository.test.ts "lists the latest saved change first when two changes have the same timestamp" | The later change first (`id` as tie-break) |
+| Edge case | A ticket that has never changed status | S6 | ticketRepository.test.ts "returns an empty history for a new ticket"; TicketDetails.test.tsx "says there are no status changes yet when the history is empty" | Empty history; "No status changes yet." |
+| Edge case | The list has no way to change the status | S7 | [TicketList.test.tsx](../src/components/TicketList.test.tsx) "shows the status without any control to change it" | Status shown, no dropdown, button or form |
+
+**Why these test cases.** They follow the risks in the spec: a change that is not saved, a history that is not stored, values the dropdown cannot send but a direct request can, a ticket that is missing, and a Save that changes nothing. Each case runs at the lowest level that can show it. The schema is tested as a unit, saving and history against a real in-memory SQLite database, the server action with mocked `revalidatePath` and `redirect`, and what the handler sees as components. One e2e test covers the whole flow, because the detail page is an async Server Component. The cases were proposed with `/test-cases` for each criterion and chosen by the owner, and the tests were seen failing before the code was written. The tests that passed at once were checked with temporary changes (see "Mutation check, status change" below).
+
 ## Mutation check
 
 Green tests only show that code and tests agree. To show that the tests fail for the right reason, `npm run test:mutation` breaks one line of `submitTicket` on purpose, runs the tests, checks that the named tests fail, and restores the file. Add `-- --e2e` to run Playwright as well (one production build per mutation, a few minutes).
@@ -107,17 +132,44 @@ Done by hand on 2026-11-11 with `npx playwright test e2e/notes.spec.ts`. Each mu
 - **C and D** show that the delete flow and the "note is gone" flow are really checked.
 - Not tried: mutations in the repository, the schemas and the add flows. The data and action tests cover them but have no mutation check.
 
+## Mutation check, status change (manual)
+
+Some status tests passed on their first run, or needed to be shown failing for the right reason. Each check was one temporary change that was then removed, and the file was checked to be unchanged afterwards. The `npm run test:mutation` script covers only `submitTicket` and was not used.
+
+| Mutation | Should fail | Result |
+|---|---|---|
+| `changeTicketStatus` returns `"changed"` instead of `"not_found"` for a missing ticket (AC-S4) | "returns not_found and saves nothing when the ticket does not exist" | Caught. Done 2026-11-09 by Claude Code, approved by Jessica Swahn, who checked the restore in the diff |
+| The insert into `ticket_status_changes` is commented out (AC-S6) | Written down before the run: "stores the previous status…", "lists the changes newest first", "lists only the changes of the given ticket", "ignores a change to the status the ticket already has" | Caught: exactly those 4 failed. The tests for the same timestamp, an empty history and a missing ticket passed, as they do not depend on the insert. Done 2026-11-09 by Jessica Swahn; file unchanged afterwards (checked in Fork) |
+| A temporary "Change" button in the ticket list (AC-S7) | "shows the status without any control to change it" | Caught. Done 2026-11-10 by Claude Code; `TicketList.tsx` unchanged afterwards |
+| The detail page passes an empty history (AC-S1, AC-S6) | e2e "changing the status on the detail page…" | Caught. Done 2026-11-10 by Claude Code; `page.tsx` unchanged afterwards |
+
 ## Manual checks
+
+### Data, setup and failures
 
 | Check | Why manual | Status | Result |
 |---|---|---|---|
 | Existing tickets get the category `General` after `npm run db:migrate` (AC1.7) | Tests migrate an empty database, so they do not show existing rows | Done 2026-11-07 on `data/dev.db` | All 4 existing tickets had `General` |
 | A ticket is still there after the dev server restarts (AC7.1) | The test opens a new connection but does not restart a real server | Done 2026-11-10 and again 2026-11-11 after the review fixes, on `data/dev.db` | Ticket "Restart check 2026-11-10" (and on 2026-11-11 "Restart check 2026-11-11", id 7) saved with `createTicket`, shown on `/tickets`; dev server stopped and started with `npm run dev`; ticket still shown on `/tickets` and on its details page |
 | The persistence test fails when tickets are not kept in the file (AC7.1) | The test passed on its first run because persistence already worked, so it was never seen failing | Done 2026-11-10 (Ariadna Villar, with an AI agent) | `createDb` in `src/db/client.ts` changed by hand to always use `:memory:`: the test failed with "no such table: tickets" on the new connection. File restored and identical (`shasum`) |
-| The persistence test cleans up its temporary database on Windows (AC7.1) | macOS and Linux can delete a file that is still open, so the EBUSY error only shows on Windows, and CI runs on `ubuntu-latest` only | Skipped | Not run on Windows. Listed as a known limitation in [limitations.md](limitations.md) and under "Limitations of the verification" (below) |
+| The persistence test cleans up its temporary database on Windows (AC7.1) | macOS and Linux can delete a file that is still open, so the EBUSY error only shows on Windows, and CI runs on `ubuntu-latest` only | Done 2026-11-11 by Jessica Swahn on Windows with `npm test` | The test itself passed, but the cleanup failed with EPERM in `rmSync`: Windows releases the file a moment after `close()`. A fix that retries the delete is to be agreed with the owner (Ariadna Villar). See "Limitations of the verification" (below) |
 | The gitignore test fails when database files are not ignored (AC7.2) | The test passed on its first run because the rule already existed, so it was never seen failing | Done 2026-11-11 (Ariadna Villar, with an AI agent) | `/data/*.db` removed from `.gitignore` by hand: the `data/dev.db` and `data/e2e.db` cases failed (`git check-ignore` exited with an error), the `-wal` case still passed because `/data/*.db-*` covers it. File restored and identical (`shasum`) |
 | Error messages for registering a ticket are understandable | Judging clarity needs a person | Done 2026-11-07 by Alexandra Petersson with `npm run dev` | Invalid email (`Alex@hej`) and an empty category, with the other fields valid and priority `low`: both errors shown next to their fields, the other fields accepted. After correcting the email (`alec@hej.se`) and the category the ticket was saved. The messages were judged clear. Not judged by hand: an empty form, a name with only spaces and a too-short subject (covered by automated tests) |
 | A valid ticket cannot be saved because the database is read-only (AC1.8) | The e2e tests share one database, and the server must be restarted around the change ([decision 07](decisions/07-save-failure-handling.md)) | Done 2026-11-11 by Alexandra Petersson in Firefox on macOS with `npm run dev`, `chmod 444` and `chmod 644` on `data/dev.db` | The message was shown in red directly above **Register ticket**. The page stayed on `/tickets/new`, all values were kept, no field was marked invalid and focus did not move to the message. VoiceOver announced the message, hid it while the next attempt was pending and announced it again when that attempt also failed. The server logged `Failed to save ticket { name: 'Error', cause: 'LibsqlError', code: 'SQLITE_READONLY' }` without the entered values. After `chmod 644` and a restart the ticket was saved and the list was shown. On 2026-11-11 Jessica Swahn did the same steps on Windows with `attrib +R` and `attrib -R`, with the same result (without a screen reader). Screenshots: [browser](images/ac1-8-save-failure-browser.png), [terminal](images/ac1-8-save-failure-terminal.png), [browser on Windows](images/ac1-8-save-failure-browser-windows.png), [terminal on Windows](images/ac1-8-save-failure-terminal-windows.png). Full report: [ac1-8-manual-check.md](test-reports/ac1-8-manual-check.md) |
+
+### In the browser
+
+Automated tests cannot see layout or real browser behaviour. These checks are done by hand in Chrome with `npm run dev` and fresh seed data.
+
+| Check | Criterion | Expected | Last result |
+|---|---|---|---|
+| Long URL without spaces in the description | AC4.2 | Text wraps inside the box, no horizontal scroll | Failed on 2026-11-08 (Alexandra), fixed on 2026-11-09, passed on re-check 2026-11-10 (Alexandra) |
+| `/tickets/01`, `/tickets/1e0`, `/tickets/0x1` | AC4.4 | Redirect to the list with the message | Failed on 2026-11-08 (Alexandra), fixed on 2026-11-09, passed on re-check 2026-11-10 (Alexandra) |
+| `?notice=hej`, `?notice=`, `?notice=<b>x</b>`, `?notice=toString` | AC4.5 | No message, no tags rendered | Passed (Alexandra, 2026-11-08) |
+| Keyboard only: list, ticket, Back to tickets | AC4.6, AC3.2 | All reachable, focus visible | Passed (Alexandra, 2026-11-08) |
+| Screen reader | All | Pages are announced in a sensible order | Not done for whole pages. Only the AC1.8 save error message was checked with VoiceOver (see above) |
+| Change the status on the detail page | AC-S1 | After choosing a new status and clicking Save, the status badge, the history and the ticket list all show the new status | Passed (Jessica, 2026-11-10) |
+| Status still saved after restarting the server | AC-S6 | After stopping and starting `npm run dev`, the ticket list and the detail page still show the changed status, and the history row is still there | Passed (Jessica, 2026-11-10): the ticket changed before still had the new status in the list, and its detail page still showed the history row |
 
 ## Latest run results
 
@@ -135,25 +187,11 @@ Run on 2026-11-11 on branch `jessica/status-change-backend`, after the review fi
 
 Update this table when you rerun the checks.
 
-## Manual checks
-
-Automated tests cannot see layout or real browser behaviour. These checks are done by hand in Chrome with `npm run dev` and fresh seed data.
-
-| Check | Criterion | Expected | Last result |
-|---|---|---|---|
-| Long URL without spaces in the description | AC4.2 | Text wraps inside the box, no horizontal scroll | Failed on 2026-11-08 (Alexandra), fixed on 2026-11-09, passed on re-check 2026-11-10 (Alexandra) |
-| `/tickets/01`, `/tickets/1e0`, `/tickets/0x1` | AC4.4 | Redirect to the list with the message | Failed on 2026-11-08 (Alexandra), fixed on 2026-11-09, passed on re-check 2026-11-10 (Alexandra) |
-| `?notice=hej`, `?notice=`, `?notice=<b>x</b>`, `?notice=toString` | AC4.5 | No message, no tags rendered | Passed (Alexandra, 2026-11-08) |
-| Keyboard only: list, ticket, Back to tickets | AC4.6, AC3.2 | All reachable, focus visible | Passed (Alexandra, 2026-11-08) |
-| Screen reader | All | Pages are announced in a sensible order | Not done for whole pages. Only the AC1.8 save error message was checked with VoiceOver (see above) |
-| Change the status on the detail page | AC-S1 | After choosing a new status and clicking Save, the status badge, the history and the ticket list all show the new status | Passed (Jessica, 2026-11-10) |
-| Status still saved after restarting the server | AC-S6 | After stopping and starting `npm run dev`, the ticket list and the detail page still show the changed status, and the history row is still there | Passed (Jessica, 2026-11-10): the ticket changed before still had the new status in the list, and its detail page still showed the history row |
-
 ## Limitations of the verification
 
 - "Still there after a restart" (AC-S6) is a manual check only.
 - "Invalid status." on the detail page is tested at component level only. The dropdown cannot send an unknown value, so e2e cannot reach it.
-- Two status tests passed on their first run, because the code already existed: the AC-S7 list test and the e2e test for AC-S1. They were seen failing with temporary changes that were then removed: a button in the list, and the detail page passing an empty history.
+- Two status tests passed on their first run, because the code already existed: the AC-S7 list test and the e2e test for AC-S1. They were seen failing with temporary changes (see "Mutation check, status change").
 - The history shows the date only, so the e2e test checks the date format, not the exact date.
 - End-to-end tests cover Chrome only.
 - No accessibility audit beyond the keyboard navigation test and labelled form fields. The only screen reader test is the VoiceOver check of the save error message (AC1.8).
@@ -161,11 +199,6 @@ Automated tests cannot see layout or real browser behaviour. These checks are do
 - The AC1 tests added after the code (blank fields, limits, email, priority, `maxlength`, missing name) passed on their first run, because the behaviour already existed. They were not seen failing first; the mutation check covers `submitTicket` only.
 - The ticket list does not show the category, so e2e cannot show that it is saved. The action test covers it, and mutation 3 shows that the test catches it.
 - The mutation check tries four hand-picked mutations in `submitTicket`, not every possible fault.
-- The persistence test's cleanup has not been run on Windows. The test closes each database client before deleting its temporary folder, which should prevent the EBUSY error Windows gives for an open file, but this was only run on macOS, and CI runs on `ubuntu-latest`.
-- No accessibility audit beyond the keyboard navigation test and labelled form fields. No screen reader test.
-- e2e tests share one seeded database, so they depend on the seed data order.
-- The AC1 tests added after the code (blank fields, limits, email, priority, `maxlength`, missing name) passed on their first run, because the behaviour already existed. They were not seen failing first; the mutation check covers `submitTicket` only.
-- The ticket list does not show the category, so e2e cannot show that it is saved. The action test covers it, and mutation 3 shows that the test catches it.
-- The mutation check tries three hand-picked mutations in `submitTicket`, not every possible fault.
+- The persistence test's cleanup fails on Windows with EPERM (run 2026-11-11), although the test itself passes. CI runs on `ubuntu-latest` only, so it does not show this.
 - The schema, data, action and component tests for the notes were seen failing before the code existed, except one component test (the count after a comment is deleted), which passed before the code because it only re-renders. The e2e tests in `e2e/notes.spec.ts` were written after the code and passed on their first run. The manual mutation check found that the revalidate pattern for other open tabs is not tested.
 - No manual check of the look of the notes section (button styles, spacing) was done by a second person.
