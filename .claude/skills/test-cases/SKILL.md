@@ -18,11 +18,11 @@ If no criterion is given, or the id cannot be found, stop and ask.
 
 ## Steps
 
-1. **Find the criterion.** Quote it word for word with its file. Read the surrounding spec too (rules, error messages, decisions, open questions), since those often decide the expected result.
+1. **Find the criterion.** Quote it word for word with its file. Before proposing anything, read the spec's Decisions table and open questions, then the rest of the spec (rules, error messages). These often decide the expected result.
 2. **Read the test levels** in `docs/verification.md`, and its criterion-to-test mapping to see what is already tested.
 3. **Read the code it touches**, if any exists (for example `src/tickets/`, `src/app/(portal)/tickets/`), to pick realistic test levels. Read only; do not run anything.
 4. **Propose test cases.** Cover at least one happy path, one error path and the relevant edge cases (empty values, limits, unknown values, missing records, the same value twice). Keep each case to one behaviour.
-5. **Mark assumptions and ask questions.** Every guess about behaviour the criterion or spec does not state is marked as an assumption. List the questions the owners must answer before those cases can be built.
+5. **Mark assumptions and ask questions.** Every guess about behaviour the criterion or spec does not state is marked as an assumption. List the questions the owners must answer before those cases can be built. Do not ask about anything the Decisions table already settles: use the decision and name it in the Expected result or Details.
 6. **Let the owners choose.** Number the cases and ask which ones to build. Stop there. Building them is done separately, with the `ticket-change` skill.
 
 ## Output
@@ -37,9 +37,11 @@ Start with the quoted criterion and its source, then the table:
 - **Test level:** unit, data, server action, component or end-to-end, as in `docs/verification.md`. Async Server Components and full flows go to end-to-end.
 - **Expected result:** concrete and checkable, using the exact values and messages from the spec where they exist.
 - Mark a row that rests on an assumption with **(assumption)** in the Behaviour column.
+- Keep every cell to about 60 characters. Longer details go in Details.
 
 After the table:
 
+- **Details:** numbered by row number, for rows that need more than the table holds: exact messages, setup, why, and the spec decision the row relies on.
 - **Already covered:** existing tests from `docs/verification.md` that already check part of the criterion, if any.
 - **Assumptions:** numbered, each tied to the rows it affects.
 - **Questions:** numbered, for the owners to answer.

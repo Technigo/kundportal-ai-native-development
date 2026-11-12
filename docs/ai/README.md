@@ -23,6 +23,10 @@ A project skill at [.claude/skills/ticket-change/SKILL.md](../../.claude/skills/
 
 A project skill at [.claude/skills/test-cases/SKILL.md](../../.claude/skills/test-cases/SKILL.md). It turns one acceptance criterion into a numbered table of proposed test cases (happy path, error path, edge cases) with assumptions and questions. It writes no test code and changes no files. The owners choose the cases, and the building is done with `ticket-change`. Anyone on the team can run it with `/test-cases`.
 
+### Version 2, 2026-11-12, owner Jessica Swahn
+
+Version 1 gave tables too wide for the terminal and sometimes asked about things the spec had already decided. Version 2 keeps every table cell to about 60 characters, with longer details in a numbered Details list, and reads the spec's Decisions table first so it does not ask about settled questions. The diff was proposed by Claude Code and reviewed by the owner before it was applied. Both versions were run on AC-S5 and AC-S2 with the same prompt, and the longest table row went from 285 and 368 characters to 157 and 163. The metrics, results and limitations are in [test-cases-comparison/README.md](test-cases-comparison/README.md).
+
 ### Examples of use
 
 **Ticket details (AC4.1–AC4.6), 2026-11-05, owner Marie Flem Honningdalnes, reviewer Alexandra Petersson**
