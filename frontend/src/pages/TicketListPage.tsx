@@ -3,8 +3,8 @@ import { Link } from "react-router"
 import type { ColumnDef } from "@tanstack/react-table"
 import { ChevronDown, Filter, Search } from "lucide-react"
 
-import type { components, operations } from "@/api/schema"
-import { BACKEND_UNREACHABLE, errorDetail, messageWithoutDetail } from "@/api/errors"
+import type { components } from "@/api/schema"
+import { fetchTickets, type TicketListResult } from "@/api/tickets"
 import { TicketPageLayout } from "@/components/ticket-page-layout"
 import { useTicketListRefresh } from "@/components/ticket-list-refresh"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -41,13 +41,8 @@ type Category = components["schemas"]["Category"]
 type Priority = components["schemas"]["Priority"]
 type Status = components["schemas"]["Status"]
 
-type TicketListBody =
-  operations["list_tickets_tickets_get"]["responses"][200]["content"]["application/json"]
-
-type ListState =
-  | { state: "loading" }
-  | { state: "ok"; tickets: Ticket[] }
-  | { state: "error"; message: string }
+// The ok and error states come from the ticket client (KSP-79: error handling in one place).
+type ListState = { state: "loading" } | TicketListResult
 
 const columns: ColumnDef<Ticket>[] = [
   {
@@ -96,22 +91,6 @@ const columns: ColumnDef<Ticket>[] = [
     ),
   },
 ]
-
-async function fetchTickets(): Promise<ListState> {
-  try {
-    const response = await fetch("/api/tickets")
-    if (response.ok) {
-      const tickets = (await response.json()) as TicketListBody
-      return { state: "ok", tickets }
-    }
-    // KSP-38 AC2 (network errors and 500 give a Swedish message): never an empty alert.
-    // Without a readable detail, the status code decides the text (messageWithoutDetail).
-    const detail = await errorDetail(response)
-    return { state: "error", message: detail ?? messageWithoutDetail(response.status) }
-  } catch {
-    return { state: "error", message: BACKEND_UNREACHABLE }
-  }
-}
 
 function FilterSelect<T extends string>({
   id,
