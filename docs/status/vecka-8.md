@@ -69,13 +69,13 @@ Körda 2026-11-12 på `e01f69a` (merge av PR #118, veckostatus V8 torsdag), samm
   `pnpm dev`. Genomgånget av Claude Code via Playwright på Mustafas uppdrag, inte för hand av en människa:
   1. Tom lista visar "Inga ärenden än" (CORE-15, tom lista är inget fel).
   2. Tomt formulär ger "Rubrik måste fyllas i. Beskrivning måste fyllas i. Välj en giltig kategori. Välj en
-     giltig prioritet." (CORE-18, alla meddelanden i fältordning, och CORE-06, CORE-07 och CORE-08: rubrik saknas,
-     beskrivning saknas, okänd kategori eller prioritet).
+     giltig prioritet." (CORE-18, alla meddelanden i fältordning, och meddelandena för CORE-06 och CORE-07:
+     rubrik saknas, beskrivning saknas). Att inget ärende sparas kontrollerades inte i det här steget.
   3. Ett påhittat ärende (Faktura och betalning, Hög) registreras och syns i listan som #1 med status Nytt
      (CORE-01, ärendet skapas med status `new`).
   4. Detaljvyn visar de sparade uppgifterna och tidslinjen med "Ärendet skapades" (CORE-04, ärendet
      hämtas med sitt id).
-  5. Status Nytt till Pågående sparas. Tidslinjen visar "Nytt → till Pågående (aktuell status)" överst
+  5. Status Nytt till Pågående sparas. Tidslinjen visar "Nytt → Pågående" överst
      (HIST-05, tidslinjen i detaljvyn).
   6. `/tickets/999` visar "Ärendet finns inte." och en länk tillbaka (CORE-10, okänt ärende ger 404).
   7. Efter omstart av backend mot samma databas ger API:t ärendet med `in_progress` och två
@@ -84,14 +84,17 @@ Körda 2026-11-12 på `e01f69a` (merge av PR #118, veckostatus V8 torsdag), samm
 
   Webbläsarens konsol visade bara 422- och 404-svaren från steg 2 och 6, inga fel i appen.
 - **Kontroll för hand** av hela avsnitt 3 i [verifieringsplanen](../verifiering.md), Mustafa 2026-11-12 på
-  `319a3eb` (samma kod som `e01f69a`), den första efter KSP-79 (gemensam felhantering för API-anrop). Allt
-  godkänt: listan, felmeddelandena, svenska tecken och emoji, kontrasten i ljust och mörkt läge, en backend
-  som inte svarar, statusbytet med tidslinjen och omstarten. Raden står i verifieringsplanen, avsnitt 4.
+  `319a3eb` (samma kod som `e01f69a`), den första efter KSP-79 (gemensam felhantering för API-anrop). Alla
+  punkter godkända: listan, felmeddelandena, svenska tecken och emoji, kontrasten i ljust och mörkt läge, en
+  backend som inte svarar, statusbytet med tidslinjen och omstarten. En iakttagelse: räknaren under rubriken
+  räknar mellanslag, men backenden räknar efter trimning (se Osäkert eller ofärdigt). Raden står i
+  verifieringsplanen, avsnitt 4.
 
 ## Osäkert eller ofärdigt
 
 | Vad | Varför | Plan |
 | --- | --- | --- |
+| Räknaren under rubriken räknar mellanslag, backenden gör det inte (CORE-12, rubriken högst 100 tecken efter trimning) | Iakttaget vid kontrollen för hand 2026-11-12: sju mellanslag visar "7 / 100". En rubrik på 98 tecken och 3 mellanslag visar "101 / 100", men backenden godtar den | Ingen rättning före slutleveransen. Förs in som känd begränsning i `docs/begransningar-och-risker.md` (KSP-61) |
 | Frågan på demon varför 16 av 18 nya tester föll för KSP-37 (tidslinjen) | Vi hade inget tydligt svar direkt. Svaret: testerna skrevs före koden mot ett tomt skal (`9970983`), så 16 föll av rätt anledning. De 2 gröna var HIST-08-testerna (okänt ärende ger 404 och ingen historik), och mutationen TL1 visar att de skyddar 404-fallet (`docs/verifiering.md`, avsnitt 4 och 5) | Förklaringen fanns bara i commit-meddelandet. Lärdom: skriv varför ett test är grönt före koden där resultatet redovisas |
 
 ## Nästa steg
