@@ -494,13 +494,27 @@ h1 {
   padding: 0.65rem 0.75rem;
   border: 1px solid #8a7767;
   border-radius: 0.45rem;
-  background: #fffaf1;
+  background-color: #fffaf1;
   color: var(--color-text);
   font: inherit;
 }
 
 .case-fields-table .form-control:where(textarea) {
   resize: vertical;
+}
+
+.form-control:where(select) {
+  appearance: none;
+  padding-right: 2.5rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='m4 6 4 4 4-4' fill='none' stroke='%232a1a0e' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.85rem center;
+  background-size: 0.75rem;
+}
+
+.case-fields-table .form-control:where(select) {
+  padding-right: 2.25rem;
+  background-position: right 0.75rem center;
 }
 
 .case-fields-table .form-control:focus-visible {

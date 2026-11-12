@@ -15,6 +15,17 @@ Resultaten nedan kommer från projektets verifieringssessioner och PR-arbetet. D
 
 Resultaten kördes om mot nuvarande kod i arbetet med detta underlag. De är teamresultat, inte bevis på vem som personligen körde eller granskade varje kommando. Kontrollera PR #25 för aktuell status på GitHub innan rapportering.
 
+## Riskfokuserad kontroll av krav-ID
+
+På Misaels begäran prövade Copilot-assistenten om kravkontrollen fångar ett krav-ID som saknas i en testtitel. Endast den unika testtiteln för `CI-REQ-COVERAGE-003` ändrades tillfälligt; därefter återställdes den.
+
+| Steg | Kommando | Faktiskt resultat |
+|---|---|---|
+| Testtiteln saknade krav-ID:t | `npm run check:requirements -- HEAD` | **Förväntat underkänt:** `CI-REQ-COVERAGE-003 has no matching test title in the automated test files.` |
+| Testtiteln återställd | `npm run check:requirements -- HEAD` | **Godkänt:** 84 krav har testtitlar. |
+
+Testfilen är återställd och mutationens ändring finns inte kvar. Kontrollen visar att checker hittar det saknade ID:t i testtiteln. Den verifierar inte att kravet är fullständigt, att rätt beteende testas eller att testet har tillräcklig kvalitet. Assistenten körde kommandona; detta är inte i sig belägg för att studenten själv utförde dem.
+
 ## Omfattning och spårning
 
 De funktionella ticketsen i [featureindexet](../features/README.md) omfattar skapa, lista, visa detalj, redigera, ta bort, ändra status, hantera intern anteckning och funktionell feedback/tillgänglighet. CI kontrollerar krav-ID:n mot tester i stället för att duplicera en manuell testkolumn i varje spec.
