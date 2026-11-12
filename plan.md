@@ -26,7 +26,8 @@ Varje delsteg verifieras och granskas. Vi pausar för godkännande innan nästa 
 | 6 | Visa ärendedetalj; testa befintligt och saknat ärende | Klart — verifierat och godkänt efter granskning |
 | 7 | Ändra status och verifiera beständig uppdatering | Klart — verifierat och godkänt efter granskning |
 | 8 | Lägga till/redigera/radera intern anteckning | Klart — verifierat och godkänt för commit |
-| 9 | Gemensamma UI-komponenter, konsekvent felbesked och visuell kontroll | Återstår |
-| 10 | Playwright-flöden, full krav-test-matris, verifieringsresultat och överlämning | Återstår |
+| 9 | Tillgänglighet och fokusflöden | Återstår |
+| 10 | Gemensamma UI-komponenter, konsekventa felbesked och visuell kontroll | Återstår |
+| 11 | Playwright-flöden, verifieringsmatris och överlämning | Återstår |
 
 Tester skrivs före implementation inom varje feature. Varje krav-ID ska synas i minst ett testnamn eller testbeskrivning. `uppgift.md` lämnas orörd.
