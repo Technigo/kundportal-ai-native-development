@@ -69,12 +69,12 @@ _Vald testnivå (t.ex. integrationstest mot HTTP + databas), varför just dessa 
 
 ### Del 4 (AK10–AK16, gränssnittet)
 
-- **JSDOM med fejkad `fetch`** (`frontend/tests/arenden.test.js`). Del 2 svarar fortfarande 501, så ett anrop mot den riktiga servern kan inte visa om sidan ritar rätt. Testerna kontrollerar vad sidan skickar och vad den visar.
+- **JSDOM med fejkad `fetch`** (`frontend/tests/arenden.test.js`). Den 9 november svarade Del 2 501, så testerna skrevs mot en fejkad `fetch`. De kontrollerar vad sidan skickar och vad den visar. I slutversionen kör de automatiserade frontendtesterna fortfarande mot fejkad `fetch`.
 - Varje AK har happy path och, där det finns, error path eller gränsfall. Sidan skickar bara fält som ändrats: status till `PATCH /api/arenden/:arendenummer/status`, övriga fält till `PATCH /api/arenden/:arendenummer`.
 - Text från servern läses med `textContent`. Därför finns ett eget test för rubrik och beskrivning som innehåller taggar.
 - Detaljen är medvetet inte en `dl` med åtta textvärden. Ärendenummer, skapad och deadline är text. Rubrik, beskrivning, kategori och prioritet är formulärfält. Status är en lista. Fälten ska inte visas två gånger.
 - Deadline går inte att redigera. Öppen fråga 2 i specen är inte avgjord.
-- **Kontroll av testerna.** Felaktiga varianter byttes in en i taget, testerna blev röda, och koden återställdes. Exempel: ett sparat fält skrev över den avvisade statusen, en sparad status skrev över den avvisade rubriken, status skickades fast den var oförändrad, och vakten släpptes när det första av två svar kom.
+- **Kontroll av testerna.** För den sammanslagna vyn med en sparaknapp byttes felaktiga varianter in en i taget, testerna blev röda, och koden återställdes. Antal röda tester per variant står i avsnitt 3.
 
 ## 3. Resultat och begränsningar
 
@@ -157,7 +157,7 @@ Den riktiga servern startades med en tillfällig databasfil, tillsammans med `fr
 
 **Manuellt**
 
-Sidan öppnades på `http://localhost:3000/`. `fetch` byttes ut i sidan, eftersom listan och sparning mot den riktiga servern svarar 501.
+Sidan öppnades på `http://localhost:3000/`. `fetch` byttes ut i sidan, eftersom listan och sparning mot den riktiga servern den dagen svarade 501.
 
 - En kolumn i ordningen ärendenummer, rubrik, beskrivning, kategori, prioritet, status, skapad, deadline. En knapp med texten Spara.
 - Ändrad kategori och status, ett klick: ett fältanrop och ett statusanrop. Båda värdena visades som sparade och meddelanderutan tömdes.
@@ -165,12 +165,49 @@ Sidan öppnades på `http://localhost:3000/`. `fetch` byttes ut i sidan, efterso
 - Spara var inaktiv från start, aktiv efter en ändring, och inaktiv igen när värdet återställdes eller efter Återställ.
 - Vid 1280, 768 och 375 px: ingen sidledsscroll, och dialogen rymdes. På 375 px ligger Återställ och Spara under varandra. Innehållet scrollar lodrätt i dialogen vid 1280 och 375 px. Vid 768 px rymdes det utan scroll.
 
+**Fångar testerna felet?** Sparaknappen, samma kväll. Varje variant gjordes tillfälligt och återställdes. Efter sista återställningen var sviten grön igen, med samma resultat som ovan. Rapporten namnger vilka tester som föll. En summeringsrad med antal röda tester i hela sviten sparades inte.
+
+| Felaktig variant | Röda tester |
+|---|---|
+| Ett sparat fält skriver status i listan | 1 (`fält sparas och status avvisas`) |
+| Sparad status skriver över rubriken | 1 (`fält avvisas och status sparas`) |
+| Status skickas även när den är oförändrad | 2 (AK14 och `oförändrade fält skickar inget PATCH`) |
+| Vakten släpps när första svaret kommer | 1 (robusthetstestet) |
+
 **Begränsningar**
 
-- Inget riktigt PATCH eller GET är kontrollerat. Servern svarar 501.
-- "Finns kvar efter omstart" i AK12 och AK14 är inte visat. Det hör till backend.
+- Den 9 november var inget riktigt PATCH eller GET kontrollerat. Servern svarade 501. Se integrationskontrollen nedan.
+- I den här körningen, med fejkad `fetch`, är "finns kvar efter omstart" i AK12 och AK14 inte visat.
 - Prioritet 6 och en kategori utanför listan kan inte väljas i formuläret. De fältfelen är simulerade serversvar.
 - En beskrivning på cirka 5000 tecken, en rubrik på 100 tecken utan mellanslag och texten för en tom lista är inte kontrollerade i webbläsaren.
+- Att Spara är inaktiv tills något ändras saknar automatiserat test.
+
+### Del 4, efter integrationen, 2026-11-12
+
+**Automatiserat**
+
+- `npm test` på koden i `dfb9a4e`, innan den här uppdateringen av planen:
+  - backend 221 gröna, 0 todo
+  - frontend 36 gröna, 0 todo, varav 24 i `frontend/tests/arenden.test.js`
+
+Inga kodfiler har ändrats efter den körningen. Siffrorna från 9 november gäller innan Del 2 och Del 3 var integrerade. De står kvar ovan.
+
+**Manuellt**
+
+Integrationskontroll, efter integrationen. Hela flödet kördes lokalt mot riktig backend (`npm start`, sidan på `http://localhost:3000`):
+
+- registrera ett ärende
+- ärendet visas i listan
+- ändra status och övriga fält
+- starta om servern
+- ärendet finns kvar med de ändrade värdena
+
+Resultat: fungerade som förväntat. Det är inte ett automatiserat test. Beskrivning på cirka 5000 tecken och texten för en tom lista är inte kontrollerade.
+
+**Begränsningar**
+
+- Frontendtesterna kör fortfarande mot fejkad `fetch`. Inget automatiserat test kör gränssnittet mot backend.
+- Beskrivning på cirka 5000 tecken, rubrik på 100 tecken utan mellanslag och texten för en tom lista är inte kontrollerade i webbläsaren.
 - Att Spara är inaktiv tills något ändras saknar automatiserat test.
 
 ## Så körs testerna
