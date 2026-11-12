@@ -235,8 +235,8 @@ it('reloads the list after a ticket is saved and keeps the form open with the co
   fill('Kundnamn', 'Exempelkund')
   fill('Rubrik', 'Påhittat nytt ärende')
   fill('Beskrivning', 'Påhittad beskrivning.')
-  fill('Kategori', 'other')
-  fill('Prioritet', 'normal')
+  fireEvent.click(screen.getByLabelText('Övrigt'))
+  fireEvent.click(screen.getByLabelText('Normal'))
   fireEvent.click(screen.getByRole('button', { name: 'Spara ärende' }))
 
   // Det nya ärendet kommer från backend-svaret på den omladdade listan

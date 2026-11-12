@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 import { ApiError } from '../../api/client'
 import { createTicket } from '../../api/tickets'
@@ -29,13 +29,17 @@ function type(label: string, value: string) {
   fireEvent.change(screen.getByLabelText(label), { target: { value } })
 }
 
+function choose(label: string) {
+  fireEvent.click(screen.getByLabelText(label))
+}
+
 function fillValid() {
   type('Kund-ID', '  K-104  ')
   type('Kundnamn', 'Exempelkund')
   type('Rubrik', 'Fråga om faktura')
   type('Beskrivning', 'Jag behöver hjälp med en påhittad faktura.')
-  type('Kategori', 'billing')
-  type('Prioritet', 'normal')
+  choose('Faktura')
+  choose('Normal')
 }
 
 function submit() {
@@ -204,4 +208,34 @@ it('calls onCancel from the cancel button', () => {
   fireEvent.click(screen.getByRole('button', { name: 'Avbryt' }))
 
   expect(onCancel).toHaveBeenCalledTimes(1)
+})
+
+it('shows category and priority as radio groups where one choice at a time is selected', () => {
+  render(<TicketForm onCreated={vi.fn()} />)
+
+  const category = screen.getByRole('group', { name: 'Kategori' })
+  expect(within(category).getAllByRole('radio')).toHaveLength(3)
+  expect(screen.getByRole('group', { name: 'Prioritet' })).toBeInTheDocument()
+
+  choose('Faktura')
+  choose('Teknisk support')
+
+  expect(screen.getByLabelText('Teknisk support')).toBeChecked()
+  expect(screen.getByLabelText('Faktura')).not.toBeChecked()
+})
+
+it('marks the choice groups as invalid with a description and moves focus to the first option', () => {
+  render(<TicketForm onCreated={vi.fn()} />)
+
+  type('Kund-ID', 'K-104')
+  type('Kundnamn', 'Exempelkund')
+  type('Rubrik', 'Fråga om faktura')
+  type('Beskrivning', 'Påhittad beskrivning.')
+  submit()
+
+  expect(screen.getByLabelText('Faktura')).toHaveFocus()
+  expect(screen.getByLabelText('Faktura')).toHaveAttribute('aria-invalid', 'true')
+  expect(screen.getByRole('group', { name: 'Kategori' })).toHaveAccessibleDescription(
+    /Välj en kategori/,
+  )
 })
