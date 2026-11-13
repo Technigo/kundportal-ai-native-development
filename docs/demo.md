@@ -11,7 +11,7 @@ It takes about 15 minutes the first time and 1 minute after that. It works on a 
 Node.js is the free program that runs the app.
 
 1. Go to https://nodejs.org.
-2. Click the download button marked **LTS**. Any version from 24 upwards works. The guide was tried with 24.21.0 and 26.13.1.
+2. Click the download button marked **LTS**. Any version from 24 upwards works. The guide was tried with 24.21.0 and 26.13.1 on a Mac, and 24.22.2 on Windows.
 3. Open the file you downloaded and click **Continue** or **Next** on every screen until it says the installation is complete. The default choices are fine.
 
 ## Part 2: Download the app (about 2 minutes)
@@ -25,6 +25,8 @@ Node.js is the free program that runs the app.
 
 ## Part 3: Open a terminal in the app's folder (about 1 minute)
 
+Follow only the steps for your computer: **Mac** or **Windows**. The Mac steps do not work on Windows.
+
 **Mac:**
 
 1. Press **Command (⌘) + Space**, type `Terminal` and press **Enter**. A window with text opens.
@@ -35,8 +37,8 @@ Node.js is the free program that runs the app.
 **Windows:**
 
 1. Open the **kundportal-ai-native-grupp-5-main** folder in File Explorer. If you see a folder with the same name inside it, open that one.
-2. Click once in the address bar at the top of the window, where the folder's location is shown.
-3. Type `powershell` and press **Enter**. A blue or black window with text opens.
+2. Right-click an empty space inside the folder (not on a file) and click **Open in Terminal**. A window with text opens.
+   - On Windows 10, or if you do not see **Open in Terminal**: hold **Shift**, right-click an empty space inside the folder, and click **Open PowerShell window here**.
 
 **Check that it worked:** type this and press Enter:
 
@@ -44,7 +46,7 @@ Node.js is the free program that runs the app.
 node --version
 ```
 
-You should see a version number such as `v26.13.1` or `v24.21.0`. If you see "not found" or "not recognized", close the terminal, open it again as above, and try once more. If it still fails, restart the computer.
+You should see a version number such as `v26.13.1`, `v24.22.2` or `v24.21.0`. If you see "not found" or "not recognized", close the terminal, open it again as above, and try once more. If it still fails, restart the computer.
 
 ## Part 4: Set up the app (one time, about 2 minutes)
 

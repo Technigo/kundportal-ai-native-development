@@ -7,7 +7,7 @@
 - No email is sent to the requester.
 - Data is stored in a local SQLite file. The app is meant to run locally only.
 - End-to-end tests run in Chrome only.
-- The persistence test (`src/db/persistence.test.ts`) fails on Windows. The test itself passes, but the cleanup that deletes its temporary folder fails with EPERM, even though each database client is closed first (run by Jessica Swahn on 2026-11-11). It passes on macOS and in CI on Linux. A fix has been suggested and is not applied yet.
+- The persistence test (`src/db/persistence.test.ts`) failed on Windows. The test itself passed, but the cleanup that deletes its temporary folder failed with EPERM, even though each database client is closed first (run by Jessica Swahn on 2026-11-11). It passes on macOS and in CI on Linux. A fix is applied (the cleanup now retries deleting the folder, `maxRetries: 5, retryDelay: 100`), but it has not been run on Windows yet.
 - No pagination: the ticket list loads every ticket.
 - The category is only entered in the New ticket form. It is not shown in the ticket list or on the ticket details page yet.
 - The manual check of the save error message (AC1.8) was done in Firefox with VoiceOver on macOS, and on Windows (`attrib`) by Jessica Swahn on 2026-11-11 without a screen reader. Other browsers and screen readers have not been tried.

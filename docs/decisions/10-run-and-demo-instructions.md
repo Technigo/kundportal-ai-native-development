@@ -40,7 +40,7 @@ The step-by-step guide is in [docs/demo.md](../demo.md). It covers installing No
 - Pull requests that change setup or what the demo script shows must update the README and [docs/demo.md](../demo.md). Reviewers check both.
 - The guide can be updated in any pull request without a new decision, because this decision only says where it is and how it is checked.
 - CI shows that a fresh checkout installs, builds, starts and passes the tests on Linux. It does not show that a person can follow these steps; the manual fresh-clone check does.
-- Windows is not covered by CI, and the Windows steps in the guide (PowerShell from the address bar, the security window, `Terminate batch job`) have not been tried yet. A team member on Windows will follow the guide before the hand-in. The persistence test fails on Windows (see [limitations.md](../limitations.md)).
+- Windows is not covered by CI. Jessica Swahn followed the guide on Windows on 2026-11-13 (Node.js 24.22.2). Typing `powershell` in the File Explorer address bar did nothing for her, so Part 3 now uses **Open in Terminal** and says to follow only the steps for your own computer. The changed Part 3 has not been followed again on Windows. The persistence test failed on Windows in its cleanup; a fix is applied but not yet run on Windows (see [limitations.md](../limitations.md)).
 - The guide was followed on a Mac with Node.js 24.21.0 (npm 11.19.0) and 26.13.1 (npm 11.20.0), the version the LTS button on nodejs.org gives on 2026-11-12.
 - `npm run db:reset` deletes local tickets, so preparing a demo removes anything created earlier on that machine.
 - This decision builds on [08](08-ticket-persistence.md) and does not supersede it.
