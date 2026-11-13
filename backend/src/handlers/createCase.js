@@ -15,7 +15,10 @@ export function createCase({ db, now, body }) {
   const today = dagensDatum(nu);
   const input = validateNewCase(body, today); // kastar ValidationError → 400
   const arendenummer = generateCaseNumber(db, today.slice(0, 4));
-  return { status: 201, body: insertCase(db, { arendenummer, ...input, skapad: nu.toISOString() }) };
+  return {
+    status: 201,
+    body: insertCase(db, { arendenummer, ...input, skapad: nu.toISOString() }),
+  };
 }
 
 /**

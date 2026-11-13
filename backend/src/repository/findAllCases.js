@@ -9,5 +9,8 @@ const FIND_ALL_CASES = `
 /** Returnerar alla ärenden som en lista i API-formatet, senast registrerade först (AK10). */
 export function findAllCases(db) {
   // node:sqlite ger objekt utan prototyp; gör om dem till vanliga objekt.
-  return db.prepare(FIND_ALL_CASES).all().map((rad) => ({ ...rad }));
+  return db
+    .prepare(FIND_ALL_CASES)
+    .all()
+    .map((rad) => ({ ...rad }));
 }

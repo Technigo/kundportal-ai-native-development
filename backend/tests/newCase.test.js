@@ -32,13 +32,21 @@ describe('validateNewCase', () => {
   });
 
   it('arendenummer, skapad, id och okända fält följer inte med', () => {
-    const input = validCase({ arendenummer: '1999-1', skapad: '1999-01-01T00:00:00.000Z', id: 7, extra: true });
+    const input = validCase({
+      arendenummer: '1999-1',
+      skapad: '1999-01-01T00:00:00.000Z',
+      id: 7,
+      extra: true,
+    });
 
     expect(validateNewCase(input, TODAY)).toEqual(validCase());
   });
 
   it('rubrik och beskrivning returneras utan blanktecken före och efter', () => {
-    const resultat = validateNewCase(validCase({ rubrik: '  Rubrik ', beskrivning: '\tText\n' }), TODAY);
+    const resultat = validateNewCase(
+      validCase({ rubrik: '  Rubrik ', beskrivning: '\tText\n' }),
+      TODAY,
+    );
 
     expect(resultat.rubrik).toBe('Rubrik');
     expect(resultat.beskrivning).toBe('Text');

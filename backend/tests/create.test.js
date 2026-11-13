@@ -55,7 +55,11 @@ describe('AK1: registrera ett giltigt ärende (happy path)', () => {
     const res = await registrera(validCase());
 
     expect(res.status).toBe(201);
-    expect(res.body).toEqual({ arendenummer: '2026-1', ...validCase(), skapad: FIXED_NOW.toISOString() });
+    expect(res.body).toEqual({
+      arendenummer: '2026-1',
+      ...validCase(),
+      skapad: FIXED_NOW.toISOString(),
+    });
     expect(antalSparade()).toBe(1);
   });
 
@@ -75,15 +79,26 @@ describe('AK1: registrera ett giltigt ärende (happy path)', () => {
 
   it('arendenummer, skapad och okända fält i begäran ignoreras – systemet sätter dem', async () => {
     const res = await registrera(
-      validCase({ arendenummer: '1999-1', skapad: '1999-01-01T00:00:00.000Z', id: 42, okantFalt: 'x' }),
+      validCase({
+        arendenummer: '1999-1',
+        skapad: '1999-01-01T00:00:00.000Z',
+        id: 42,
+        okantFalt: 'x',
+      }),
     );
 
     expect(res.status).toBe(201);
-    expect(res.body).toEqual({ arendenummer: '2026-1', ...validCase(), skapad: FIXED_NOW.toISOString() });
+    expect(res.body).toEqual({
+      arendenummer: '2026-1',
+      ...validCase(),
+      skapad: FIXED_NOW.toISOString(),
+    });
   });
 
   it('rubrik och beskrivning sparas utan blanktecken före och efter', async () => {
-    const res = await registrera(validCase({ rubrik: '  Kan inte logga in  ', beskrivning: '\nKunden ringde.\n' }));
+    const res = await registrera(
+      validCase({ rubrik: '  Kan inte logga in  ', beskrivning: '\nKunden ringde.\n' }),
+    );
     const sparat = server.db.prepare('SELECT rubrik, beskrivning FROM arenden').get();
 
     expect(res.body.rubrik).toBe('Kan inte logga in');
@@ -126,21 +141,27 @@ describe('AK1: registrera ett giltigt ärende (happy path)', () => {
 });
 
 describe('AK2: obligatoriskt fält saknas (error path)', () => {
-  it.each(OBLIGATORISKA)('%s saknas: 400 med fältfelet "%s", inget sparas', async (falt, meddelande) => {
-    const res = await registrera(utan(falt));
+  it.each(OBLIGATORISKA)(
+    '%s saknas: 400 med fältfelet "%s", inget sparas',
+    async (falt, meddelande) => {
+      const res = await registrera(utan(falt));
 
-    expect(res.status).toBe(400);
-    expect(res.body).toEqual({ fel: ALLMANT_FEL, faltfel: { [falt]: meddelande } });
-    expect(antalSparade()).toBe(0);
-  });
+      expect(res.status).toBe(400);
+      expect(res.body).toEqual({ fel: ALLMANT_FEL, faltfel: { [falt]: meddelande } });
+      expect(antalSparade()).toBe(0);
+    },
+  );
 
-  it.each(OBLIGATORISKA)('%s är en tom sträng (tom dropdown): samma fältfel, inget sparas', async (falt, meddelande) => {
-    const res = await registrera(validCase({ [falt]: '' }));
+  it.each(OBLIGATORISKA)(
+    '%s är en tom sträng (tom dropdown): samma fältfel, inget sparas',
+    async (falt, meddelande) => {
+      const res = await registrera(validCase({ [falt]: '' }));
 
-    expect(res.status).toBe(400);
-    expect(res.body.faltfel).toEqual({ [falt]: meddelande });
-    expect(antalSparade()).toBe(0);
-  });
+      expect(res.status).toBe(400);
+      expect(res.body.faltfel).toEqual({ [falt]: meddelande });
+      expect(antalSparade()).toBe(0);
+    },
+  );
 
   it('400 med fältfel för varje obligatoriskt fält som saknas – alla fel skickas tillsammans', async () => {
     const res = await registrera({});
@@ -164,12 +185,15 @@ describe('AK2: obligatoriskt fält saknas (error path)', () => {
     expect(res.body.arendenummer).toBe('2026-1');
   });
 
-  it.each([[null], [[]], ['text'], [42]])('en JSON-kropp som inte är ett objekt (%j) ger 400, inte 500', async (kropp) => {
-    const res = await registrera(kropp);
+  it.each([[null], [[]], ['text'], [42]])(
+    'en JSON-kropp som inte är ett objekt (%j) ger 400, inte 500',
+    async (kropp) => {
+      const res = await registrera(kropp);
 
-    expect(res.status).toBe(400);
-    expect(res.body.faltfel).toEqual(Object.fromEntries(OBLIGATORISKA));
-  });
+      expect(res.status).toBe(400);
+      expect(res.body.faltfel).toEqual(Object.fromEntries(OBLIGATORISKA));
+    },
+  );
 });
 
 describe('AK3: rubrikens längdgräns (gränsfall)', () => {
