@@ -83,7 +83,7 @@ Open your web browser (Chrome, Edge, Safari or Firefox) and go to:
 http://localhost:3000
 ```
 
-If the terminal shows a different address after `Local:`, use that one instead.
+If the terminal shows a different address after `Local:`, for example `http://localhost:3001`, use that one instead, here and in every step below where the guide says `http://localhost:3000`.
 
 On Windows, a security window may ask whether Node.js may use the network. You can click **Cancel**: the app still works on your own computer.
 
@@ -91,7 +91,7 @@ There is no sign-in. Whoever opens the app is treated as a customer service case
 
 ## Part 6: Try the app (about 10 minutes)
 
-A **ticket** is a customer's support case. Follow the steps in order. Each step says what to do and what you should see.
+A **ticket** is a customer's support case. Follow the steps in order. Each step says what to do and what you should see. If your terminal showed a different address in Part 5, use it instead of `http://localhost:3000` in steps 1 and 14.
 
 | # | Do this | You should see |
 |---|---|---|
@@ -120,7 +120,7 @@ You can now close the terminal and the browser tab. The tickets you created are 
 ## Next time
 
 1. Open a terminal in the app's folder (Part 3).
-2. Run `npm run dev` and open http://localhost:3000 (Part 5).
+2. Run `npm run dev` and open http://localhost:3000, or the address the terminal shows after `Local:` (Part 5).
 
 You do not need to install anything again.
 
@@ -135,6 +135,8 @@ You do not need to install anything again.
 | The browser says "This site can't be reached" | The app is not running. Check that the terminal window is open and shows `✓ Ready`. If not, run `npm run dev`. |
 | The Tickets page shows an error that starts with `Failed query` or contains `no such table` | The database is missing or out of date. Stop the app (Part 7), run `npm run db:migrate` and start the app again. This keeps the tickets you created. If the error is still there, stop the app, run `npm run db:reset` and start it again. This deletes the tickets you created. |
 | The terminal shows `Another next dev server is already running` | The app is already running in another terminal window. Use that window, or stop it there with Control + C. |
+| On Windows: `npm` fails with `running scripts is disabled on this system` | Windows is blocking PowerShell scripts. In the same window, type `cmd` and press **Enter**, then run the `npm` command again. |
+| The browser shows a different app, or nothing, at `http://localhost:3000` | Another program is using that address. Look in the terminal for the address after `Local:` (for example `http://localhost:3001`) and use that one. |
 | Something else | Copy all the text in the terminal and send it to the team. |
 
 ## For developers
