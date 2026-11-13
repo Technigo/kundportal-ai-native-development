@@ -1,52 +1,60 @@
 # Kundserviceportalen
 
-Här samlar ni teamets arbete med Kundserviceportalen i kursen AI Native Development. Ni väljer teknik och bygger en mindre fullstacklösning med AI-stöd. Använd bara påhittade kunduppgifter.
+Skelett för kursprojektet *Bygg Kundserviceportalen med AI-stöd*. En handläggare ska kunna registrera ett kundärende, se det i en lista, öppna detaljer, ändra status och ändra övriga fält. Kravet och acceptanskriterierna finns i [SPECIFIKATION.md](SPECIFIKATION.md). Endast påhittade kunduppgifter används.
 
-**Uppgift, betygskriterier, veckoförväntningar och deadline finns under Kursexamination i Disco.** Börja där och återvänd dit under arbetet.
-[Länk till Disco](https://technigo.disco.co/p/fall-2026-ai-native-development/collection/Q29sbGVjdGlvbjozNzg3Ng==?u=25dab1f8-7abb-463e-a19e-d379efb7caae&drawerTab=comments)
+> **Status:** skelett. Servern, databasen, routing, felhantering och sidans ramverk fungerar. Själva funktionerna är platshållare som svarar `501 Inte byggt ännu` tills de byggs. Se [docs/ARBETSFORDELNING.md](docs/ARBETSFORDELNING.md) för vem som bygger vad.
+
+## Krav
+
+- Node.js **22.13 eller nyare** (SQLite följer med i Node via `node:sqlite`, ingen extra databasserver behövs).
+- npm.
 
 ## Kom igång
 
-Projektarbetet börjar vecka 5. Ni får börja frivilligt vecka 4; den veckans fristående kodövning finns kvar.
+```bash
+npm install        # installerar Vitest (och jsdom för frontendtesterna)
+npm start          # startar servern på http://localhost:3000
+```
 
-1. Läs uppgiften och veckans förväntningar i Disco.
-2. **En person i teamet skapar en publik fork** från [kursens repository](https://github.com/Technigo/kundportal-ai-native-development) på sitt GitHub-konto. Den personen bjuder in övriga teammedlemmar som **collaborators** via **Settings -> Collaborators -> Add people**. Alla accepterar sin inbjudan och kontrollerar att de kan pusha till teamets fork. Vi kan läsa koden och underlagen i den publika forken utan en separat inbjudan.
-3. Klona teamets fork till era datorer.
-4. Gör en första förändring: beskriv teamet och er första plan i er dokumentation. Committa och pusha förändringen till `main` i teamets fork. Körbar kod behövs inte för att öppna PR:n.
-5. Öppna teamets löpande PR enligt nästa avsnitt.
-6. Fortsätt med projektarbetet enligt vecka 5 i Disco.
+Öppna <http://localhost:3000>. Backend serverar `frontend/index.html`, så det är en enda process.
+Databasen sparas i `backend/data/portal.db`. Ta bort filen för att börja om. Node skriver en varning om att SQLite är experimentellt – det är väntat.
 
-Ni arbetar i **samma fork** under projektet. Det räcker att en person skapar den. Se [GitHubs instruktion för att bjuda in collaborators](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/repository-access-and-collaboration/inviting-collaborators-to-a-personal-repository) om ni behöver hjälp.
+Valfria miljövariabler: `PORT` (standard 3000) och `DB_PATH` (standard `backend/data/portal.db`).
 
-## Branches och pull requests
+## Tester
 
-Teamets löpande PR går **från `main` i teamets fork till `main` i kursens repository**.
+```bash
+npm test               # backend + frontend
+npm run test:backend
+npm run test:frontend
+```
 
-| Val i GitHub | Ange |
-|---|---|
-| Base repository | `Technigo/kundportal-ai-native-development` |
-| Base | `main` |
-| Head repository | Teamets fork |
-| Compare | `main` |
+Tester som inte är skrivna än är markerade `todo` och räknas som väntande, inte som godkända.
 
-Välj **compare across forks** om båda repositories inte visas. Använd teamets namn i PR-rubriken. Kopiera innehållet i [PR-mallen för teamets projekt](.github/PULL_REQUEST_TEMPLATE/teamets-projekt.md) till beskrivningen och fyll i det som finns vid starten. Resten växer fram under projektet.
+## Struktur
 
-Håll samma PR öppen under projektperioden. Den används för uppföljning och inlämning och ska inte mergas till kursens repository under arbetet. Nya commits på teamets `main` syns i samma PR.
+```
+SPECIFIKATION.md        Kraven och acceptanskriterierna (AK1–AK16)
+AGENTS.md               Instruktioner till AI-agenter i projektet
+docs/                   API-kontrakt, arbetsfördelning, verifieringsplan
+backend/
+  src/
+    server.js           Startar servern
+    app.js              Routing, JSON-läsning, felhantering
+    db.js               Öppnar SQLite och skapar tabellen
+    constants.js        Kategorier, statusar och gränsvärden
+    errors.js           ValidationError, NotFoundError, NotImplementedError
+    validation/         Fältregler (Del 1)
+    handlers/           En fil per endpoint
+    repository/         En fil per databasoperation
+  tests/                Vitest + tests/helpers/testServer.js
+frontend/
+  index.html            Hela gränssnittet i en HTML-fil (HTML, CSS och JS)
+  tests/                Vitest + jsdom
+```
 
-Inom teamets fork kan ni använda separata branches för mindre uppgifter och granska dem i interna PR:er till **teamets egen `main`**. Kontrollera vilket repository som är mål innan ni öppnar en intern PR. Gör granskningen spårbar: vem granskade, vad kontrollerades och vad ledde återkopplingen till?
+## Konventioner
 
-[GitHubs guide för PR från en fork](https://docs.github.com/en/pull-requests/how-tos/create-pull-requests/creating-a-pull-request-from-a-fork) beskriver valen i gränssnittet.
-
-## Er dokumentation
-
-Ni utformar själva dokumentationen och styrningen av era AI-verktyg utifrån uppgiften i Disco. Länka till teamets gemensamma underlag från den löpande PR:n, så att vi kan följa ert arbete.
-
-## Slutversion och inlämning
-
-När gruppens kod, tester och gemensamma dokumentation är pushade kopierar ni länken till den commit som innehåller slutversionen. Lägg länken överst i teamets löpande PR-beskrivning under **Slutversion för examination**. Kontrollera att länkarna till underlagen visar den inlämnade versionen i teamets fork.
-
-Varje student lämnar sin individuella redovisning som en **Markdown-fil (.md) i sin egen inlämning i Disco**. Märk dokumentet med ditt namn och länka till teamets fork, löpande PR, markerade slutversion och det arbete som visar ditt eget bidrag.
-
-Den individuella redovisningen ska inte läggas i teamets repository eller länkas från teamets PR. Du behöver inte dela dokumentet med dina klasskamrater. Gruppens kod, tester och gemensamma dokumentation finns fortsatt på GitHub.
-
-Följ den aktuella instruktionen och deadlinen i Disco.
+- **Fältnamn är svenska och motsvarar specen**: `arendenummer`, `rubrik`, `beskrivning`, `kategori`, `prioritet`, `status`, `skapad`, `deadline`. Det gör det enkelt att följa ett krav från spec till kod och test. Funktions- och filnamn är engelska.
+- Felmeddelanden som användaren ser är på svenska.
+- Testnamn börjar med acceptanskriteriet, t.ex. `AK3: …`.
