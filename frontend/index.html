@@ -601,6 +601,230 @@
           width: 100%;
         }
       }
+      
+      /* ===== DESIGN – grönt tema och formulär i två kolumner (endast utseende) ===== */
+      :root {
+        --bg: #f1f7f4;
+        --text: #12332a;
+        --muted: #4f6e62;
+        --border: #cfe3da;
+        --accent: #0b6b4f;
+      }
+      .topbar {
+        border-bottom: 1px solid var(--border);
+        box-shadow: 0 4px 18px rgba(11, 107, 79, 0.08);
+      }
+      .topbar h1 {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-weight: 800;
+      }
+      .topbar h1::before {
+        content: '';
+        width: 0.9rem;
+        height: 0.9rem;
+        border-radius: 0.25rem 50% 50% 50%;
+        background: var(--accent);
+        animation: design-pop 0.6s ease both;
+      }
+      nav button {
+        border-color: transparent;
+        border-radius: 999px;
+        background: transparent;
+        font-weight: 600;
+        transition: background 0.2s;
+      }
+      nav button:hover {
+        background: #e2f1ea;
+      }
+      nav button[aria-current='page'] {
+        background: var(--accent);
+        border-color: var(--accent);
+      }
+      section[data-view] {
+        border: 0;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(11, 107, 79, 0.1);
+        animation: design-rise 0.5s ease both;
+      }
+      h2 {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--accent);
+      }
+      .form-row input,
+      .form-row select,
+      .form-row textarea {
+        border: 1.5px solid #a9cbbd;
+        border-radius: 12px;
+        background: #fafdfb;
+      }
+      .submit-btn {
+        padding: 0.7rem 1.6rem;
+        border-radius: 999px;
+        font-weight: 700;
+        box-shadow: 0 6px 16px rgba(11, 107, 79, 0.3);
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+      }
+      .submit-btn:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 22px rgba(11, 107, 79, 0.35);
+      }
+      .case-row:hover,
+      .case-table tr.case-row:hover {
+        background: #f1f7f4;
+      }
+      .case-row:focus td,
+      .case-row.is-focused td {
+        background: #dff0e8;
+      }
+      .case-row:focus,
+      .case-row.is-focused {
+        outline-color: var(--accent);
+      }
+      .detail-close:hover {
+        background: #f1f7f4;
+      }
+      .case-row {
+        animation: design-rise 0.45s ease both;
+      }
+      .case-row:nth-child(2) {
+        animation-delay: 0.06s;
+      }
+      .case-row:nth-child(3) {
+        animation-delay: 0.12s;
+      }
+      .case-row:nth-child(4) {
+        animation-delay: 0.18s;
+      }
+      .case-row:nth-child(n + 5) {
+        animation-delay: 0.24s;
+      }
+      @keyframes design-rise {
+        from {
+          opacity: 0;
+          transform: translateY(12px);
+        }
+      }
+      @keyframes design-pop {
+        from {
+          opacity: 0;
+          transform: scale(0.3);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
+      /* Registrera nytt ärende: rubrik och beskrivning till vänster, valen till höger */
+      @media (min-width: 48rem) {
+        #new-case-form {
+          max-width: none;
+          display: grid;
+          grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+          column-gap: 2rem;
+        }
+        #new-case-form .form-row:nth-child(1) {
+          grid-column: 1;
+          grid-row: 1;
+        }
+        #new-case-form .form-row:nth-child(2) {
+          grid-column: 1;
+          grid-row: 2 / span 3;
+        }
+        #new-case-form .form-row:nth-child(2) textarea {
+          flex: 1;
+          min-height: 10rem;
+          resize: vertical;
+        }
+        #new-case-form .form-row:nth-child(3) {
+          grid-column: 2;
+          grid-row: 1;
+        }
+        #new-case-form .form-row:nth-child(4) {
+          grid-column: 2;
+          grid-row: 2;
+        }
+        #new-case-form .form-row:nth-child(5) {
+          grid-column: 2;
+          grid-row: 3;
+        }
+        #new-case-form .form-row:nth-child(6) {
+          grid-column: 2;
+          grid-row: 4;
+        }
+        #new-case-form .submit-btn {
+          grid-column: 1 / -1;
+          grid-row: 5;
+          justify-self: start;
+        }
+      }
+      
+      /* ===== DESIGN – större text (lättare att läsa) ===== */
+      html {
+        font-size: 112.5%;
+      }
+      body {
+        line-height: 1.6;
+      }
+      .field-error {
+        font-size: 1rem;
+      }
+      .case-table {
+        font-size: 1rem;
+      }
+      @media (max-width: 40rem) {
+        .case-table td[data-field='nummer'],
+        .case-table td[data-field='arendenummer'],
+        .case-table td[data-field='prioritet'],
+        .case-table td[data-field='deadline'] {
+          font-size: 0.95rem;
+        }
+        .case-table td[data-field='status'] .case-clip {
+          font-size: 0.85rem;
+        }
+      }
+      @media (min-width: 40.0625rem) and (max-width: 52rem) {
+        .case-table th[data-field='prioritet'],
+        .case-table td[data-field='prioritet'] {
+          width: 6rem;
+        }
+      }
+            .field-hint {
+        display: block;
+        margin-top: 0.25rem;
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+            /* Detaljvyn: samma rundade former och gröna stil som i registreringsformuläret */
+      .detail-dialog {
+        border: 0;
+        border-radius: 20px;
+      }
+      .detail-edit-form input,
+      .detail-edit-form textarea,
+      .detail-edit-form select,
+      .detail-status-form select {
+        border: 1.5px solid #a9cbbd;
+        border-radius: 12px;
+        background-color: #fafdfb;
+      }
+      .detail-edit-submit,
+      .detail-status-submit {
+        padding: 0.5rem 1.4rem;
+        border-radius: 999px;
+        font-weight: 700;
+      }
+      .detail-edit-submit {
+        border-color: #a9cbbd;
+      }
     </style>
   </head>
   <body>
@@ -637,7 +861,8 @@
           </div>
           <div class="form-row">
             <label for="f-prioritet">Prioritet</label>
-            <select id="f-prioritet" name="prioritet"></select>
+            <select id="f-prioritet" name="prioritet" aria-describedby="hint-prioritet"></select>
+            <span class="field-hint" id="hint-prioritet">1 = lägst, 5 = högst</span>
             <span class="field-error" data-error-for="prioritet"></span>
           </div>
           <div class="form-row">
@@ -1185,6 +1410,12 @@
         for (const value of PORTAL_CONFIG.PRIORITETER) {
           prioritet.append(new Option(String(value), String(value)));
         }
+                const prioritetHint = document.createElement('span');
+        prioritetHint.className = 'field-hint';
+        prioritetHint.id = 'detail-hint-prioritet';
+        prioritetHint.textContent = '1 = lägst, 5 = högst';
+        prioritet.setAttribute('aria-describedby', prioritetHint.id);
+        prioritet.after(prioritetHint);
         prioritet.value = String(saved.prioritet);
         return { form, rubrik, beskrivning, kategori, prioritet };
       }
