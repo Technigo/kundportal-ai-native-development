@@ -1,52 +1,98 @@
 # Kundserviceportalen
 
-Här samlar ni teamets arbete med Kundserviceportalen i kursen AI Native Development. Ni väljer teknik och bygger en mindre fullstacklösning med AI-stöd. Använd bara påhittade kunduppgifter.
+Kundserviceportalen is a customer service portal where case handlers register support tickets on behalf of customers who contact support by phone or in writing, and follow the tickets through a workflow with status updates. It is a local-first app built with Next.js 16, TypeScript, Tailwind CSS, SQLite (libSQL) and Drizzle ORM, using fake customer data only.
 
-**Uppgift, betygskriterier, veckoförväntningar och deadline finns under Kursexamination i Disco.** Börja där och återvänd dit under arbetet.
-[Länk till Disco](https://technigo.disco.co/p/fall-2026-ai-native-development/collection/Q29sbGVjdGlvbjozNzg3Ng==?u=25dab1f8-7abb-463e-a19e-d379efb7caae&drawerTab=comments)
+## Documentation
 
-## Kom igång
+- [Run and demo guide](docs/demo.md): install, start and try the app step by step, written for people with no software background
+- [Project brief and spec](docs/project-brief.md): workflows, acceptance criteria, scope
+- [Verification plan](docs/verification.md): test selection, results, limits
+- [Limitations and next steps](docs/limitations.md)
+- [Team](docs/team.md): members, working agreement, ownership and change log
+- [Status updates](docs/status/): weekly status
+- [Decisions](docs/decisions/README.md): architecture decisions
+- [AI usage](docs/ai/README.md): AI workflow and reusable step
+- [CLAUDE.md](CLAUDE.md): stack, commands and rules for AI agents
 
-Projektarbetet börjar vecka 5. Ni får börja frivilligt vecka 4; den veckans fristående kodövning finns kvar.
+Quickstart and commands are in the app section below.
 
-1. Läs uppgiften och veckans förväntningar i Disco.
-2. **En person i teamet skapar en publik fork** från [kursens repository](https://github.com/Technigo/kundportal-ai-native-development) på sitt GitHub-konto. Den personen bjuder in övriga teammedlemmar som **collaborators** via **Settings -> Collaborators -> Add people**. Alla accepterar sin inbjudan och kontrollerar att de kan pusha till teamets fork. Vi kan läsa koden och underlagen i den publika forken utan en separat inbjudan.
-3. Klona teamets fork till era datorer.
-4. Gör en första förändring: beskriv teamet och er första plan i er dokumentation. Committa och pusha förändringen till `main` i teamets fork. Körbar kod behövs inte för att öppna PR:n.
-5. Öppna teamets löpande PR enligt nästa avsnitt.
-6. Fortsätt med projektarbetet enligt vecka 5 i Disco.
+---
 
-Ni arbetar i **samma fork** under projektet. Det räcker att en person skapar den. Se [GitHubs instruktion för att bjuda in collaborators](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/repository-access-and-collaboration/inviting-collaborators-to-a-personal-repository) om ni behöver hjälp.
+### Requirements
 
-## Branches och pull requests
+- Node.js 24 or later (`.nvmrc` pins the major version)
+- Google Chrome, for the end-to-end tests run locally
 
-Teamets löpande PR går **från `main` i teamets fork till `main` i kursens repository**.
+### Getting started
 
-| Val i GitHub | Ange |
+No developer tools? Follow the [run and demo guide](docs/demo.md) instead.
+
+```bash
+npm install
+cp .env.example .env.local   # optional; the defaults use ./data/dev.db
+npm run db:reset             # create, migrate and seed the local database
+npm run dev
+```
+
+Then open http://localhost:3000.
+
+There's no sign-in yet: anyone who opens the app is treated as a case handler and sees every ticket.
+
+### Troubleshooting
+
+**The Tickets page shows `Failed query: select ... from "tickets"`.** The local database has not been set up. If `npm run dev` starts before the database exists, it creates an empty `data/dev.db` file with no tables. Set the database up with one of these:
+
+- `npm run db:migrate` and then `npm run db:seed`: creates the tables and adds demo tickets, and deletes nothing. Run the seed only once, or the demo tickets are added again. Then reload the page; the dev server does not need a restart.
+- `npm run db:reset`: deletes `data/dev.db` first, so any tickets you created locally are lost. Stop the dev server before you run it and start it again afterwards: a running server keeps its connection to the deleted file, so reloading still fails.
+
+### Commands
+
+| Command | What it does |
 |---|---|
-| Base repository | `Technigo/kundportal-ai-native-development` |
-| Base | `main` |
-| Head repository | Teamets fork |
-| Compare | `main` |
+| `npm run dev` | Start the development server |
+| `npm run build` / `npm run start` | Build for production / serve the build |
+| `npm run lint` | Run ESLint |
+| `npm run typecheck` | Generate route types, then check types with TypeScript |
+| `npm test` | Run unit and component tests once (Vitest) |
+| `npm run test:watch` | Run Vitest in watch mode while you develop |
+| `npm run test:e2e` | Reset a separate `data/e2e.db`, build, and run the Playwright tests |
+| `npm run test:mutation` | Break `submitTicket` on purpose and check that the right tests fail (`-- --e2e` adds Playwright) |
+| `npm run db:generate` | Create a migration in `drizzle/` from changes to `src/db/schema.ts` |
+| `npm run db:migrate` | Apply migrations to `DATABASE_URL` |
+| `npm run db:seed` | Insert demo tickets, with notes and comments on two of them |
+| `npm run db:reset` | Delete the local database file, then migrate and seed (local files only) |
 
-Välj **compare across forks** om båda repositories inte visas. Använd teamets namn i PR-rubriken. Kopiera innehållet i [PR-mallen för teamets projekt](.github/PULL_REQUEST_TEMPLATE/teamets-projekt.md) till beskrivningen och fyll i det som finns vid starten. Resten växer fram under projektet.
+### Troubleshooting
 
-Håll samma PR öppen under projektperioden. Den används för uppföljning och inlämning och ska inte mergas till kursens repository under arbetet. Nya commits på teamets `main` syns i samma PR.
+| Problem | Fix |
+|---|---|
+| `no such table` (for example `ticket_status_changes`) after pulling | Someone added a migration in `drizzle/`. Run `npm run db:migrate`. Do it after every pull that changes `drizzle/`. |
+| The local database is in a bad state | `npm run db:reset` deletes `data/dev.db` and creates it again with the demo tickets. Tickets you added yourself are lost. |
 
-Inom teamets fork kan ni använda separata branches för mindre uppgifter och granska dem i interna PR:er till **teamets egen `main`**. Kontrollera vilket repository som är mål innan ni öppnar en intern PR. Gör granskningen spårbar: vem granskade, vad kontrollerades och vad ledde återkopplingen till?
+### Test-driven development
 
-[GitHubs guide för PR från en fork](https://docs.github.com/en/pull-requests/how-tos/create-pull-requests/creating-a-pull-request-from-a-fork) beskriver valen i gränssnittet.
+Every change starts with a failing test:
 
-## Er dokumentation
+1. **Red:** write a test that describes the behaviour, then run it and watch it fail for the right reason.
+2. **Green:** write the least code that makes it pass.
+3. **Refactor:** tidy up with the tests still green.
 
-Ni utformar själva dokumentationen och styrningen av era AI-verktyg utifrån uppgiften i Disco. Länka till teamets gemensamma underlag från den löpande PR:n, så att vi kan följa ert arbete.
+Where each kind of test goes:
 
-## Slutversion och inlämning
+- **Unit and component tests** (Vitest + React Testing Library) sit next to the code as `*.test.ts(x)`. Database tests run against a fresh in-memory SQLite per test (`src/test-utils/testDb.ts`) and use `// @vitest-environment node`.
+- **End-to-end tests** (Playwright) live in `e2e/`. They run against a production build and a freshly seeded `data/e2e.db`. Async Server Components can't be unit-tested with Vitest, so cover them here.
 
-När gruppens kod, tester och gemensamma dokumentation är pushade kopierar ni länken till den commit som innehåller slutversionen. Lägg länken överst i teamets löpande PR-beskrivning under **Slutversion för examination**. Kontrollera att länkarna till underlagen visar den inlämnade versionen i teamets fork.
+### Project layout
 
-Varje student lämnar sin individuella redovisning som en **Markdown-fil (.md) i sin egen inlämning i Disco**. Märk dokumentet med ditt namn och länka till teamets fork, löpande PR, markerade slutversion och det arbete som visar ditt eget bidrag.
-
-Den individuella redovisningen ska inte läggas i teamets repository eller länkas från teamets PR. Du behöver inte dela dokumentet med dina klasskamrater. Gruppens kod, tester och gemensamma dokumentation finns fortsatt på GitHub.
-
-Följ den aktuella instruktionen och deadlinen i Disco.
+```
+src/app/                 routes (App Router); (portal)/ holds the pages that share the portal shell
+src/components/          React components (+ tests)
+src/tickets/             ticket validation (zod) and data access
+src/db/                  Drizzle schema, client, migrate/seed/reset scripts
+src/lib/                 navigation
+src/test-utils/          Vitest setup and test database helpers
+drizzle/                 generated SQL migrations (commit these)
+e2e/                     Playwright specs
+data/                    local SQLite databases (git-ignored)
+docs/                    spec, decisions, status updates, verification plan
+```

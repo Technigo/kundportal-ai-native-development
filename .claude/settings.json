@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "deny": [
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git merge:*)",
+      "Bash(git rebase:*)",
+      "Bash(git reset:*)",
+      "Bash(git tag:*)",
+      "Bash(git cherry-pick:*)",
+      "Bash(git stash:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh pr merge:*)",
+      "Bash(gh pr review:*)",
+      "Read(./.env*)",
+      "Edit(./.env*)",
+      "Edit(./drizzle/**)",
+      "Edit(./package-lock.json)",
+      "Edit(./AGENTS.md)",
+      "Edit(./node_modules/**)"
+    ]
+  }
+}
