@@ -1,0 +1,8 @@
+# Editorinställningar för hela repot, se https://editorconfig.org
+# Nya filer får LF-radslut och UTF-8, som .gitattributes och Prettier väntar sig.
+root = true
+
+[*]
+end_of_line = lf
+charset = utf-8
+insert_final_newline = true

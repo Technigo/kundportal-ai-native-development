@@ -1,0 +1,682 @@
+{
+  "info": {
+    "name": "Kundserviceportalen NORS API",
+    "description": "Ärenden API (FastAPI backend). Requirement ids (R#, A#) refer to docs/specs/kravspec.md and docs/specs/sok-filter.md.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "arendeId",
+      "value": "1"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET /health",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Status ok\", () => pm.expect(pm.response.json().status).to.eql(\"ok\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Ärenden",
+      "item": [
+        {
+          "name": "A1 Create valid case",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/arenden",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "arenden"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rubrik\": \"Faktura saknas\",\n  \"beskrivning\": \"Kunden har inte fått sin faktura.\",\n  \"kategori\": \"Fakturering\",\n  \"prioritet\": \"Hög\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test(\"Status is Nytt (R1)\", () => pm.expect(body.status).to.eql(\"Nytt\"));",
+                  "pm.test(\"Has id and skapad\", () => {",
+                  "  pm.expect(body.id).to.be.a(\"number\");",
+                  "  pm.expect(Date.parse(body.skapad)).to.not.be.NaN;",
+                  "});",
+                  "pm.collectionVariables.set(\"arendeId\", body.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A2 Create without rubrik → 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/arenden",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "arenden"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"beskrivning\": \"Kunden har inte fått sin faktura.\",\n  \"kategori\": \"Fakturering\",\n  \"prioritet\": \"Hög\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.variables.set(\"expectedField\", \"rubrik\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"Felet pekar ut fältet\", () => {",
+                  "  const detail = pm.response.json().detail;",
+                  "  pm.expect(detail).to.be.an(\"array\").that.is.not.empty;",
+                  "  pm.expect(detail.map((d) => d.loc[d.loc.length - 1])).to.include(pm.variables.get(\"expectedField\"));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A3 Create with spaces-only rubrik → 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/arenden",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "arenden"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rubrik\": \"   \",\n  \"beskrivning\": \"Kunden har inte fått sin faktura.\",\n  \"kategori\": \"Fakturering\",\n  \"prioritet\": \"Hög\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.variables.set(\"expectedField\", \"rubrik\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"Felet pekar ut fältet\", () => {",
+                  "  const detail = pm.response.json().detail;",
+                  "  pm.expect(detail).to.be.an(\"array\").that.is.not.empty;",
+                  "  pm.expect(detail.map((d) => d.loc[d.loc.length - 1])).to.include(pm.variables.get(\"expectedField\"));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "R2 Create with spaces-only beskrivning → 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/arenden",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "arenden"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rubrik\": \"Faktura saknas\",\n  \"beskrivning\": \"   \",\n  \"kategori\": \"Fakturering\",\n  \"prioritet\": \"Hög\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.variables.set(\"expectedField\", \"beskrivning\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"Felet pekar ut fältet\", () => {",
+                  "  const detail = pm.response.json().detail;",
+                  "  pm.expect(detail).to.be.an(\"array\").that.is.not.empty;",
+                  "  pm.expect(detail.map((d) => d.loc[d.loc.length - 1])).to.include(pm.variables.get(\"expectedField\"));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "R2 Create without kategori → 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/arenden",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "arenden"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rubrik\": \"Faktura saknas\",\n  \"beskrivning\": \"Kunden har inte fått sin faktura.\",\n  \"prioritet\": \"Hög\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.variables.set(\"expectedField\", \"kategori\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"Felet pekar ut fältet\", () => {",
+                  "  const detail = pm.response.json().detail;",
+                  "  pm.expect(detail).to.be.an(\"array\").that.is.not.empty;",
+                  "  pm.expect(detail.map((d) => d.loc[d.loc.length - 1])).to.include(pm.variables.get(\"expectedField\"));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A6 List cases",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/arenden",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "arenden"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Array with required fields\", () => {",
+                  "  const list = pm.response.json();",
+                  "  pm.expect(list).to.be.an(\"array\").that.is.not.empty;",
+                  "  list.forEach((a) => pm.expect(a).to.include.all.keys(\"id\", \"rubrik\", \"status\", \"prioritet\", \"skapad\"));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A7 Get case by id",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/arenden/{{arendeId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "arenden",
+                "{{arendeId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"All fields present\", () => pm.expect(pm.response.json()).to.have.all.keys(\"id\", \"rubrik\", \"beskrivning\", \"kategori\", \"prioritet\", \"status\", \"skapad\"));",
+                  "pm.test(\"Same id\", () => pm.expect(String(pm.response.json().id)).to.eql(String(pm.collectionVariables.get(\"arendeId\"))));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A8 Change status",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/arenden/{{arendeId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "arenden",
+                "{{arendeId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Pågående\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "R8. Change case status."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Status changed\", () => pm.expect(pm.response.json().status).to.eql(\"Pågående\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A9 Change to invalid status → 422",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/arenden/{{arendeId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "arenden",
+                "{{arendeId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Raderad\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "R9. Reject an invalid status."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 422\", () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A10 Get missing case → 404",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/arenden/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "arenden",
+                "999999"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Clear message\", () => pm.expect(pm.response.json().detail).to.eql(\"Ärendet hittades inte\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Not implemented in backend",
+      "description": "Search/filter requests are proposed; editing and deletion are outside the current specification.",
+      "item": [
+        {
+          "name": "A17 Unknown status filter → 422",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/arenden?status=Raderad",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "arenden"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "Raderad"
+                }
+              ]
+            },
+            "description": "R11.7. Only relevant if Q9 = backend search."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 422\", () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Edit case",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/arenden/{{arendeId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "arenden",
+                "{{arendeId}}"
+              ]
+            },
+            "description": "Outside v1.0 scope (ADR-002: no editing except status, no deleting). Needs team approval.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rubrik\": \"Faktura saknas (ändrad)\",\n  \"beskrivning\": \"Kunden har inte fått sin faktura.\",\n  \"kategori\": \"Fakturering\",\n  \"prioritet\": \"Medel\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Fields updated, status kept\", () => {",
+                  "  const a = pm.response.json();",
+                  "  pm.expect(a.rubrik).to.eql(\"Faktura saknas (ändrad)\");",
+                  "  pm.expect(a).to.have.all.keys(\"id\", \"rubrik\", \"beskrivning\", \"kategori\", \"prioritet\", \"status\", \"skapad\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete case",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/arenden/{{arendeId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "arenden",
+                "{{arendeId}}"
+              ]
+            },
+            "description": "Outside v1.0 scope (ADR-002: no editing except status, no deleting). Needs team approval."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get deleted case → 404",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/arenden/{{arendeId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "arenden",
+                "{{arendeId}}"
+              ]
+            },
+            "description": "Runs after Delete case."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

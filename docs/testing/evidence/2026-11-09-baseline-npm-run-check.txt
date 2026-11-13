@@ -1,0 +1,137 @@
+Evidence: rerun of the frontend quality gate, with every test name
+Date:     2026-11-09
+Branch:   qa-frontend-testing (= origin/main 9ea263b, as stated by Sravani); frontend/ unchanged
+Commands: from frontend/, with FORCE_COLOR=0 and NO_COLOR=1:
+          1. npm run check
+          2. npx vitest run --reporter=verbose
+Result:   1. exit 0: format, lint, typecheck, tests and build pass
+          2. exit 0: 5 test files, 54 tests pass
+Used by:  docs/testing/testing-spec.md (QA-1, QA-3)
+========================================================================================
+1. npm run check
+========================================================================================
+> kundserviceportalen-nors@0.1.0 check
+> npm run format:check && npm run lint && npm run typecheck && npm run test:run && npm run build
+
+
+> kundserviceportalen-nors@0.1.0 format:check
+> prettier --check .
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> kundserviceportalen-nors@0.1.0 lint
+> eslint .
+
+
+> kundserviceportalen-nors@0.1.0 typecheck
+> tsc -b --noEmit
+
+
+> kundserviceportalen-nors@0.1.0 test:run
+> vitest run
+
+
+ RUN  v3.2.7 D:/AINativeDevelopment2026/qa-frontend-testing/frontend
+
+ ✓ src/utils/filterArenden.test.ts (15 tests) 12ms
+ ✓ src/api/arendenApi.test.ts (12 tests) 103ms
+ ✓ src/components/ArendeDetail.test.tsx (6 tests) 607ms
+ ✓ src/components/ArendeForm.test.tsx (8 tests) 3842ms
+   ✓ ArendeForm – create > creates a case and passes it to onSaved  861ms
+   ✓ ArendeForm – create > A2: a case without a title is rejected with a clear message; still two cases  544ms
+   ✓ ArendeForm – create > A3: a title with only spaces counts as empty; still two cases  628ms
+   ✓ ArendeForm – create > A4: a category that is not allowed is rejected with a clear message; nothing saved  857ms
+   ✓ ArendeForm – create > disables submit while saving  798ms
+ ✓ src/App.test.tsx (13 tests) 4874ms
+   ✓ App > A1: a valid case is saved with status Nytt and a created time, and shows in the list  964ms
+   ✓ App > search, filters and the no-hits message work together in the list  740ms
+   ✓ App – search and filters (sok-filter.md) > SF-A12: '<script>' is plain text: 'Inga ärenden matchar', and the app keeps working  411ms
+   ✓ App – search and filters (sok-filter.md) > SF-A14: the search field holds at most 100 characters  1396ms
+
+ Test Files  5 passed (5)
+      Tests  54 passed (54)
+   Start at  09:50:46
+   Duration  8.73s (transform 282ms, setup 7.35s, collect 1.10s, tests 9.44s, environment 7.09s, prepare 1.67s)
+
+
+> kundserviceportalen-nors@0.1.0 build
+> tsc -b && vite build
+
+vite v6.4.5 building for production...
+transforming...
+✓ 274 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.51 kB │ gzip:  0.31 kB
+dist/assets/index-CmA2gtVF.css    4.85 kB │ gzip:  1.63 kB
+dist/assets/index-DJ_Ulzuq.js   154.96 kB │ gzip: 49.88 kB
+✓ built in 834ms
+exit 0
+
+========================================================================================
+2. npx vitest run --reporter=verbose
+========================================================================================
+ RUN  v3.2.7 D:/AINativeDevelopment2026/qa-frontend-testing/frontend
+
+ ✓ src/utils/filterArenden.test.ts > filterArenden (sok-filter.md) > SF-A1: 'faktura' finds C3 and C1, with C3 first 1ms
+ ✓ src/utils/filterArenden.test.ts > filterArenden (sok-filter.md) > SF-A2: 'FAKTURA' gives the same result as 'faktura' 0ms
+ ✓ src/utils/filterArenden.test.ts > filterArenden (sok-filter.md) > SF-A3: 'FÖR' finds only C1 0ms
+ ✓ src/utils/filterArenden.test.ts > filterArenden (sok-filter.md) > SF-A4: 'inloggningen', only in the description, finds only C2 0ms
+ ✓ src/utils/filterArenden.test.ts > filterArenden (sok-filter.md) > SF-A5: part of a word, 'faktur', finds C3 and C1 0ms
+ ✓ src/utils/filterArenden.test.ts > filterArenden (sok-filter.md) > SF-A6: status Nytt shows only C1, and Alla shows all three again 0ms
+ ✓ src/utils/filterArenden.test.ts > filterArenden (sok-filter.md) > SF-A7: kategori Teknik shows only C2 0ms
+ ✓ src/utils/filterArenden.test.ts > filterArenden (sok-filter.md) > SF-A8: prioritet Låg shows only C3 0ms
+ ✓ src/utils/filterArenden.test.ts > filterArenden (sok-filter.md) > SF-A9: 'faktura' and status Nytt together show only C1 0ms
+ ✓ src/utils/filterArenden.test.ts > filterArenden (sok-filter.md) > SF-A11: only spaces shows all three, and '  faktura  ' is the same as 'faktura' 0ms
+ ✓ src/utils/filterArenden.test.ts > filterArenden (sok-filter.md) > returns an empty list when nothing matches 0ms
+ ✓ src/utils/filterArenden.test.ts > filterArenden (sok-filter.md) > SF-R6: treats special characters as plain text 0ms
+ ✓ src/utils/filterArenden.test.ts > filterArenden (sok-filter.md) > SF-R8: does not change the cases 0ms
+ ✓ src/utils/filterArenden.test.ts > sortNewestFirst (R6) > A12: the most recently created case comes first and the oldest last 0ms
+ ✓ src/utils/filterArenden.test.ts > sortNewestFirst (R6) > R6: with the same created time, the highest id comes first 0ms
+ ✓ src/api/arendenApi.test.ts > arendenApi > lists all cases 17ms
+ ✓ src/api/arendenApi.test.ts > arendenApi > gets one case by id 4ms
+ ✓ src/api/arendenApi.test.ts > arendenApi > maps 404 to the backend message (R10) 3ms
+ ✓ src/api/arendenApi.test.ts > arendenApi > creates a case with status Nytt (R1) 4ms
+ ✓ src/api/arendenApi.test.ts > arendenApi > maps 422 to field errors (R3) 3ms
+ ✓ src/api/arendenApi.test.ts > arendenApi > strips Pydantic's prefix 'Value error, ' from field errors (R12) 4ms
+ ✓ src/api/arendenApi.test.ts > arendenApi > maps network failure to a Swedish message 2ms
+ ✓ src/api/arendenApi.test.ts > arendenApi > maps a non-JSON server error to a generic message 2ms
+ ✓ src/api/arendenApi.test.ts > arendenApi > updates status and rejects invalid status (R8, R9) 6ms
+ ✓ src/api/arendenApi.test.ts > mocks follow the backend decisions > rejects a category and a priority that are not allowed, with the decided texts 2ms
+ ✓ src/api/arendenApi.test.ts > mocks follow the backend decisions > reports a missing field as 'Måste fyllas i' 2ms
+ ✓ src/api/arendenApi.test.ts > mocks follow the backend decisions > checks the status before the id: 422 before 404 5ms
+ ✓ src/components/ArendeDetail.test.tsx > ArendeDetail > A7: all fields of the chosen case are shown 103ms
+ ✓ src/components/ArendeDetail.test.tsx > ArendeDetail > A10: shows a clear message when the case does not exist 21ms
+ ✓ src/App.test.tsx > App > default page: Alla ärenden list, no side panel 122ms
+ ✓ src/App.test.tsx > App > A6: all three cases show with title, status, priority and created time 37ms
+ ✓ src/App.test.tsx > App > shows empty state when no cases exist 24ms
+ ✓ src/components/ArendeDetail.test.tsx > ArendeDetail > A8: the status changes to Pågående and the other fields are unchanged 108ms
+ ✓ src/App.test.tsx > App > shows error with retry when the API is down 73ms
+ ✓ src/components/ArendeDetail.test.tsx > ArendeDetail > A9: an invalid status is rejected with a clear message and the status is still Nytt 93ms
+ ✓ src/App.test.tsx > App > clicking a row opens details in the side panel, list stays visible 126ms
+ ✓ src/components/ArendeDetail.test.tsx > ArendeDetail > ignores a status response for a case that is no longer shown 194ms
+ ✓ src/components/ArendeDetail.test.tsx > ArendeDetail > calls onClose 39ms
+ ✓ src/components/ArendeForm.test.tsx > ArendeForm – create > creates a case and passes it to onSaved 938ms
+ ✓ src/App.test.tsx > App > A1: a valid case is saved with status Nytt and a created time, and shows in the list 900ms
+ ✓ src/App.test.tsx > App > only status can be changed: no edit option in the list or the details 100ms
+ ✓ src/components/ArendeForm.test.tsx > ArendeForm – create > A2: a case without a title is rejected with a clear message; still two cases 600ms
+ ✓ src/components/ArendeForm.test.tsx > ArendeForm – create > moves focus to the first invalid field on submit 50ms
+ ✓ src/App.test.tsx > App > search, filters and the no-hits message work together in the list 734ms
+ ✓ src/components/ArendeForm.test.tsx > ArendeForm – create > A3: a title with only spaces counts as empty; still two cases 651ms
+ ✓ src/components/ArendeForm.test.tsx > ArendeForm – create > R2: shows a message for every missing field 84ms
+ ✓ src/App.test.tsx > App > a status change in the panel is reflected by the list filter 306ms
+ ✓ src/App.test.tsx > App – search and filters (sok-filter.md) > SF-A10: 'xyz' gives 'Inga ärenden matchar'; clearing and searching again shows all three unchanged 231ms
+ ✓ src/components/ArendeForm.test.tsx > ArendeForm – create > A4: a category that is not allowed is rejected with a clear message; nothing saved 793ms
+ ✓ src/App.test.tsx > App – search and filters (sok-filter.md) > SF-A12: '<script>' is plain text: 'Inga ärenden matchar', and the app keeps working 410ms
+ ✓ src/App.test.tsx > App – search and filters (sok-filter.md) > SF-A13: the list is unchanged while typing and is searched when Enter is pressed 251ms
+ ✓ src/components/ArendeForm.test.tsx > ArendeForm – create > disables submit while saving 923ms
+ ✓ src/components/ArendeForm.test.tsx > ArendeForm – create > calls onCancel 76ms
+ ✓ src/App.test.tsx > App – search and filters (sok-filter.md) > SF-A14: the search field holds at most 100 characters 1457ms
+
+ Test Files  5 passed (5)
+      Tests  54 passed (54)
+   Start at  09:51:01
+   Duration  6.44s (transform 226ms, setup 2.19s, collect 551ms, tests 9.52s, environment 3.09s, prepare 657ms)
+
+exit 0

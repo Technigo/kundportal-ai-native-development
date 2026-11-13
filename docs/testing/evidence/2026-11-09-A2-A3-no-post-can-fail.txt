@@ -1,0 +1,85 @@
+Evidence: the "form sends no POST /arenden" check in A2 and A3 can fail
+Date:     2026-11-09
+Branch:   qa-frontend-testing (based on 9ea263b, as stated by Sravani), with the uncommitted
+          change in frontend/src/components/ArendeForm.test.tsx
+Command:  from frontend/: FORCE_COLOR=0 NO_COLOR=1 npx vitest run src/components/ArendeForm.test.tsx -t "A2|A3"
+Result:   exit 1; in both tests only the no-POST check failed (A2 line 76, A3 line 97)
+Used by:  docs/agentuppdrag/2026-11-09-a2-a4-form-tests.md
+Note:     Testing Library color codes removed with sed. No other change to the output.
+
+Why: code review findings 1 and 4 (2026-11-09). The old recorder listened for MSW's
+request:start event and matched only the path "/arenden". It could miss a request if
+VITE_API_URL had a path prefix or a trailing slash, or if the event fired after the check.
+The new recorder spies on fetch, which the form calls synchronously on submit, and matches
+the exact URL `${API_BASE_URL}/arenden` with method POST.
+
+Temporary change (one run; undone right after, checked byte for byte against a backup):
+  ArendeForm.tsx, in save(), after validation fails:
+      void createArende(values).catch(() => {}); // TEMPORARY
+      return;
+  The form keeps its own messages and fires the request in the background without
+  awaiting it. The mock rejects the empty title, so nothing is saved. Only the no-POST
+  check can catch this, and it has to see a request that has not finished yet.
+Undone:   cmp form.bak src/components/ArendeForm.tsx -> identical
+========================================================================================
+
+ RUN  v3.2.7 D:/AINativeDevelopment2026/qa-frontend-testing/frontend
+
+ ❯ src/components/ArendeForm.test.tsx (8 tests | 2 failed | 6 skipped) 1230ms
+   ↓ ArendeForm – create > creates a case and passes it to onSaved
+   × ArendeForm – create > A2: a case without a title is rejected with a clear message; still two cases 543ms
+     → expected [ [ …(2) ] ] to have a length of +0 but got 1
+   ↓ ArendeForm – create > moves focus to the first invalid field on submit
+   × ArendeForm – create > A3: a title with only spaces counts as empty; still two cases 685ms
+     → expected [ [ …(2) ] ] to have a length of +0 but got 1
+   ↓ ArendeForm – create > R2: shows a message for every missing field
+   ↓ ArendeForm – create > A4: a category that is not allowed is rejected with a clear message; nothing saved
+   ↓ ArendeForm – create > disables submit while saving
+   ↓ ArendeForm – create > calls onCancel
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/components/ArendeForm.test.tsx > ArendeForm – create > A2: a case without a title is rejected with a clear message; still two cases
+AssertionError: expected [ [ …(2) ] ] to have a length of +0 but got 1
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ src/components/ArendeForm.test.tsx:76:30
+     74|     expect(screen.getByText("Rubrik måste fyllas i.")).toBeInTheDocume…
+     75|     expect(screen.getByLabelText("Rubrik")).toHaveAttribute("aria-inva…
+     76|     expect(createRequests()).toHaveLength(0);
+       |                              ^
+     77|     expect(onSaved).not.toHaveBeenCalled();
+     78|     expect(db.arenden).toHaveLength(2);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/components/ArendeForm.test.tsx > ArendeForm – create > A3: a title with only spaces counts as empty; still two cases
+AssertionError: expected [ [ …(2) ] ] to have a length of +0 but got 1
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ src/components/ArendeForm.test.tsx:97:30
+     95|     expect(screen.getByText("Rubrik måste fyllas i.")).toBeInTheDocume…
+     96|     expect(screen.getByLabelText("Rubrik")).toHaveAttribute("aria-inva…
+     97|     expect(createRequests()).toHaveLength(0);
+       |                              ^
+     98|     expect(onSaved).not.toHaveBeenCalled();
+     99|     expect(db.arenden).toHaveLength(2);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 6 skipped (8)
+   Start at  12:35:26
+   Duration  2.61s (transform 70ms, setup 394ms, collect 97ms, tests 1.23s, environment 522ms, prepare 106ms)
+

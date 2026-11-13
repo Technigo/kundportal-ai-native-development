@@ -1,0 +1,67 @@
+Evidence: baseline of the frontend quality gate before QA changes
+Date:     2026-11-08
+Branch:   qa-frontend-testing (= origin/main 9ea263b, as stated by Sravani)
+Command:  npm run check, from frontend/
+Result:   format, lint, typecheck and build pass; 5 test files, 54 tests pass
+Source:   baseline-2026-11-08.txt at the repo root. Copied 2026-11-09 and converted
+          from UTF-16 to UTF-8; color codes removed and garbled characters
+          (e.g. "Γ£ô" for "✓") restored. No other change.
+Note:     vitest's default reporter lists only slow tests by name. The full list is in
+          2026-11-09-baseline-npm-run-check.txt.
+----------------------------------------------------------------------------------------
+> kundserviceportalen-nors@0.1.0 check
+> npm run format:check && npm run lint && npm run typecheck && npm run test:run && npm run build
+
+
+> kundserviceportalen-nors@0.1.0 format:check
+> prettier --check .
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> kundserviceportalen-nors@0.1.0 lint
+> eslint .
+
+
+> kundserviceportalen-nors@0.1.0 typecheck
+> tsc -b --noEmit
+
+
+> kundserviceportalen-nors@0.1.0 test:run
+> vitest run
+
+
+ RUN  v3.2.7 D:/AINativeDevelopment2026/qa-frontend-testing/frontend
+
+ ✓ src/utils/filterArenden.test.ts (15 tests) 10ms
+ ✓ src/api/arendenApi.test.ts (12 tests) 89ms
+ ✓ src/components/ArendeDetail.test.tsx (6 tests) 646ms
+ ✓ src/components/ArendeForm.test.tsx (8 tests) 3976ms
+   ✓ ArendeForm – create > creates a case and passes it to onSaved  940ms
+   ✓ ArendeForm – create > A2: a case without a title is rejected with a clear message; still two cases  661ms
+   ✓ ArendeForm – create > A3: a title with only spaces counts as empty; still two cases  714ms
+   ✓ ArendeForm – create > A4: a category that is not allowed is rejected with a clear message; nothing saved  777ms
+   ✓ ArendeForm – create > disables submit while saving  725ms
+ ✓ src/App.test.tsx (13 tests) 4988ms
+   ✓ App > A1: a valid case is saved with status Nytt and a created time, and shows in the list  1062ms
+   ✓ App > search, filters and the no-hits message work together in the list  750ms
+   ✓ App – search and filters (sok-filter.md) > SF-A14: the search field holds at most 100 characters  1541ms
+
+ Test Files  5 passed (5)
+      Tests  54 passed (54)
+   Start at  09:20:11
+   Duration  9.49s (transform 290ms, setup 9.10s, collect 1.12s, tests 9.71s, environment 8.28s, prepare 1.88s)
+
+
+> kundserviceportalen-nors@0.1.0 build
+> tsc -b && vite build
+
+vite v6.4.5 building for production...
+transforming...
+✓ 274 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.51 kB │ gzip:  0.31 kB
+dist/assets/index-CmA2gtVF.css    4.85 kB │ gzip:  1.63 kB
+dist/assets/index-DJ_Ulzuq.js   154.96 kB │ gzip: 49.88 kB
+✓ built in 793ms

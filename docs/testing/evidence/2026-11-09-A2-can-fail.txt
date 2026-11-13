@@ -1,0 +1,890 @@
+Evidence: every check in the A2 component test can fail
+Date:     2026-11-09
+Branch:   qa-frontend-testing (based on 9ea263b, as stated by Sravani), with the uncommitted
+          A2 change in frontend/src/components/ArendeForm.test.tsx
+Command:  from frontend/: FORCE_COLOR=0 NO_COLOR=1 npx vitest run src/components/ArendeForm.test.tsx -t "A2"
+          run once per temporary change below
+Result:   every check failed at least once; each run exits 1
+Used by:  docs/agentuppdrag/2026-11-09-a2-a4-form-tests.md
+Note:     Testing Library colors its DOM dump even with FORCE_COLOR=0; those color codes
+          were removed with sed. No other change to the output.
+
+Checks in the A2 test (line numbers in ArendeForm.test.tsx after the change):
+  67  starting state: two cases before the action ..... failed in run 1
+  73  message "Rubrik måste fyllas i." is shown ........ failed in runs 2 and 4
+  74  title field has aria-invalid="true" .............. failed in run 3
+  75  the form sends no POST /arenden .................. failed in run 5
+  76  onSaved is not called ............................ failed in run 5
+  77  still two cases afterwards ....................... failed in run 5
+
+Temporary changes (one run each; every change was undone right after its run, checked
+byte for byte against a backup, see "Undone" after each run):
+  1  ArendeForm.test.tsx: startWithTwoCases uses slice(0, 3)
+  2  ArendeForm.tsx: title message changed to "Rubrik saknas."
+  3  ArendeForm.tsx: title field always aria-invalid={false}
+  4  ArendeForm.tsx: the return after validation commented out, so the form sends anyway
+     (the mock still rejects). The mock's 422 replaces the form's message, so line 73
+     fails first, with a thrown error that expect.soft cannot catch. Kept because it shows
+     the message check also catches a form that sends despite errors.
+  5  as run 4, plus handlers.ts no longer checks rubrik, so the mock saves the case
+Runs 4 and 5 also changed the A2 checks to expect.soft temporarily, so every failing
+check is listed in one run. That was undone too.
+========================================================================================
+Run 1: Starting-state check. Temporary change in src/components/ArendeForm.test.tsx: startWithTwoCases uses slice(0, 3), so three cases exist before the action.
+========================================================================================
+Command: FORCE_COLOR=0 NO_COLOR=1 npx vitest run src/components/ArendeForm.test.tsx -t "A2"
+
+
+ RUN  v3.2.7 D:/AINativeDevelopment2026/qa-frontend-testing/frontend
+
+ ❯ src/components/ArendeForm.test.tsx (8 tests | 1 failed | 7 skipped) 9ms
+   ↓ ArendeForm – create > creates a case and passes it to onSaved
+   × ArendeForm – create > A2: a case without a title is rejected with a clear message; still two cases 6ms
+     → expected [ { id: 1, …(6) }, …(2) ] to have a length of 2 but got 3
+   ↓ ArendeForm – create > moves focus to the first invalid field on submit
+   ↓ ArendeForm – create > A3: a title with only spaces counts as empty; still two cases
+   ↓ ArendeForm – create > R2: shows a message for every missing field
+   ↓ ArendeForm – create > A4: a category that is not allowed is rejected with a clear message; nothing saved
+   ↓ ArendeForm – create > disables submit while saving
+   ↓ ArendeForm – create > calls onCancel
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/components/ArendeForm.test.tsx > ArendeForm – create > A2: a case without a title is rejected with a clear message; still two cases
+AssertionError: expected [ { id: 1, …(6) }, …(2) ] to have a length of 2 but got 3
+
+- Expected
++ Received
+
+- 2
++ 3
+
+ ❯ src/components/ArendeForm.test.tsx:67:24
+     65|   it("A2: a case without a title is rejected with a clear message; sti…
+     66|     startWithTwoCases();
+     67|     expect(db.arenden).toHaveLength(2);
+       |                        ^
+     68|     const createRequests = recordCreateRequests();
+     69|     const { onSaved } = renderCreate();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 7 skipped (8)
+   Start at  11:36:06
+   Duration  1.40s (transform 75ms, setup 393ms, collect 97ms, tests 9ms, environment 524ms, prepare 122ms)
+
+Exit code: 1
+Undone: all three files are byte-identical to the backup.
+
+========================================================================================
+Run 2: Message check. Temporary change in src/components/ArendeForm.tsx: the title message is "Rubrik saknas." instead of "Rubrik måste fyllas i.".
+========================================================================================
+Command: FORCE_COLOR=0 NO_COLOR=1 npx vitest run src/components/ArendeForm.test.tsx -t "A2"
+
+
+ RUN  v3.2.7 D:/AINativeDevelopment2026/qa-frontend-testing/frontend
+
+ ❯ src/components/ArendeForm.test.tsx (8 tests | 1 failed | 7 skipped) 632ms
+   ↓ ArendeForm – create > creates a case and passes it to onSaved
+   × ArendeForm – create > A2: a case without a title is rejected with a clear message; still two cases 628ms
+     → Unable to find an element with the text: Rubrik måste fyllas i.. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <form
+      aria-labelledby="form-title"
+      class="form"
+      novalidate=""
+    >
+      <h2
+        id="form-title"
+      >
+        Nytt ärende
+      </h2>
+      <div
+        class="field"
+      >
+        <label
+          for="rubrik"
+        >
+          Rubrik
+        </label>
+        <input
+          aria-describedby="rubrik-error"
+          aria-invalid="true"
+          id="rubrik"
+          value=""
+        />
+        <p
+          class="field__error"
+          id="rubrik-error"
+        >
+          Rubrik saknas.
+        </p>
+      </div>
+      <div
+        class="field"
+      >
+        <label
+          for="beskrivning"
+        >
+          Beskrivning
+        </label>
+        <textarea
+          aria-invalid="false"
+          id="beskrivning"
+          rows="5"
+        >
+          Paketet har inte kommit.
+        </textarea>
+      </div>
+      <div
+        class="field-row"
+      >
+        <div
+          class="field"
+        >
+          <label
+            for="kategori"
+          >
+            Kategori
+          </label>
+          <select
+            aria-invalid="false"
+            id="kategori"
+          >
+            <option
+              value=""
+            >
+              Välj…
+            </option>
+            <option>
+              Fakturering
+            </option>
+            <option>
+              Teknik
+            </option>
+            <option>
+              Leverans
+            </option>
+            <option>
+              Övrigt
+            </option>
+          </select>
+        </div>
+        <div
+          class="field"
+        >
+          <label
+            for="prioritet"
+          >
+            Prioritet
+          </label>
+          <select
+            aria-invalid="false"
+            id="prioritet"
+          >
+            <option
+              value=""
+            >
+              Välj…
+            </option>
+            <option>
+              Låg
+            </option>
+            <option>
+              Medel
+            </option>
+            <option>
+              Hög
+            </option>
+          </select>
+        </div>
+      </div>
+      <div
+        class="actions"
+      >
+        <button
+          class="button"
+          type="submit"
+        >
+          Skapa ärende
+        </button>
+        <button
+          class="button button--secondary"
+          type="button"
+        >
+          Avbryt
+        </button>
+      </div>
+    </form>
+  </div>
+</body>
+   ↓ ArendeForm – create > moves focus to the first invalid field on submit
+   ↓ ArendeForm – create > A3: a title with only spaces counts as empty; still two cases
+   ↓ ArendeForm – create > R2: shows a message for every missing field
+   ↓ ArendeForm – create > A4: a category that is not allowed is rejected with a clear message; nothing saved
+   ↓ ArendeForm – create > disables submit while saving
+   ↓ ArendeForm – create > calls onCancel
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/components/ArendeForm.test.tsx > ArendeForm – create > A2: a case without a title is rejected with a clear message; still two cases
+TestingLibraryElementError: Unable to find an element with the text: Rubrik måste fyllas i.. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <form
+      aria-labelledby="form-title"
+      class="form"
+      novalidate=""
+    >
+      <h2
+        id="form-title"
+      >
+        Nytt ärende
+      </h2>
+      <div
+        class="field"
+      >
+        <label
+          for="rubrik"
+        >
+          Rubrik
+        </label>
+        <input
+          aria-describedby="rubrik-error"
+          aria-invalid="true"
+          id="rubrik"
+          value=""
+        />
+        <p
+          class="field__error"
+          id="rubrik-error"
+        >
+          Rubrik saknas.
+        </p>
+      </div>
+      <div
+        class="field"
+      >
+        <label
+          for="beskrivning"
+        >
+          Beskrivning
+        </label>
+        <textarea
+          aria-invalid="false"
+          id="beskrivning"
+          rows="5"
+        >
+          Paketet har inte kommit.
+        </textarea>
+      </div>
+      <div
+        class="field-row"
+      >
+        <div
+          class="field"
+        >
+          <label
+            for="kategori"
+          >
+            Kategori
+          </label>
+          <select
+            aria-invalid="false"
+            id="kategori"
+          >
+            <option
+              value=""
+            >
+              Välj…
+            </option>
+            <option>
+              Fakturering
+            </option>
+            <option>
+              Teknik
+            </option>
+            <option>
+              Leverans
+            </option>
+            <option>
+              Övrigt
+            </option>
+          </select>
+        </div>
+        <div
+          class="field"
+        >
+          <label
+            for="prioritet"
+          >
+            Prioritet
+          </label>
+          <select
+            aria-invalid="false"
+            id="prioritet"
+          >
+            <option
+              value=""
+            >
+              Välj…
+            </option>
+            <option>
+              Låg
+            </option>
+            <option>
+              Medel
+            </option>
+            <option>
+              Hög
+            </option>
+          </select>
+        </div>
+      </div>
+      <div
+        class="actions"
+      >
+        <button
+          class="button"
+          type="submit"
+        >
+          Skapa ärende
+        </button>
+        <button
+          class="button button--secondary"
+          type="button"
+        >
+          Avbryt
+        </button>
+      </div>
+    </form>
+  </div>
+</body>
+ ❯ Object.getElementError node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/components/ArendeForm.test.tsx:73:19
+     71|     await user.click(screen.getByRole("button", { name: "Skapa ärende"…
+     72| 
+     73|     expect(screen.getByText("Rubrik måste fyllas i.")).toBeInTheDocume…
+       |                   ^
+     74|     expect(screen.getByLabelText("Rubrik")).toHaveAttribute("aria-inva…
+     75|     expect(createRequests).toHaveLength(0);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 7 skipped (8)
+   Start at  11:36:09
+   Duration  2.02s (transform 72ms, setup 394ms, collect 100ms, tests 632ms, environment 532ms, prepare 118ms)
+
+Exit code: 1
+Undone: all three files are byte-identical to the backup.
+
+========================================================================================
+Run 3: aria-invalid check. Temporary change in src/components/ArendeForm.tsx: the title field always has aria-invalid={false}.
+========================================================================================
+Command: FORCE_COLOR=0 NO_COLOR=1 npx vitest run src/components/ArendeForm.test.tsx -t "A2"
+
+
+ RUN  v3.2.7 D:/AINativeDevelopment2026/qa-frontend-testing/frontend
+
+ ❯ src/components/ArendeForm.test.tsx (8 tests | 1 failed | 7 skipped) 565ms
+   ↓ ArendeForm – create > creates a case and passes it to onSaved
+   × ArendeForm – create > A2: a case without a title is rejected with a clear message; still two cases 562ms
+     → expect(element).toHaveAttribute("aria-invalid", "true") // element.getAttribute("aria-invalid") === "true"
+
+Expected the element to have attribute:
+  aria-invalid="true"
+Received:
+  aria-invalid="false"
+   ↓ ArendeForm – create > moves focus to the first invalid field on submit
+   ↓ ArendeForm – create > A3: a title with only spaces counts as empty; still two cases
+   ↓ ArendeForm – create > R2: shows a message for every missing field
+   ↓ ArendeForm – create > A4: a category that is not allowed is rejected with a clear message; nothing saved
+   ↓ ArendeForm – create > disables submit while saving
+   ↓ ArendeForm – create > calls onCancel
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/components/ArendeForm.test.tsx > ArendeForm – create > A2: a case without a title is rejected with a clear message; still two cases
+Error: expect(element).toHaveAttribute("aria-invalid", "true") // element.getAttribute("aria-invalid") === "true"
+
+Expected the element to have attribute:
+  aria-invalid="true"
+Received:
+  aria-invalid="false"
+ ❯ src/components/ArendeForm.test.tsx:74:45
+     72| 
+     73|     expect(screen.getByText("Rubrik måste fyllas i.")).toBeInTheDocume…
+     74|     expect(screen.getByLabelText("Rubrik")).toHaveAttribute("aria-inva…
+       |                                             ^
+     75|     expect(createRequests).toHaveLength(0);
+     76|     expect(onSaved).not.toHaveBeenCalled();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 7 skipped (8)
+   Start at  11:36:13
+   Duration  1.95s (transform 73ms, setup 394ms, collect 93ms, tests 565ms, environment 507ms, prepare 140ms)
+
+Exit code: 1
+Undone: all three files are byte-identical to the backup.
+
+========================================================================================
+Run 4: No-request check. Temporary change in src/components/ArendeForm.tsx: the return after validation is commented out, so the form sends even with errors. The mock still rejects. The A2 checks are temporarily expect.soft so every failing check is listed.
+========================================================================================
+Command: FORCE_COLOR=0 NO_COLOR=1 npx vitest run src/components/ArendeForm.test.tsx -t "A2"
+
+
+ RUN  v3.2.7 D:/AINativeDevelopment2026/qa-frontend-testing/frontend
+
+ ❯ src/components/ArendeForm.test.tsx (8 tests | 1 failed | 7 skipped) 650ms
+   ↓ ArendeForm – create > creates a case and passes it to onSaved
+   × ArendeForm – create > A2: a case without a title is rejected with a clear message; still two cases 647ms
+     → Unable to find an element with the text: Rubrik måste fyllas i.. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <form
+      aria-labelledby="form-title"
+      class="form"
+      novalidate=""
+    >
+      <h2
+        id="form-title"
+      >
+        Nytt ärende
+      </h2>
+      <div
+        class="field"
+      >
+        <label
+          for="rubrik"
+        >
+          Rubrik
+        </label>
+        <input
+          aria-describedby="rubrik-error"
+          aria-invalid="true"
+          id="rubrik"
+          value=""
+        />
+        <p
+          class="field__error"
+          id="rubrik-error"
+        >
+          Får inte vara tomt eller bara mellanslag
+        </p>
+      </div>
+      <div
+        class="field"
+      >
+        <label
+          for="beskrivning"
+        >
+          Beskrivning
+        </label>
+        <textarea
+          aria-invalid="false"
+          id="beskrivning"
+          rows="5"
+        >
+          Paketet har inte kommit.
+        </textarea>
+      </div>
+      <div
+        class="field-row"
+      >
+        <div
+          class="field"
+        >
+          <label
+            for="kategori"
+          >
+            Kategori
+          </label>
+          <select
+            aria-invalid="false"
+            id="kategori"
+          >
+            <option
+              value=""
+            >
+              Välj…
+            </option>
+            <option>
+              Fakturering
+            </option>
+            <option>
+              Teknik
+            </option>
+            <option>
+              Leverans
+            </option>
+            <option>
+              Övrigt
+            </option>
+          </select>
+        </div>
+        <div
+          class="field"
+        >
+          <label
+            for="prioritet"
+          >
+            Prioritet
+          </label>
+          <select
+            aria-invalid="false"
+            id="prioritet"
+          >
+            <option
+              value=""
+            >
+              Välj…
+            </option>
+            <option>
+              Låg
+            </option>
+            <option>
+              Medel
+            </option>
+            <option>
+              Hög
+            </option>
+          </select>
+        </div>
+      </div>
+      <p
+        class="alert"
+        role="alert"
+      >
+        Kontrollera fälten och försök igen.
+      </p>
+      <div
+        class="actions"
+      >
+        <button
+          class="button"
+          type="submit"
+        >
+          Skapa ärende
+        </button>
+        <button
+          class="button button--secondary"
+          type="button"
+        >
+          Avbryt
+        </button>
+      </div>
+    </form>
+  </div>
+</body>
+   ↓ ArendeForm – create > moves focus to the first invalid field on submit
+   ↓ ArendeForm – create > A3: a title with only spaces counts as empty; still two cases
+   ↓ ArendeForm – create > R2: shows a message for every missing field
+   ↓ ArendeForm – create > A4: a category that is not allowed is rejected with a clear message; nothing saved
+   ↓ ArendeForm – create > disables submit while saving
+   ↓ ArendeForm – create > calls onCancel
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/components/ArendeForm.test.tsx > ArendeForm – create > A2: a case without a title is rejected with a clear message; still two cases
+TestingLibraryElementError: Unable to find an element with the text: Rubrik måste fyllas i.. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <form
+      aria-labelledby="form-title"
+      class="form"
+      novalidate=""
+    >
+      <h2
+        id="form-title"
+      >
+        Nytt ärende
+      </h2>
+      <div
+        class="field"
+      >
+        <label
+          for="rubrik"
+        >
+          Rubrik
+        </label>
+        <input
+          aria-describedby="rubrik-error"
+          aria-invalid="true"
+          id="rubrik"
+          value=""
+        />
+        <p
+          class="field__error"
+          id="rubrik-error"
+        >
+          Får inte vara tomt eller bara mellanslag
+        </p>
+      </div>
+      <div
+        class="field"
+      >
+        <label
+          for="beskrivning"
+        >
+          Beskrivning
+        </label>
+        <textarea
+          aria-invalid="false"
+          id="beskrivning"
+          rows="5"
+        >
+          Paketet har inte kommit.
+        </textarea>
+      </div>
+      <div
+        class="field-row"
+      >
+        <div
+          class="field"
+        >
+          <label
+            for="kategori"
+          >
+            Kategori
+          </label>
+          <select
+            aria-invalid="false"
+            id="kategori"
+          >
+            <option
+              value=""
+            >
+              Välj…
+            </option>
+            <option>
+              Fakturering
+            </option>
+            <option>
+              Teknik
+            </option>
+            <option>
+              Leverans
+            </option>
+            <option>
+              Övrigt
+            </option>
+          </select>
+        </div>
+        <div
+          class="field"
+        >
+          <label
+            for="prioritet"
+          >
+            Prioritet
+          </label>
+          <select
+            aria-invalid="false"
+            id="prioritet"
+          >
+            <option
+              value=""
+            >
+              Välj…
+            </option>
+            <option>
+              Låg
+            </option>
+            <option>
+              Medel
+            </option>
+            <option>
+              Hög
+            </option>
+          </select>
+        </div>
+      </div>
+      <p
+        class="alert"
+        role="alert"
+      >
+        Kontrollera fälten och försök igen.
+      </p>
+      <div
+        class="actions"
+      >
+        <button
+          class="button"
+          type="submit"
+        >
+          Skapa ärende
+        </button>
+        <button
+          class="button button--secondary"
+          type="button"
+        >
+          Avbryt
+        </button>
+      </div>
+    </form>
+  </div>
+</body>
+ ❯ Object.getElementError node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/components/ArendeForm.test.tsx:73:24
+     71|     await user.click(screen.getByRole("button", { name: "Skapa ärende"…
+     72| 
+     73|     expect.soft(screen.getByText("Rubrik måste fyllas i.")).toBeInTheD…
+       |                        ^
+     74|     expect.soft(screen.getByLabelText("Rubrik")).toHaveAttribute("aria…
+     75|     expect.soft(createRequests).toHaveLength(0);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 7 skipped (8)
+   Start at  11:36:17
+   Duration  1.99s (transform 73ms, setup 396ms, collect 88ms, tests 650ms, environment 504ms, prepare 110ms)
+
+Exit code: 1
+Undone: all three files are byte-identical to the backup.
+
+========================================================================================
+Run 5: onSaved and still-two-cases checks. Temporary changes: the return in src/components/ArendeForm.tsx is commented out as in run 4, and src/mocks/handlers.ts no longer checks rubrik, so the mock saves the case. The A2 checks are temporarily expect.soft.
+========================================================================================
+Command: FORCE_COLOR=0 NO_COLOR=1 npx vitest run src/components/ArendeForm.test.tsx -t "A2"
+
+
+ RUN  v3.2.7 D:/AINativeDevelopment2026/qa-frontend-testing/frontend
+
+ ❯ src/components/ArendeForm.test.tsx (8 tests | 1 failed | 7 skipped) 630ms
+   ↓ ArendeForm – create > creates a case and passes it to onSaved
+   × ArendeForm – create > A2: a case without a title is rejected with a clear message; still two cases 627ms
+     → expected [ …(1) ] to have a length of +0 but got 1
+     → expected "spy" to not be called at all, but actually been called 1 times
+
+Received: 
+
+  1st spy call:
+
+    Array [
+      Object {
+        "beskrivning": "Paketet har inte kommit.",
+        "id": 3,
+        "kategori": "Leverans",
+        "prioritet": "Hög",
+        "rubrik": "",
+        "skapad": "2026-11-09T10:36:23.589Z",
+        "status": "Nytt",
+      },
+    ]
+
+
+Number of calls: 1
+
+     → expected [ { id: 1, …(6) }, …(2) ] to have a length of 2 but got 3
+   ↓ ArendeForm – create > moves focus to the first invalid field on submit
+   ↓ ArendeForm – create > A3: a title with only spaces counts as empty; still two cases
+   ↓ ArendeForm – create > R2: shows a message for every missing field
+   ↓ ArendeForm – create > A4: a category that is not allowed is rejected with a clear message; nothing saved
+   ↓ ArendeForm – create > disables submit while saving
+   ↓ ArendeForm – create > calls onCancel
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/components/ArendeForm.test.tsx > ArendeForm – create > A2: a case without a title is rejected with a clear message; still two cases
+AssertionError: expected [ …(1) ] to have a length of +0 but got 1
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ src/components/ArendeForm.test.tsx:75:33
+     73|     expect.soft(screen.getByText("Rubrik måste fyllas i.")).toBeInTheD…
+     74|     expect.soft(screen.getByLabelText("Rubrik")).toHaveAttribute("aria…
+     75|     expect.soft(createRequests).toHaveLength(0);
+       |                                 ^
+     76|     expect.soft(onSaved).not.toHaveBeenCalled();
+     77|     expect.soft(db.arenden).toHaveLength(2);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  src/components/ArendeForm.test.tsx > ArendeForm – create > A2: a case without a title is rejected with a clear message; still two cases
+AssertionError: expected "spy" to not be called at all, but actually been called 1 times
+
+Received: 
+
+  1st spy call:
+
+    Array [
+      Object {
+        "beskrivning": "Paketet har inte kommit.",
+        "id": 3,
+        "kategori": "Leverans",
+        "prioritet": "Hög",
+        "rubrik": "",
+        "skapad": "2026-11-09T10:36:23.589Z",
+        "status": "Nytt",
+      },
+    ]
+
+
+Number of calls: 1
+
+ ❯ src/components/ArendeForm.test.tsx:76:30
+     74|     expect.soft(screen.getByLabelText("Rubrik")).toHaveAttribute("aria…
+     75|     expect.soft(createRequests).toHaveLength(0);
+     76|     expect.soft(onSaved).not.toHaveBeenCalled();
+       |                              ^
+     77|     expect.soft(db.arenden).toHaveLength(2);
+     78|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  src/components/ArendeForm.test.tsx > ArendeForm – create > A2: a case without a title is rejected with a clear message; still two cases
+AssertionError: expected [ { id: 1, …(6) }, …(2) ] to have a length of 2 but got 3
+
+- Expected
++ Received
+
+- 2
++ 3
+
+ ❯ src/components/ArendeForm.test.tsx:77:29
+     75|     expect.soft(createRequests).toHaveLength(0);
+     76|     expect.soft(onSaved).not.toHaveBeenCalled();
+     77|     expect.soft(db.arenden).toHaveLength(2);
+       |                             ^
+     78|   });
+     79| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 7 skipped (8)
+   Start at  11:36:21
+   Duration  2.01s (transform 71ms, setup 392ms, collect 90ms, tests 630ms, environment 515ms, prepare 122ms)
+
+Exit code: 1
+Undone: all three files are byte-identical to the backup.
+

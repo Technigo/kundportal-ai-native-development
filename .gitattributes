@@ -1,0 +1,3 @@
+# Textfiler checkas ut med LF på alla plattformar, så att Prettier (som väntar sig LF)
+# godkänner dem även på Windows. Binärfiler känns igen automatiskt och lämnas orörda.
+* text=auto eol=lf

@@ -1,0 +1,155 @@
+Evidence: frontend quality gate after merging origin/main into qa-frontend-testing
+Date:     2026-11-09
+Branch:   qa-frontend-testing, merge of origin/main (c8077a4) in progress, not yet committed;
+          the branch's own commits are 3111da0 and 25b8a25
+Commands: from frontend/, with FORCE_COLOR=0 and NO_COLOR=1:
+          1. npm run check
+          2. npx vitest run --reporter=verbose
+Result:   1. exit 0: format, lint, typecheck, tests and build
+          2. exit 0: Test Files 7 passed (7); Tests 68 passed (68)
+Used by:  docs/testing/testing-spec.md (QA-1, QA-3), docs/verifieringsplan.md (Resultat),
+          docs/agentuppdrag/2026-11-09-a2-a4-form-tests.md
+========================================================================================
+1. npm run check
+========================================================================================
+
+> kundserviceportalen-nors@0.1.0 check
+> npm run format:check && npm run lint && npm run typecheck && npm run test:run && npm run build
+
+
+> kundserviceportalen-nors@0.1.0 format:check
+> prettier --check .
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> kundserviceportalen-nors@0.1.0 lint
+> eslint .
+
+
+> kundserviceportalen-nors@0.1.0 typecheck
+> tsc -b --noEmit
+
+
+> kundserviceportalen-nors@0.1.0 test:run
+> vitest run
+
+
+ RUN  v3.2.7 D:/AINativeDevelopment2026/qa-frontend-testing/frontend
+
+ ✓ src/utils/countByStatus.test.ts (3 tests) 6ms
+ ✓ src/utils/filterArenden.test.ts (15 tests) 10ms
+ ✓ src/api/arendenApi.test.ts (12 tests) 79ms
+ ✓ src/components/StatusOverview.test.tsx (3 tests) 96ms
+ ✓ src/components/ArendeDetail.test.tsx (6 tests) 483ms
+ ✓ src/components/ArendeForm.test.tsx (8 tests) 3906ms
+   ✓ ArendeForm – create > creates a case and passes it to onSaved  920ms
+   ✓ ArendeForm – create > A2: a case without a title is rejected with a clear message; still two cases  610ms
+   ✓ ArendeForm – create > A3: a title with only spaces counts as empty; still two cases  596ms
+   ✓ ArendeForm – create > A4: a category that is not allowed is rejected with a clear message; nothing saved  882ms
+   ✓ ArendeForm – create > disables submit while saving  806ms
+ ✓ src/App.test.tsx (21 tests) 6125ms
+   ✓ App > A1: a valid case is saved with status Nytt and a created time, and shows in the list  886ms
+   ✓ App > search, filters and the no-hits message work together in the list  703ms
+   ✓ App – search and filters (sok-filter.md) > SF-A12: '<script>' is plain text: 'Inga ärenden matchar', and the app keeps working  456ms
+   ✓ App – search and filters (sok-filter.md) > SF-A14: the search field holds at most 100 characters  1439ms
+   ✓ App – status overview (statusoversikt.md) > SO-A4: creating a valid case updates the overview to Nytt 3, the other counts are unchanged  998ms
+
+ Test Files  7 passed (7)
+      Tests  68 passed (68)
+   Start at  13:23:35
+   Duration  7.96s (transform 372ms, setup 3.56s, collect 840ms, tests 10.70s, environment 4.73s, prepare 949ms)
+
+
+> kundserviceportalen-nors@0.1.0 build
+> tsc -b && vite build
+
+vite v6.4.5 building for production...
+transforming...
+✓ 276 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.51 kB │ gzip:  0.31 kB
+dist/assets/index-UyFyGkMg.css    4.97 kB │ gzip:  1.66 kB
+dist/assets/index-D1c4Dzkb.js   155.30 kB │ gzip: 49.99 kB
+✓ built in 770ms
+========================================================================================
+2. npx vitest run --reporter=verbose
+========================================================================================
+
+ RUN  v3.2.7 D:/AINativeDevelopment2026/qa-frontend-testing/frontend
+
+ ✓ src/utils/countByStatus.test.ts > countByStatus (statusoversikt.md) > SO-A1: S1–S4 give Nytt 2, Pågående 1, Väntar på kund 0, Avslutat 1, in that order 2ms
+ ✓ src/utils/countByStatus.test.ts > countByStatus (statusoversikt.md) > SO-A2: no cases give 0 for all four statuses 0ms
+ ✓ src/utils/countByStatus.test.ts > countByStatus (statusoversikt.md) > SO-A8: three cases, all Avslutat, give Nytt 0, Pågående 0, Väntar på kund 0, Avslutat 3, in that order 0ms
+ ✓ src/utils/filterArenden.test.ts > filterArenden (sok-filter.md) > SF-A1: 'faktura' finds C3 and C1, with C3 first 2ms
+ ✓ src/utils/filterArenden.test.ts > filterArenden (sok-filter.md) > SF-A2: 'FAKTURA' gives the same result as 'faktura' 0ms
+ ✓ src/utils/filterArenden.test.ts > filterArenden (sok-filter.md) > SF-A3: 'FÖR' finds only C1 0ms
+ ✓ src/utils/filterArenden.test.ts > filterArenden (sok-filter.md) > SF-A4: 'inloggningen', only in the description, finds only C2 0ms
+ ✓ src/utils/filterArenden.test.ts > filterArenden (sok-filter.md) > SF-A5: part of a word, 'faktur', finds C3 and C1 0ms
+ ✓ src/utils/filterArenden.test.ts > filterArenden (sok-filter.md) > SF-A6: status Nytt shows only C1, and Alla shows all three again 0ms
+ ✓ src/utils/filterArenden.test.ts > filterArenden (sok-filter.md) > SF-A7: kategori Teknik shows only C2 0ms
+ ✓ src/utils/filterArenden.test.ts > filterArenden (sok-filter.md) > SF-A8: prioritet Låg shows only C3 0ms
+ ✓ src/utils/filterArenden.test.ts > filterArenden (sok-filter.md) > SF-A9: 'faktura' and status Nytt together show only C1 0ms
+ ✓ src/utils/filterArenden.test.ts > filterArenden (sok-filter.md) > SF-A11: only spaces shows all three, and '  faktura  ' is the same as 'faktura' 0ms
+ ✓ src/utils/filterArenden.test.ts > filterArenden (sok-filter.md) > returns an empty list when nothing matches 0ms
+ ✓ src/utils/filterArenden.test.ts > filterArenden (sok-filter.md) > SF-R6: treats special characters as plain text 0ms
+ ✓ src/utils/filterArenden.test.ts > filterArenden (sok-filter.md) > SF-R8: does not change the cases 0ms
+ ✓ src/utils/filterArenden.test.ts > sortNewestFirst (R6) > A12: the most recently created case comes first and the oldest last 0ms
+ ✓ src/utils/filterArenden.test.ts > sortNewestFirst (R6) > R6: with the same created time, the highest id comes first 0ms
+ ✓ src/api/arendenApi.test.ts > arendenApi > lists all cases 26ms
+ ✓ src/api/arendenApi.test.ts > arendenApi > gets one case by id 7ms
+ ✓ src/api/arendenApi.test.ts > arendenApi > maps 404 to the backend message (R10) 4ms
+ ✓ src/api/arendenApi.test.ts > arendenApi > creates a case with status Nytt (R1) 6ms
+ ✓ src/api/arendenApi.test.ts > arendenApi > maps 422 to field errors (R3) 5ms
+ ✓ src/api/arendenApi.test.ts > arendenApi > strips Pydantic's prefix 'Value error, ' from field errors (R12) 7ms
+ ✓ src/api/arendenApi.test.ts > arendenApi > maps network failure to a Swedish message 3ms
+ ✓ src/api/arendenApi.test.ts > arendenApi > maps a non-JSON server error to a generic message 3ms
+ ✓ src/api/arendenApi.test.ts > arendenApi > updates status and rejects invalid status (R8, R9) 13ms
+ ✓ src/api/arendenApi.test.ts > mocks follow the backend decisions > rejects a category and a priority that are not allowed, with the decided texts 5ms
+ ✓ src/api/arendenApi.test.ts > mocks follow the backend decisions > reports a missing field as 'Måste fyllas i' 4ms
+ ✓ src/api/arendenApi.test.ts > mocks follow the backend decisions > checks the status before the id: 422 before 404 6ms
+ ✓ src/components/StatusOverview.test.tsx > StatusOverview (statusoversikt.md) > SO-K1: the overview is named 'Antal ärenden per status' and each status reads together with its number 83ms
+ ✓ src/components/StatusOverview.test.tsx > StatusOverview (statusoversikt.md) > SO-A1: shows the four statuses in order, with no buttons or links 15ms
+ ✓ src/components/StatusOverview.test.tsx > StatusOverview (statusoversikt.md) > SO-A2: with no cases all four statuses show 0 8ms
+ ✓ src/components/ArendeDetail.test.tsx > ArendeDetail > A7: all fields of the chosen case are shown 104ms
+ ✓ src/components/ArendeDetail.test.tsx > ArendeDetail > A10: shows a clear message when the case does not exist 12ms
+ ✓ src/App.test.tsx > App > default page: Alla ärenden list, no side panel 123ms
+ ✓ src/App.test.tsx > App > A6: all three cases show with title, status, priority and created time 32ms
+ ✓ src/App.test.tsx > App > shows empty state when no cases exist 22ms
+ ✓ src/components/ArendeDetail.test.tsx > ArendeDetail > A8: the status changes to Pågående and the other fields are unchanged 108ms
+ ✓ src/components/ArendeDetail.test.tsx > ArendeDetail > A9: an invalid status is rejected with a clear message and the status is still Nytt 75ms
+ ✓ src/App.test.tsx > App > shows error with retry when the API is down 100ms
+ ✓ src/components/ArendeDetail.test.tsx > ArendeDetail > ignores a status response for a case that is no longer shown 204ms
+ ✓ src/components/ArendeDetail.test.tsx > ArendeDetail > calls onClose 30ms
+ ✓ src/App.test.tsx > App > clicking a row opens details in the side panel, list stays visible 186ms
+ ✓ src/components/ArendeForm.test.tsx > ArendeForm – create > creates a case and passes it to onSaved 897ms
+ ✓ src/App.test.tsx > App > A1: a valid case is saved with status Nytt and a created time, and shows in the list 840ms
+ ✓ src/App.test.tsx > App > only status can be changed: no edit option in the list or the details 78ms
+ ✓ src/components/ArendeForm.test.tsx > ArendeForm – create > A2: a case without a title is rejected with a clear message; still two cases 595ms
+ ✓ src/components/ArendeForm.test.tsx > ArendeForm – create > moves focus to the first invalid field on submit 36ms
+ ✓ src/App.test.tsx > App > search, filters and the no-hits message work together in the list 563ms
+ ✓ src/components/ArendeForm.test.tsx > ArendeForm – create > A3: a title with only spaces counts as empty; still two cases 521ms
+ ✓ src/components/ArendeForm.test.tsx > ArendeForm – create > R2: shows a message for every missing field 55ms
+ ✓ src/App.test.tsx > App > a status change in the panel is reflected by the list filter 207ms
+ ✓ src/App.test.tsx > App – search and filters (sok-filter.md) > SF-A10: 'xyz' gives 'Inga ärenden matchar'; clearing and searching again shows all three unchanged 237ms
+ ✓ src/components/ArendeForm.test.tsx > ArendeForm – create > A4: a category that is not allowed is rejected with a clear message; nothing saved 596ms
+ ✓ src/App.test.tsx > App – search and filters (sok-filter.md) > SF-A12: '<script>' is plain text: 'Inga ärenden matchar', and the app keeps working 266ms
+ ✓ src/App.test.tsx > App – search and filters (sok-filter.md) > SF-A13: the list is unchanged while typing and is searched when Enter is pressed 173ms
+ ✓ src/components/ArendeForm.test.tsx > ArendeForm – create > disables submit while saving 791ms
+ ✓ src/components/ArendeForm.test.tsx > ArendeForm – create > calls onCancel 47ms
+ ✓ src/App.test.tsx > App – search and filters (sok-filter.md) > SF-A14: the search field holds at most 100 characters 1369ms
+ ✓ src/App.test.tsx > App – status overview (statusoversikt.md) > SO-A1: opening the list shows Nytt 2, Pågående 1, Väntar på kund 0, Avslutat 1 and all four cases 28ms
+ ✓ src/App.test.tsx > App – status overview (statusoversikt.md) > SO-A2: with no cases the overview shows 0 for all four and the list 'Inga ärenden ännu' 19ms
+ ✓ src/App.test.tsx > App – status overview (statusoversikt.md) > SO-A3: changing S1 from Nytt to Pågående updates the overview, the other counts are unchanged 200ms
+ ✓ src/App.test.tsx > App – status overview (statusoversikt.md) > SO-A4: creating a valid case updates the overview to Nytt 3, the other counts are unchanged 1021ms
+ ✓ src/App.test.tsx > App – status overview (statusoversikt.md) > SO-A5: searching 'xyz' and filtering Avslutat gives 'Inga ärenden matchar', the overview is unchanged 231ms
+ ✓ src/App.test.tsx > App – status overview (statusoversikt.md) > SO-A6: when the list cannot be fetched an error is shown and no overview 6ms
+ ✓ src/App.test.tsx > App – status overview (statusoversikt.md) > SO-A7: while the list is loading 'Laddar ärenden…' is shown and no overview 47ms
+ ✓ src/App.test.tsx > App – status overview (statusoversikt.md) > SO-A8: opening the list with three Avslutat cases shows Nytt 0, Pågående 0, Väntar på kund 0, Avslutat 3 23ms
+
+ Test Files  7 passed (7)
+      Tests  68 passed (68)
+   Start at  13:23:48
+   Duration  7.58s (transform 325ms, setup 3.32s, collect 860ms, tests 10.08s, environment 4.64s, prepare 1.02s)
+

@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+
+# Node
+node_modules/
+dist/
+
+# Environment and editor files
+.env
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# .env
+.env.local
+.env
+
+# notes
+notes.md
+
+# db
+nors.db

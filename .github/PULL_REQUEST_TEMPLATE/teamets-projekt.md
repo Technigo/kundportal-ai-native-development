@@ -4,9 +4,10 @@ Länk till slutversionens commit, fylls i vid inlämningen:
 
 ## Teamet
 
-- Teamnamn:
-- Teammedlemmar och GitHub-användarnamn:
-- Teamets fork:
+- Teamnamn: NORS
+- Teammedlemmar och GitHub-användarnamn: Ottowski, NathalieBruno, TheDaftJavatronicPastaCoder och sravanip99
+
+- Teamets fork: nors-kundportal-development
 
 ## Gruppens underlag
 

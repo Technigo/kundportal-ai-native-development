@@ -1,0 +1,348 @@
+:root {
+  --color-primary: #26745a;
+  --color-primary-dark: #17382c;
+  --color-text-muted: #52635b;
+  --color-border: #dfe5e2;
+  --color-surface: #ffffff;
+  --color-background: #f1f5f2;
+  --color-error: #b3261e;
+  --color-error-bg: #fdecea;
+  --radius: 0.75rem;
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+}
+
+.app {
+  width: min(100%, 90rem);
+  margin: 0 auto;
+  padding: var(--space-lg) var(--space-md) var(--space-xl);
+}
+
+.app__header h1 {
+  margin: 0;
+  font-size: clamp(2rem, 6vw, 3rem);
+  letter-spacing: -0.04em;
+}
+
+.eyebrow {
+  margin: 0 0 var(--space-sm);
+  color: var(--color-primary);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.app__header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+/* Status overview under the heading (docs/specs/statusoversikt.md). */
+.overview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin: var(--space-sm) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.layout {
+  display: grid;
+  gap: var(--space-lg);
+  align-items: start;
+  margin-top: var(--space-lg);
+}
+
+/* Side panel sits right of the list from tablet width; below it on phones. */
+@media (min-width: 900px) {
+  .layout--with-panel {
+    grid-template-columns: minmax(0, 1fr) minmax(22rem, 28rem);
+  }
+
+  .panel {
+    position: sticky;
+    top: var(--space-md);
+    max-height: calc(100vh - 2 * var(--space-md));
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 899px) {
+  .layout--with-panel .panel {
+    order: -1;
+  }
+}
+
+.panel__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.panel__top .eyebrow {
+  margin: 0;
+}
+
+.icon-button {
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--color-primary-dark);
+  background: var(--color-surface);
+  cursor: pointer;
+}
+
+.detail h2 {
+  margin: var(--space-sm) 0 0;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+}
+
+.form .actions {
+  margin-top: 0;
+}
+
+.table__row {
+  cursor: pointer;
+}
+
+.table__row:hover {
+  background: var(--color-background);
+}
+
+.table__row--selected,
+.table__row--selected:hover {
+  background: #e6f2ec;
+  box-shadow: inset 3px 0 0 var(--color-primary);
+}
+
+.card {
+  padding: var(--space-lg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.card h2 {
+  margin: 0 0 var(--space-md);
+  font-size: 1.25rem;
+}
+
+.form {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.field {
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.field label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: var(--space-md);
+}
+
+input,
+textarea,
+select {
+  min-height: 2.75rem;
+  padding: var(--space-sm) 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  font: inherit;
+  color: inherit;
+  background: var(--color-surface);
+}
+
+[aria-invalid="true"] {
+  border-color: var(--color-error);
+}
+
+.field__error {
+  margin: 0;
+  color: var(--color-error);
+  font-size: 0.875rem;
+}
+
+.alert {
+  margin: 0;
+  padding: var(--space-sm) var(--space-md);
+  border-radius: 0.5rem;
+  color: var(--color-error);
+  background: var(--color-error-bg);
+}
+
+.button {
+  justify-self: start;
+  min-height: 2.75rem;
+  padding: 0 var(--space-lg);
+  border: 0;
+  border-radius: 0.5rem;
+  font: inherit;
+  font-weight: 600;
+  color: var(--color-surface);
+  background: var(--color-primary);
+  cursor: pointer;
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.button--secondary {
+  color: var(--color-primary-dark);
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
+}
+
+.link {
+  padding: 0;
+  border: 0;
+  font: inherit;
+  color: var(--color-primary);
+  background: none;
+  text-align: left;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-md);
+  align-items: end;
+  margin-bottom: var(--space-lg);
+}
+
+@media (min-width: 768px) {
+  .filters {
+    grid-template-columns: 2fr auto repeat(3, minmax(0, 1fr));
+  }
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 0.75rem var(--space-sm);
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.table th {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 600px) {
+  .table thead {
+    display: none;
+  }
+
+  .table tr {
+    display: grid;
+    gap: var(--space-xs);
+    padding: var(--space-sm) 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .table td {
+    padding: 0;
+    border: 0;
+  }
+}
+
+.empty {
+  color: var(--color-text-muted);
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.125rem 0.625rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge--new {
+  color: #1d5fa8;
+}
+
+.badge--progress {
+  color: #8a5a00;
+}
+
+.badge--waiting {
+  color: #7a3e9d;
+}
+
+.badge--closed {
+  color: var(--color-text-muted);
+}
+
+.details {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-sm) var(--space-lg);
+  margin: var(--space-md) 0 var(--space-lg);
+}
+
+.details dt {
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.details dd {
+  margin: 0;
+}
+
+.details__text {
+  white-space: pre-wrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}
+
+.button:disabled,
+.icon-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

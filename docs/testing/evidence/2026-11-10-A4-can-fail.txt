@@ -1,0 +1,1340 @@
+Evidence: every check in the A4 component test can fail
+Date:     2026-11-10 (runs redone after the code review fixes, see "Changed" below)
+Branch:   qa-frontend-testing at bf49dac (PR #15), with the uncommitted A4 change in
+          frontend/src/components/ArendeForm.test.tsx and Q8 in docs/specs/kravspec.md
+Command:  from frontend/: FORCE_COLOR=0 NO_COLOR=1 npx vitest run src/components/ArendeForm.test.tsx -t "A4"
+          run once per temporary change below
+Result:   every check failed, each in its own run; each run exits 1
+Used by:  docs/agentuppdrag/2026-11-09-a2-a4-form-tests.md
+Note:     Testing Library colors its DOM dump even with FORCE_COLOR=0; those color codes
+          were removed with sed. No other change to the output.
+
+What A4 checks after Q8 (kravspec.md, answered 2026-11-10 by the team): the form shows
+the backend's rejection clearly and does not treat it as saved. That a category that is
+not allowed is rejected and nothing is saved is shown by the backend's API test.
+
+Changed after the code review (2026-11-10):
+  - The starting-state check (two cases before the action) was removed from A4. Once the
+    test replaces the POST handler, the mock database is never used again, so the check
+    only tested the test's own setup. The old run 1 could only make it fail by editing the
+    test itself (startWithTwoCases with slice(0, 3)).
+  - A new check was added: the replaced handler records each request body, and the test
+    checks that the form sent exactly one request with kategori "Leverans". Before, the
+    simulated 422 answered any POST, so A4 passed even if the form sent the wrong category.
+  - All five runs below were redone against the current test, so the line numbers match.
+    Every temporary change is now in ArendeForm.tsx; none edits the test.
+
+Checks in the A4 test (line numbers in ArendeForm.test.tsx after the change):
+  141  the backend's category message is shown ............ failed in run 2
+  142  the form sent one request with kategori "Leverans" .. failed in run 1
+  143  category field has aria-invalid="true" ............. failed in run 3
+  144  alert "Kontrollera fälten och försök igen." ........ failed in run 4
+  145  onSaved is not called .............................. failed in run 5
+
+Temporary changes (one run each; every change was undone right after its run, checked
+byte for byte against a backup, see "Undone" after each run):
+  1  ArendeForm.tsx: the request data always has kategori: "" (added after beskrivning)
+  2  ArendeForm.tsx: setFieldErrors({}) instead of the backend's field errors
+  3  ArendeForm.tsx: category field always aria-invalid={false}
+  4  ArendeForm.tsx: setFormError(null), so no alert is shown
+  5  ArendeForm.tsx: onSaved is called in the catch block, before the error is handled
+
+After the five runs, the whole file was run on the restored files: 8 passed, exit 0.
+========================================================================================
+Run 1: Sent-category check. Temporary change in src/components/ArendeForm.tsx: the form always sends an empty kategori, whatever the user chose.
+========================================================================================
+Command: FORCE_COLOR=0 NO_COLOR=1 npx vitest run src/components/ArendeForm.test.tsx -t "A4"
+
+
+ RUN  v3.2.7 D:/AINativeDevelopment2026/qa-frontend-testing/frontend
+
+ ❯ src/components/ArendeForm.test.tsx (8 tests | 1 failed | 7 skipped) 928ms
+   ↓ ArendeForm – create > creates a case and passes it to onSaved
+   ↓ ArendeForm – create > A2: a case without a title is rejected with a clear message; still two cases
+   ↓ ArendeForm – create > moves focus to the first invalid field on submit
+   ↓ ArendeForm – create > A3: a title with only spaces counts as empty; still two cases
+   ↓ ArendeForm – create > R2: shows a message for every missing field
+   × ArendeForm – create > A4: the backend's rejection of a category is shown clearly and nothing is passed on 926ms
+     → expected [ { …(4) } ] to deeply equal [ ObjectContaining{…} ]
+   ↓ ArendeForm – create > disables submit while saving
+   ↓ ArendeForm – create > calls onCancel
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/components/ArendeForm.test.tsx > ArendeForm – create > A4: the backend's rejection of a category is shown clearly and nothing is passed on
+AssertionError: expected [ { …(4) } ] to deeply equal [ ObjectContaining{…} ]
+
+- Expected
++ Received
+
+  [
+-   ObjectContaining {
+-     "kategori": "Leverans",
++   {
++     "beskrivning": "Paketet har inte kommit.",
++     "kategori": "",
++     "prioritet": "Hög",
++     "rubrik": "Leverans försenad",
+    },
+  ]
+
+ ❯ src/components/ArendeForm.test.tsx:142:24
+    140| 
+    141|     expect(await screen.findByText(KATEGORI_ERROR)).toBeInTheDocument(…
+    142|     expect(sentBodies).toEqual([expect.objectContaining({ kategori: "L…
+       |                        ^
+    143|     expect(screen.getByLabelText("Kategori")).toHaveAttribute("aria-in…
+    144|     expect(screen.getByRole("alert")).toHaveTextContent("Kontrollera f…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 7 skipped (8)
+   Start at  14:16:49
+   Duration  2.28s (transform 73ms, setup 386ms, collect 91ms, tests 928ms, environment 517ms, prepare 124ms)
+
+
+Exit code: 1
+Undone: both files are byte-identical to the backup.
+
+========================================================================================
+Run 2: Message check. Temporary change in src/components/ArendeForm.tsx: the form ignores the backend's field errors, so the category message is not shown.
+========================================================================================
+Command: FORCE_COLOR=0 NO_COLOR=1 npx vitest run src/components/ArendeForm.test.tsx -t "A4"
+
+
+ RUN  v3.2.7 D:/AINativeDevelopment2026/qa-frontend-testing/frontend
+
+ ❯ src/components/ArendeForm.test.tsx (8 tests | 1 failed | 7 skipped) 1921ms
+   ↓ ArendeForm – create > creates a case and passes it to onSaved
+   ↓ ArendeForm – create > A2: a case without a title is rejected with a clear message; still two cases
+   ↓ ArendeForm – create > moves focus to the first invalid field on submit
+   ↓ ArendeForm – create > A3: a title with only spaces counts as empty; still two cases
+   ↓ ArendeForm – create > R2: shows a message for every missing field
+   × ArendeForm – create > A4: the backend's rejection of a category is shown clearly and nothing is passed on 1919ms
+     → Unable to find an element with the text: Ogiltig kategori. Välj Fakturering, Teknik, Leverans eller Övrigt.. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <form
+      aria-labelledby="form-title"
+      class="form"
+      novalidate=""
+    >
+      <h2
+        id="form-title"
+      >
+        Nytt ärende
+      </h2>
+      <div
+        class="field"
+      >
+        <label
+          for="rubrik"
+        >
+          Rubrik
+        </label>
+        <input
+          aria-invalid="false"
+          id="rubrik"
+          value="Leverans försenad"
+        />
+      </div>
+      <div
+        class="field"
+      >
+        <label
+          for="beskrivning"
+        >
+          Beskrivning
+        </label>
+        <textarea
+          aria-invalid="false"
+          id="beskrivning"
+          rows="5"
+        >
+          Paketet har inte kommit.
+        </textarea>
+      </div>
+      <div
+        class="field-row"
+      >
+        <div
+          class="field"
+        >
+          <label
+            for="kategori"
+          >
+            Kategori
+          </label>
+          <select
+            aria-invalid="false"
+            id="kategori"
+          >
+            <option
+              value=""
+            >
+              Välj…
+            </option>
+            <option>
+              Fakturering
+            </option>
+            <option>
+              Teknik
+            </option>
+            <option>
+              Leverans
+            </option>
+            <option>
+              Övrigt
+            </option>
+          </select>
+        </div>
+        <div
+          class="field"
+        >
+          <label
+            for="prioritet"
+          >
+            Prioritet
+          </label>
+          <select
+            aria-invalid="false"
+            id="prioritet"
+          >
+            <option
+              value=""
+            >
+              Välj…
+            </option>
+            <option>
+              Låg
+            </option>
+            <option>
+              Medel
+            </option>
+            <option>
+              Hög
+            </option>
+          </select>
+        </div>
+      </div>
+      <p
+        class="alert"
+        role="alert"
+      >
+        Kontrollera fälten och försök igen.
+      </p>
+      <div
+        class="actions"
+      >
+        <button
+          class="button"
+          type="submit"
+        >
+          Skapa ärende
+        </button>
+        <button
+          class="button button--secondary"
+          type="button"
+        >
+          Avbryt
+        </button>
+      </div>
+    </form>
+  </div>
+</body>
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <form
+      aria-labelledby="form-title"
+      class="form"
+      novalidate=""
+    >
+      <h2
+        id="form-title"
+      >
+        Nytt ärende
+      </h2>
+      <div
+        class="field"
+      >
+        <label
+          for="rubrik"
+        >
+          Rubrik
+        </label>
+        <input
+          aria-invalid="false"
+          id="rubrik"
+          value="Leverans försenad"
+        />
+      </div>
+      <div
+        class="field"
+      >
+        <label
+          for="beskrivning"
+        >
+          Beskrivning
+        </label>
+        <textarea
+          aria-invalid="false"
+          id="beskrivning"
+          rows="5"
+        >
+          Paketet har inte kommit.
+        </textarea>
+      </div>
+      <div
+        class="field-row"
+      >
+        <div
+          class="field"
+        >
+          <label
+            for="kategori"
+          >
+            Kategori
+          </label>
+          <select
+            aria-invalid="false"
+            id="kategori"
+          >
+            <option
+              value=""
+            >
+              Välj…
+            </option>
+            <option>
+              Fakturering
+            </option>
+            <option>
+              Teknik
+            </option>
+            <option>
+              Leverans
+            </option>
+            <option>
+              Övrigt
+            </option>
+          </select>
+        </div>
+        <div
+          class="field"
+        >
+          <label
+            for="prioritet"
+          >
+            Prioritet
+          </label>
+          <select
+            aria-invalid="false"
+            id="prioritet"
+          >
+            <option
+              value=""
+            >
+              Välj…
+            </option>
+            <option>
+              Låg
+            </option>
+            <option>
+              Medel
+            </option>
+            <option>
+              Hög
+            </option>
+          </select>
+        </div>
+      </div>
+      <p
+        class="alert"
+        role="alert"
+      >
+        Kontrollera fälten och försök igen.
+      </p>
+      <div
+        class="actions"
+      >
+        <button
+          class="button"
+          type="submit"
+        >
+          Skapa ärende
+        </button>
+        <button
+          class="button button--secondary"
+          type="button"
+        >
+          Avbryt
+        </button>
+      </div>
+    </form>
+  </div>
+</body>
+   ↓ ArendeForm – create > disables submit while saving
+   ↓ ArendeForm – create > calls onCancel
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/components/ArendeForm.test.tsx > ArendeForm – create > A4: the backend's rejection of a category is shown clearly and nothing is passed on
+TestingLibraryElementError: Unable to find an element with the text: Ogiltig kategori. Välj Fakturering, Teknik, Leverans eller Övrigt.. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <form
+      aria-labelledby="form-title"
+      class="form"
+      novalidate=""
+    >
+      <h2
+        id="form-title"
+      >
+        Nytt ärende
+      </h2>
+      <div
+        class="field"
+      >
+        <label
+          for="rubrik"
+        >
+          Rubrik
+        </label>
+        <input
+          aria-invalid="false"
+          id="rubrik"
+          value="Leverans försenad"
+        />
+      </div>
+      <div
+        class="field"
+      >
+        <label
+          for="beskrivning"
+        >
+          Beskrivning
+        </label>
+        <textarea
+          aria-invalid="false"
+          id="beskrivning"
+          rows="5"
+        >
+          Paketet har inte kommit.
+        </textarea>
+      </div>
+      <div
+        class="field-row"
+      >
+        <div
+          class="field"
+        >
+          <label
+            for="kategori"
+          >
+            Kategori
+          </label>
+          <select
+            aria-invalid="false"
+            id="kategori"
+          >
+            <option
+              value=""
+            >
+              Välj…
+            </option>
+            <option>
+              Fakturering
+            </option>
+            <option>
+              Teknik
+            </option>
+            <option>
+              Leverans
+            </option>
+            <option>
+              Övrigt
+            </option>
+          </select>
+        </div>
+        <div
+          class="field"
+        >
+          <label
+            for="prioritet"
+          >
+            Prioritet
+          </label>
+          <select
+            aria-invalid="false"
+            id="prioritet"
+          >
+            <option
+              value=""
+            >
+              Välj…
+            </option>
+            <option>
+              Låg
+            </option>
+            <option>
+              Medel
+            </option>
+            <option>
+              Hög
+            </option>
+          </select>
+        </div>
+      </div>
+      <p
+        class="alert"
+        role="alert"
+      >
+        Kontrollera fälten och försök igen.
+      </p>
+      <div
+        class="actions"
+      >
+        <button
+          class="button"
+          type="submit"
+        >
+          Skapa ärende
+        </button>
+        <button
+          class="button button--secondary"
+          type="button"
+        >
+          Avbryt
+        </button>
+      </div>
+    </form>
+  </div>
+</body>
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <form
+      aria-labelledby="form-title"
+      class="form"
+      novalidate=""
+    >
+      <h2
+        id="form-title"
+      >
+        Nytt ärende
+      </h2>
+      <div
+        class="field"
+      >
+        <label
+          for="rubrik"
+        >
+          Rubrik
+        </label>
+        <input
+          aria-invalid="false"
+          id="rubrik"
+          value="Leverans försenad"
+        />
+      </div>
+      <div
+        class="field"
+      >
+        <label
+          for="beskrivning"
+        >
+          Beskrivning
+        </label>
+        <textarea
+          aria-invalid="false"
+          id="beskrivning"
+          rows="5"
+        >
+          Paketet har inte kommit.
+        </textarea>
+      </div>
+      <div
+        class="field-row"
+      >
+        <div
+          class="field"
+        >
+          <label
+            for="kategori"
+          >
+            Kategori
+          </label>
+          <select
+            aria-invalid="false"
+            id="kategori"
+          >
+            <option
+              value=""
+            >
+              Välj…
+            </option>
+            <option>
+              Fakturering
+            </option>
+            <option>
+              Teknik
+            </option>
+            <option>
+              Leverans
+            </option>
+            <option>
+              Övrigt
+            </option>
+          </select>
+        </div>
+        <div
+          class="field"
+        >
+          <label
+            for="prioritet"
+          >
+            Prioritet
+          </label>
+          <select
+            aria-invalid="false"
+            id="prioritet"
+          >
+            <option
+              value=""
+            >
+              Välj…
+            </option>
+            <option>
+              Låg
+            </option>
+            <option>
+              Medel
+            </option>
+            <option>
+              Hög
+            </option>
+          </select>
+        </div>
+      </div>
+      <p
+        class="alert"
+        role="alert"
+      >
+        Kontrollera fälten och försök igen.
+      </p>
+      <div
+        class="actions"
+      >
+        <button
+          class="button"
+          type="submit"
+        >
+          Skapa ärende
+        </button>
+        <button
+          class="button button--secondary"
+          type="button"
+        >
+          Avbryt
+        </button>
+      </div>
+    </form>
+  </div>
+</body>
+ ❯ waitForWrapper node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ src/components/ArendeForm.test.tsx:141:25
+    139|     await user.click(screen.getByRole("button", { name: "Skapa ärende"…
+    140| 
+    141|     expect(await screen.findByText(KATEGORI_ERROR)).toBeInTheDocument(…
+       |                         ^
+    142|     expect(sentBodies).toEqual([expect.objectContaining({ kategori: "L…
+    143|     expect(screen.getByLabelText("Kategori")).toHaveAttribute("aria-in…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 7 skipped (8)
+   Start at  14:16:53
+   Duration  3.33s (transform 75ms, setup 398ms, collect 92ms, tests 1.92s, environment 552ms, prepare 110ms)
+
+
+Exit code: 1
+Undone: both files are byte-identical to the backup.
+
+========================================================================================
+Run 3: aria-invalid check. Temporary change in src/components/ArendeForm.tsx: the category field always has aria-invalid={false}.
+========================================================================================
+Command: FORCE_COLOR=0 NO_COLOR=1 npx vitest run src/components/ArendeForm.test.tsx -t "A4"
+
+
+ RUN  v3.2.7 D:/AINativeDevelopment2026/qa-frontend-testing/frontend
+
+ ❯ src/components/ArendeForm.test.tsx (8 tests | 1 failed | 7 skipped) 914ms
+   ↓ ArendeForm – create > creates a case and passes it to onSaved
+   ↓ ArendeForm – create > A2: a case without a title is rejected with a clear message; still two cases
+   ↓ ArendeForm – create > moves focus to the first invalid field on submit
+   ↓ ArendeForm – create > A3: a title with only spaces counts as empty; still two cases
+   ↓ ArendeForm – create > R2: shows a message for every missing field
+   × ArendeForm – create > A4: the backend's rejection of a category is shown clearly and nothing is passed on 910ms
+     → expect(element).toHaveAttribute("aria-invalid", "true") // element.getAttribute("aria-invalid") === "true"
+
+Expected the element to have attribute:
+  aria-invalid="true"
+Received:
+  aria-invalid="false"
+   ↓ ArendeForm – create > disables submit while saving
+   ↓ ArendeForm – create > calls onCancel
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/components/ArendeForm.test.tsx > ArendeForm – create > A4: the backend's rejection of a category is shown clearly and nothing is passed on
+Error: expect(element).toHaveAttribute("aria-invalid", "true") // element.getAttribute("aria-invalid") === "true"
+
+Expected the element to have attribute:
+  aria-invalid="true"
+Received:
+  aria-invalid="false"
+ ❯ src/components/ArendeForm.test.tsx:143:47
+    141|     expect(await screen.findByText(KATEGORI_ERROR)).toBeInTheDocument(…
+    142|     expect(sentBodies).toEqual([expect.objectContaining({ kategori: "L…
+    143|     expect(screen.getByLabelText("Kategori")).toHaveAttribute("aria-in…
+       |                                               ^
+    144|     expect(screen.getByRole("alert")).toHaveTextContent("Kontrollera f…
+    145|     expect(onSaved).not.toHaveBeenCalled();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 7 skipped (8)
+   Start at  14:16:58
+   Duration  2.34s (transform 78ms, setup 394ms, collect 95ms, tests 914ms, environment 539ms, prepare 131ms)
+
+
+Exit code: 1
+Undone: both files are byte-identical to the backup.
+
+========================================================================================
+Run 4: Alert check. Temporary change in src/components/ArendeForm.tsx: the form shows no alert when saving fails.
+========================================================================================
+Command: FORCE_COLOR=0 NO_COLOR=1 npx vitest run src/components/ArendeForm.test.tsx -t "A4"
+
+
+ RUN  v3.2.7 D:/AINativeDevelopment2026/qa-frontend-testing/frontend
+
+ ❯ src/components/ArendeForm.test.tsx (8 tests | 1 failed | 7 skipped) 908ms
+   ↓ ArendeForm – create > creates a case and passes it to onSaved
+   ↓ ArendeForm – create > A2: a case without a title is rejected with a clear message; still two cases
+   ↓ ArendeForm – create > moves focus to the first invalid field on submit
+   ↓ ArendeForm – create > A3: a title with only spaces counts as empty; still two cases
+   ↓ ArendeForm – create > R2: shows a message for every missing field
+   × ArendeForm – create > A4: the backend's rejection of a category is shown clearly and nothing is passed on 905ms
+     → Unable to find an accessible element with the role "alert"
+
+Here are the accessible roles:
+
+  form:
+
+  Name "Nytt ärende":
+  <form
+    aria-labelledby="form-title"
+    class="form"
+    novalidate=""
+  />
+
+  --------------------------------------------------
+  heading:
+
+  Name "Nytt ärende":
+  <h2
+    id="form-title"
+  />
+
+  --------------------------------------------------
+  textbox:
+
+  Name "Rubrik":
+  <input
+    aria-invalid="false"
+    id="rubrik"
+    value="Leverans försenad"
+  />
+
+  Name "Beskrivning":
+  <textarea
+    aria-invalid="false"
+    id="beskrivning"
+    rows="5"
+  />
+
+  --------------------------------------------------
+  combobox:
+
+  Name "Kategori":
+  <select
+    aria-describedby="kategori-error"
+    aria-invalid="true"
+    id="kategori"
+  />
+
+  Name "Prioritet":
+  <select
+    aria-invalid="false"
+    id="prioritet"
+  />
+
+  --------------------------------------------------
+  option:
+
+  Name "Välj…":
+  <option
+    value=""
+  />
+
+  Name "Fakturering":
+  <option />
+
+  Name "Teknik":
+  <option />
+
+  Name "Leverans":
+  <option />
+
+  Name "Övrigt":
+  <option />
+
+  Name "Välj…":
+  <option
+    value=""
+  />
+
+  Name "Låg":
+  <option />
+
+  Name "Medel":
+  <option />
+
+  Name "Hög":
+  <option />
+
+  --------------------------------------------------
+  paragraph:
+
+  Name "":
+  <p
+    class="field__error"
+    id="kategori-error"
+  />
+
+  --------------------------------------------------
+  button:
+
+  Name "Skapa ärende":
+  <button
+    class="button"
+    type="submit"
+  />
+
+  Name "Avbryt":
+  <button
+    class="button button--secondary"
+    type="button"
+  />
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <form
+      aria-labelledby="form-title"
+      class="form"
+      novalidate=""
+    >
+      <h2
+        id="form-title"
+      >
+        Nytt ärende
+      </h2>
+      <div
+        class="field"
+      >
+        <label
+          for="rubrik"
+        >
+          Rubrik
+        </label>
+        <input
+          aria-invalid="false"
+          id="rubrik"
+          value="Leverans försenad"
+        />
+      </div>
+      <div
+        class="field"
+      >
+        <label
+          for="beskrivning"
+        >
+          Beskrivning
+        </label>
+        <textarea
+          aria-invalid="false"
+          id="beskrivning"
+          rows="5"
+        >
+          Paketet har inte kommit.
+        </textarea>
+      </div>
+      <div
+        class="field-row"
+      >
+        <div
+          class="field"
+        >
+          <label
+            for="kategori"
+          >
+            Kategori
+          </label>
+          <select
+            aria-describedby="kategori-error"
+            aria-invalid="true"
+            id="kategori"
+          >
+            <option
+              value=""
+            >
+              Välj…
+            </option>
+            <option>
+              Fakturering
+            </option>
+            <option>
+              Teknik
+            </option>
+            <option>
+              Leverans
+            </option>
+            <option>
+              Övrigt
+            </option>
+          </select>
+          <p
+            class="field__error"
+            id="kategori-error"
+          >
+            Ogiltig kategori. Välj Fakturering, Teknik, Leverans eller Övrigt.
+          </p>
+        </div>
+        <div
+          class="field"
+        >
+          <label
+            for="prioritet"
+          >
+            Prioritet
+          </label>
+          <select
+            aria-invalid="false"
+            id="prioritet"
+          >
+            <option
+              value=""
+            >
+              Välj…
+            </option>
+            <option>
+              Låg
+            </option>
+            <option>
+              Medel
+            </option>
+            <option>
+              Hög
+            </option>
+          </select>
+        </div>
+      </div>
+      <div
+        class="actions"
+      >
+        <button
+          class="button"
+          type="submit"
+        >
+          Skapa ärende
+        </button>
+        <button
+          class="button button--secondary"
+          type="button"
+        >
+          Avbryt
+        </button>
+      </div>
+    </form>
+  </div>
+</body>
+   ↓ ArendeForm – create > disables submit while saving
+   ↓ ArendeForm – create > calls onCancel
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/components/ArendeForm.test.tsx > ArendeForm – create > A4: the backend's rejection of a category is shown clearly and nothing is passed on
+TestingLibraryElementError: Unable to find an accessible element with the role "alert"
+
+Here are the accessible roles:
+
+  form:
+
+  Name "Nytt ärende":
+  <form
+    aria-labelledby="form-title"
+    class="form"
+    novalidate=""
+  />
+
+  --------------------------------------------------
+  heading:
+
+  Name "Nytt ärende":
+  <h2
+    id="form-title"
+  />
+
+  --------------------------------------------------
+  textbox:
+
+  Name "Rubrik":
+  <input
+    aria-invalid="false"
+    id="rubrik"
+    value="Leverans försenad"
+  />
+
+  Name "Beskrivning":
+  <textarea
+    aria-invalid="false"
+    id="beskrivning"
+    rows="5"
+  />
+
+  --------------------------------------------------
+  combobox:
+
+  Name "Kategori":
+  <select
+    aria-describedby="kategori-error"
+    aria-invalid="true"
+    id="kategori"
+  />
+
+  Name "Prioritet":
+  <select
+    aria-invalid="false"
+    id="prioritet"
+  />
+
+  --------------------------------------------------
+  option:
+
+  Name "Välj…":
+  <option
+    value=""
+  />
+
+  Name "Fakturering":
+  <option />
+
+  Name "Teknik":
+  <option />
+
+  Name "Leverans":
+  <option />
+
+  Name "Övrigt":
+  <option />
+
+  Name "Välj…":
+  <option
+    value=""
+  />
+
+  Name "Låg":
+  <option />
+
+  Name "Medel":
+  <option />
+
+  Name "Hög":
+  <option />
+
+  --------------------------------------------------
+  paragraph:
+
+  Name "":
+  <p
+    class="field__error"
+    id="kategori-error"
+  />
+
+  --------------------------------------------------
+  button:
+
+  Name "Skapa ärende":
+  <button
+    class="button"
+    type="submit"
+  />
+
+  Name "Avbryt":
+  <button
+    class="button button--secondary"
+    type="button"
+  />
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+<body>
+  <div>
+    <form
+      aria-labelledby="form-title"
+      class="form"
+      novalidate=""
+    >
+      <h2
+        id="form-title"
+      >
+        Nytt ärende
+      </h2>
+      <div
+        class="field"
+      >
+        <label
+          for="rubrik"
+        >
+          Rubrik
+        </label>
+        <input
+          aria-invalid="false"
+          id="rubrik"
+          value="Leverans försenad"
+        />
+      </div>
+      <div
+        class="field"
+      >
+        <label
+          for="beskrivning"
+        >
+          Beskrivning
+        </label>
+        <textarea
+          aria-invalid="false"
+          id="beskrivning"
+          rows="5"
+        >
+          Paketet har inte kommit.
+        </textarea>
+      </div>
+      <div
+        class="field-row"
+      >
+        <div
+          class="field"
+        >
+          <label
+            for="kategori"
+          >
+            Kategori
+          </label>
+          <select
+            aria-describedby="kategori-error"
+            aria-invalid="true"
+            id="kategori"
+          >
+            <option
+              value=""
+            >
+              Välj…
+            </option>
+            <option>
+              Fakturering
+            </option>
+            <option>
+              Teknik
+            </option>
+            <option>
+              Leverans
+            </option>
+            <option>
+              Övrigt
+            </option>
+          </select>
+          <p
+            class="field__error"
+            id="kategori-error"
+          >
+            Ogiltig kategori. Välj Fakturering, Teknik, Leverans eller Övrigt.
+          </p>
+        </div>
+        <div
+          class="field"
+        >
+          <label
+            for="prioritet"
+          >
+            Prioritet
+          </label>
+          <select
+            aria-invalid="false"
+            id="prioritet"
+          >
+            <option
+              value=""
+            >
+              Välj…
+            </option>
+            <option>
+              Låg
+            </option>
+            <option>
+              Medel
+            </option>
+            <option>
+              Hög
+            </option>
+          </select>
+        </div>
+      </div>
+      <div
+        class="actions"
+      >
+        <button
+          class="button"
+          type="submit"
+        >
+          Skapa ärende
+        </button>
+        <button
+          class="button button--secondary"
+          type="button"
+        >
+          Avbryt
+        </button>
+      </div>
+    </form>
+  </div>
+</body>
+ ❯ Object.getElementError node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/components/ArendeForm.test.tsx:144:19
+    142|     expect(sentBodies).toEqual([expect.objectContaining({ kategori: "L…
+    143|     expect(screen.getByLabelText("Kategori")).toHaveAttribute("aria-in…
+    144|     expect(screen.getByRole("alert")).toHaveTextContent("Kontrollera f…
+       |                   ^
+    145|     expect(onSaved).not.toHaveBeenCalled();
+    146|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 7 skipped (8)
+   Start at  14:17:02
+   Duration  2.31s (transform 75ms, setup 426ms, collect 97ms, tests 908ms, environment 503ms, prepare 106ms)
+
+
+Exit code: 1
+Undone: both files are byte-identical to the backup.
+
+========================================================================================
+Run 5: onSaved check. Temporary change in src/components/ArendeForm.tsx: the form calls onSaved even when the backend rejects the case.
+========================================================================================
+Command: FORCE_COLOR=0 NO_COLOR=1 npx vitest run src/components/ArendeForm.test.tsx -t "A4"
+
+
+ RUN  v3.2.7 D:/AINativeDevelopment2026/qa-frontend-testing/frontend
+
+ ❯ src/components/ArendeForm.test.tsx (8 tests | 1 failed | 7 skipped) 908ms
+   ↓ ArendeForm – create > creates a case and passes it to onSaved
+   ↓ ArendeForm – create > A2: a case without a title is rejected with a clear message; still two cases
+   ↓ ArendeForm – create > moves focus to the first invalid field on submit
+   ↓ ArendeForm – create > A3: a title with only spaces counts as empty; still two cases
+   ↓ ArendeForm – create > R2: shows a message for every missing field
+   × ArendeForm – create > A4: the backend's rejection of a category is shown clearly and nothing is passed on 906ms
+     → expected "spy" to not be called at all, but actually been called 1 times
+
+Received: 
+
+  1st spy call:
+
+    Array [
+      Object {
+        "beskrivning": "Paketet har inte kommit.",
+        "kategori": "Leverans",
+        "prioritet": "Hög",
+        "rubrik": "Leverans försenad",
+      },
+    ]
+
+
+Number of calls: 1
+
+   ↓ ArendeForm – create > disables submit while saving
+   ↓ ArendeForm – create > calls onCancel
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/components/ArendeForm.test.tsx > ArendeForm – create > A4: the backend's rejection of a category is shown clearly and nothing is passed on
+AssertionError: expected "spy" to not be called at all, but actually been called 1 times
+
+Received: 
+
+  1st spy call:
+
+    Array [
+      Object {
+        "beskrivning": "Paketet har inte kommit.",
+        "kategori": "Leverans",
+        "prioritet": "Hög",
+        "rubrik": "Leverans försenad",
+      },
+    ]
+
+
+Number of calls: 1
+
+ ❯ src/components/ArendeForm.test.tsx:145:25
+    143|     expect(screen.getByLabelText("Kategori")).toHaveAttribute("aria-in…
+    144|     expect(screen.getByRole("alert")).toHaveTextContent("Kontrollera f…
+    145|     expect(onSaved).not.toHaveBeenCalled();
+       |                         ^
+    146|   });
+    147| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 7 skipped (8)
+   Start at  14:17:07
+   Duration  2.28s (transform 74ms, setup 405ms, collect 96ms, tests 908ms, environment 505ms, prepare 112ms)
+
+
+Exit code: 1
+Undone: both files are byte-identical to the backup.
+

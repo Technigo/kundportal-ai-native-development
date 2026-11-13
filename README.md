@@ -1,52 +1,139 @@
-# Kundserviceportalen
+# Kundserviceportalen NORS
 
-Här samlar ni teamets arbete med Kundserviceportalen i kursen AI Native Development. Ni väljer teknik och bygger en mindre fullstacklösning med AI-stöd. Använd bara påhittade kunduppgifter.
+Teamet NORS kundserviceportal. En handläggare registrerar ärenden, ser listan
+och detaljerna, ändrar status och söker och filtrerar bland ärendena. Backend i
+Python/FastAPI med SQLite, frontend i React/TypeScript.
 
-**Uppgift, betygskriterier, veckoförväntningar och deadline finns under Kursexamination i Disco.** Börja där och återvänd dit under arbetet.
-[Länk till Disco](https://technigo.disco.co/p/fall-2026-ai-native-development/collection/Q29sbGVjdGlvbjozNzg3Ng==?u=25dab1f8-7abb-463e-a19e-d379efb7caae&drawerTab=comments)
+All projektdokumentation finns i [docs/](docs/README.md).
 
-## Kom igång
+## Krav
 
-Projektarbetet börjar vecka 5. Ni får börja frivilligt vecka 4; den veckans fristående kodövning finns kvar.
+- Git
+- Python 3.10 eller senare
+- Node.js 20.19+ eller 22.12+
+- npm
 
-1. Läs uppgiften och veckans förväntningar i Disco.
-2. **En person i teamet skapar en publik fork** från [kursens repository](https://github.com/Technigo/kundportal-ai-native-development) på sitt GitHub-konto. Den personen bjuder in övriga teammedlemmar som **collaborators** via **Settings -> Collaborators -> Add people**. Alla accepterar sin inbjudan och kontrollerar att de kan pusha till teamets fork. Vi kan läsa koden och underlagen i den publika forken utan en separat inbjudan.
-3. Klona teamets fork till era datorer.
-4. Gör en första förändring: beskriv teamet och er första plan i er dokumentation. Committa och pusha förändringen till `main` i teamets fork. Körbar kod behövs inte för att öppna PR:n.
-5. Öppna teamets löpande PR enligt nästa avsnitt.
-6. Fortsätt med projektarbetet enligt vecka 5 i Disco.
+## Hämta koden
 
-Ni arbetar i **samma fork** under projektet. Det räcker att en person skapar den. Se [GitHubs instruktion för att bjuda in collaborators](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/repository-access-and-collaboration/inviting-collaborators-to-a-personal-repository) om ni behöver hjälp.
+```powershell
+git clone https://github.com/Ottowski/nors-kundportal-development.git
+cd nors-kundportal-development
+```
 
-## Branches och pull requests
+## Kör API:t
 
-Teamets löpande PR går **från `main` i teamets fork till `main` i kursens repository**.
+Från projektets rot, sätt upp backendmiljön och starta API:t:
 
-| Val i GitHub | Ange |
-|---|---|
-| Base repository | `Technigo/kundportal-ai-native-development` |
-| Base | `main` |
-| Head repository | Teamets fork |
-| Compare | `main` |
+```powershell
+cd backend
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+python -m uvicorn app.main:app --reload
+```
 
-Välj **compare across forks** om båda repositories inte visas. Använd teamets namn i PR-rubriken. Kopiera innehållet i [PR-mallen för teamets projekt](.github/PULL_REQUEST_TEMPLATE/teamets-projekt.md) till beskrivningen och fyll i det som finns vid starten. Resten växer fram under projektet.
+På macOS och Linux aktiverar du miljön med `source .venv/bin/activate` i
+stället för `.\.venv\Scripts\Activate.ps1`.
 
-Håll samma PR öppen under projektperioden. Den används för uppföljning och inlämning och ska inte mergas till kursens repository under arbetet. Nya commits på teamets `main` syns i samma PR.
+Den virtuella miljön och beroendena behöver bara skapas första gången.
+Senare räcker det att öppna en terminal i projektets rot och köra:
 
-Inom teamets fork kan ni använda separata branches för mindre uppgifter och granska dem i interna PR:er till **teamets egen `main`**. Kontrollera vilket repository som är mål innan ni öppnar en intern PR. Gör granskningen spårbar: vem granskade, vad kontrollerades och vad ledde återkopplingen till?
+```powershell
+cd backend
+.\.venv\Scripts\Activate.ps1
+python -m uvicorn app.main:app --reload
+```
 
-[GitHubs guide för PR från en fork](https://docs.github.com/en/pull-requests/how-tos/create-pull-requests/creating-a-pull-request-from-a-fork) beskriver valen i gränssnittet.
+API:t finns på <http://127.0.0.1:8000>. För att prova det interaktivt, öppna
+<http://127.0.0.1:8000/docs>. Fäll ut **POST `/arenden`**, klicka på
+**Try it out**, fyll i ett exempel och klicka på **Execute**:
 
-## Er dokumentation
+```json
+{
+  "rubrik": "Problem med inloggning",
+  "beskrivning": "Användaren kan inte logga in.",
+  "kategori": "Teknik",
+  "prioritet": "Medel"
+}
+```
 
-Ni utformar själva dokumentationen och styrningen av era AI-verktyg utifrån uppgiften i Disco. Länka till teamets gemensamma underlag från den löpande PR:n, så att vi kan följa ert arbete.
+Svaret ska ha status `201 Created`. API:t sätter id, status och
+skapad-tid automatiskt. Använd **GET `/arenden`** för att lista ärenden eller
+**GET `/arenden/{arende_id}`** för att hämta ett ärende. Ärendena lagras i en
+SQLite-fil (`backend/app/data/nors.db`, eller sökvägen i `NORS_DB_PATH`) och
+finns kvar när API-servern startas om.
 
-## Slutversion och inlämning
+Stoppa servern genom att gå till terminalen där den körs och trycka **Ctrl+C**.
 
-När gruppens kod, tester och gemensamma dokumentation är pushade kopierar ni länken till den commit som innehåller slutversionen. Lägg länken överst i teamets löpande PR-beskrivning under **Slutversion för examination**. Kontrollera att länkarna till underlagen visar den inlämnade versionen i teamets fork.
+## Kör frontenden
 
-Varje student lämnar sin individuella redovisning som en **Markdown-fil (.md) i sin egen inlämning i Disco**. Märk dokumentet med ditt namn och länka till teamets fork, löpande PR, markerade slutversion och det arbete som visar ditt eget bidrag.
+I en andra terminal, från projektets rot:
 
-Den individuella redovisningen ska inte läggas i teamets repository eller länkas från teamets PR. Du behöver inte dela dokumentet med dina klasskamrater. Gruppens kod, tester och gemensamma dokumentation finns fortsatt på GitHub.
+```powershell
+cd frontend
+npm install
+npm run dev
+```
 
-Följ den aktuella instruktionen och deadlinen i Disco.
+Öppna den lokala adressen som Vite skriver ut (normalt <http://localhost:5173>).
+
+## Kör testerna
+
+Med backendmiljön aktiverad, från `backend`:
+
+```powershell
+python -m pytest
+```
+
+Testerna startar en egen API-server mot en temporär databas, så servern behöver
+inte vara igång och `nors.db` ändras inte. Vilka tester som finns och vad de
+kontrollerar står i [docs/verifieringsplan.md](docs/verifieringsplan.md).
+
+Frontendtesterna går mot påhittad data (MSW-mockar), så backend behöver inte
+vara igång. Från `frontend`:
+
+```powershell
+npm run test:run
+```
+
+Fler kommandon från `frontend`:
+
+| Kommando | Vad det gör |
+| --- | --- |
+| `npm run dev:mock` | Kör gränssnittet mot påhittad data (MSW-mockar). Ingen backend behövs. |
+| `npm test` | Kör testerna och kör om dem när koden ändras (Vitest och Testing Library). |
+| `npm run check` | Hela kontrollen: Prettier, ESLint, TypeScript, testerna och bygget. Körs också i GitHub Actions. |
+| `npm run format` | Formaterar koden med Prettier. |
+
+### Radslut på Windows
+
+Prettier väntar sig LF-radslut. Därför checkar `.gitattributes` ut alla textfiler
+med LF, även på Windows. Klonade du repot innan filen fanns kvar har filerna
+CRLF, och då fallerar `npm run check` på Prettier. Kör en gång från `frontend`:
+
+```powershell
+npm run format
+```
+
+Filerna får då LF. Git ser ingen ändring, eftersom innehållet är detsamma som i
+repot.
+
+`.editorconfig` gör att editorn skapar nya filer med LF. JetBrains-IDE:er och
+Visual Studio läser den direkt, VS Code behöver tillägget *EditorConfig for VS
+Code*. Skapar din editor ändå en fil med CRLF hjälper `npm run format`.
+
+## API-tester (Postman)
+
+Importera `docs/api/kundportal.postman_collection.json` och
+`docs/api/kundportal.postman_environment.json` i Postman, eller kör dem från
+terminalen. Se [docs/api/README.md](docs/api/README.md).
+
+## Utveckling i teamet
+
+- Lägg API-kod i `backend/app` och UI-kod i `frontend/src`.
+- Skapa och aktivera Pythons virtuella miljö innan du installerar
+  backendberoenden.
+- Committa inte virtuella miljöer, `node_modules` eller lokala `.env`-filer;
+  de ignoreras av Git.
+- Lägg till beroenden i `backend/requirements.txt` eller
+  `frontend/package.json` så att resten av teamet kan installera dem.
