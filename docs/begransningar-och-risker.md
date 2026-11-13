@@ -1,6 +1,6 @@
 # Kända begränsningar, risker och förslag på vidareutveckling
 
-> Utkast 2026-11-04 · Samordnare: Azalea (KSP-61) · Var och en skriver punkterna för sin del.
+> Skapad 2026-11-04, senast ändrad 2026-11-13 · Samordnare: Azalea (KSP-61) · Var och en skriver punkterna för sin del.
 > Id förklaras kort: **KSP-xx** är ärenden i Linear, **CORE-xx** kraven för kärnan
 > ([SPEC-karna.md](specs/SPEC-karna.md)) och **HIST-xx** kraven för statuslogik och historik
 > ([SPEC-arendehistorik.md](specs/SPEC-arendehistorik.md)).
@@ -37,6 +37,7 @@ underlag. Här samlas det som tidigare stod utspritt i specarna, ADR:erna och ve
 | TypeScript-typerna i `frontend/src/api/schema.d.ts` genereras med `pnpm generate:api` mot en körande backend, och CI kontrollerar inte att de stämmer med `/openapi.json` (Mustafa) | Ändras API-kontraktet utan att någon genererar om typerna går frontendbygget ändå igenom, men mot det gamla kontraktet. Felet syns först när anropet körs | KSP-28 (TypeScript-typer från OpenAPI), [ADR-002](decisions/ADR-002-stack.md) under Två språk, skriptet `generate:api` i `frontend/package.json` |
 | Sökningen i listan matchar bara ärende-id och rubrik, inte beskrivningen (Mustafa) | Ett ärende som bara nämner sökordet i beskrivningen hittas inte med sökningen | `filterTickets` i `frontend/src/lib/ticket-filters.ts`, KSP-77 (sök och filter i ärendetabellen). PR #102 (sök och filter i ärendetabellen): https://github.com/desiboli/kundportal-ai-native-development/pull/102 |
 | Sökord och filter sparas bara i listsidans tillstånd, inte i adressen (Mustafa) | Går handläggaren från listan till ett ärende och tillbaka är sökningen och filtren nollställda och får väljas igen. En filtrerad lista kan inte heller länkas | `TicketListPage` i `frontend/src/pages/TicketListPage.tsx` och vägarna i `frontend/src/App.tsx`, KSP-77 (sök och filter i ärendetabellen) |
+| Räknaren under rubriken i formuläret räknar tecknen före trimning, medan backenden räknar efter trimning (CORE-12, rubriken högst 100 tecken efter trimning) | Inledande och avslutande mellanslag räknas. En rubrik på 98 tecken och 3 mellanslag visar "101 / 100", men backenden godtar den. Inget ärende stoppas felaktigt, men räknaren kan visa över gränsen | `codePointLength(draft.title)` i `frontend/src/components/create-ticket-form.tsx`. Iakttaget vid Mustafas kontroll för hand 2026-11-12 ([veckostatus V8](status/vecka-8.md), Osäkert eller ofärdigt) |
 
 ### Vad testerna inte visar (Azalea, Nicklas)
 

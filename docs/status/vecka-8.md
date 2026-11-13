@@ -1,7 +1,7 @@
 # Veckostatus vecka 8: demo och slutleverans
 
 > Läget torsdag 2026-11-12 efter demon (Azalea). *Verifierat* ifyllt torsdag kväll 2026-11-12 på `e01f69a`
-> (Mustafa, med Claude Code). Slutläget fylls i fredag 13/11. Jämför med veckans förväntningar i
+> (Mustafa, med Claude Code). Slutläget fredag 2026-11-13: slutversionen är länken överst i den löpande PR:n [Technigo#2 (Grupp 6 – Kundserviceportalen)](https://github.com/Technigo/kundportal-ai-native-development/pull/2), under "Slutversion för examination" (KSP-56). Jämför med veckans förväntningar i
 > Disco. Id förklaras kort: **KSP-xx** är ärenden i
 > [Linear: Kundserviceportalen](https://linear.app/grupp6/project/kundserviceportalen-be4a4840b5ef),
 > **CORE-xx** är kraven för kärnan ([SPEC-karna.md](../specs/SPEC-karna.md)) och **HIST-xx**
@@ -36,7 +36,7 @@ Teamets plan för veckan (enligt Linear):
 | Förväntning | Läge |
 | --- | --- |
 | 1. Demon: flöde, beslut och verifiering | Hela flödet finns på `main`: skapa, lista, visa, statusbyte, tidslinjen (HIST-05) och felmeddelanden på svenska (UI-delen av HIST-14). Backend 192 passed. Tidslinjen visar sedan teamets beslut 2026-11-09 den senaste posten överst, medan API:t ger äldst först (HIST-03). **Gjort:** teamet höll demon 2026-11-12 (KSP-57) |
-| 2. Slutversion, körbar lösning och underlag | Körinstruktionerna är rättade: README kräver Node 22.19 (PR #110 (Node-kravet i README, KSP-19): https://github.com/desiboli/kundportal-ai-native-development/pull/110). CI kräver `backend` och `frontend` före merge (KSP-17). Kända begränsningar och risker finns i `docs/begransningar-och-risker.md` (KSP-61, PR #98, #115 och #116). Slutversionen markeras fredag (KSP-56) |
+| 2. Slutversion, körbar lösning och underlag | Körinstruktionerna är rättade: README kräver Node 22.19 (PR #110 (Node-kravet i README, KSP-19): https://github.com/desiboli/kundportal-ai-native-development/pull/110). CI kräver `backend` och `frontend` före merge (KSP-17). Kända begränsningar och risker finns i `docs/begransningar-och-risker.md` (KSP-61, PR #98, #115 och #116). **Slutversionen** är markerad överst i [Technigo#2 (Grupp 6 – Kundserviceportalen)](https://github.com/Technigo/kundportal-ai-native-development/pull/2) (KSP-56). Kända begränsningar kompletterade med räknaren för CORE-12 |
 | 3. Utvärdering av arbetssättet | **Gjort.** PR #57 (utvärdering av arbetssättet, KSP-62): https://github.com/desiboli/kundportal-ai-native-development/pull/57, öppnad 2026-10-30 och mergad 2026-11-11 (Nicklas). Utvärderingen finns i `docs/ai/utvardering.md` |
 | 4. Körinstruktionerna följda av någon annan | **Gjort** av Nicklas 2026-11-04 på macOS (KSP-19). Node-kravet rättat i PR #110, mergad 2026-11-08 |
 
@@ -94,7 +94,7 @@ Körda 2026-11-12 på `e01f69a` (merge av PR #118, veckostatus V8 torsdag), samm
 
 | Vad | Varför | Plan |
 | --- | --- | --- |
-| Räknaren under rubriken räknar mellanslag, backenden gör det inte (CORE-12, rubriken högst 100 tecken efter trimning) | Iakttaget vid kontrollen för hand 2026-11-12: sju mellanslag visar "7 / 100". En rubrik på 98 tecken och 3 mellanslag visar "101 / 100", men backenden godtar den | Ingen rättning före slutleveransen. Förs in som känd begränsning i `docs/begransningar-och-risker.md` (KSP-61) |
+| Räknaren under rubriken räknar mellanslag, backenden gör det inte (CORE-12, rubriken högst 100 tecken efter trimning) | Iakttaget vid kontrollen för hand 2026-11-12: sju mellanslag visar "7 / 100". En rubrik på 98 tecken och 3 mellanslag visar "101 / 100", men backenden godtar den | Ingen rättning före slutleveransen. Införd som känd begränsning i [begransningar-och-risker.md](../begransningar-och-risker.md), avsnitt 1, Frontend (KSP-61) |
 | Frågan på demon varför 16 av 18 nya tester föll för KSP-37 (tidslinjen) | Vi hade inget tydligt svar direkt. Svaret: testerna skrevs före koden mot ett tomt skal (`9970983`), så 16 föll av rätt anledning. De 2 gröna var HIST-08-testerna (okänt ärende ger 404 och ingen historik), och mutationen TL1 visar att de skyddar 404-fallet (`docs/verifiering.md`, avsnitt 4 och 5) | Förklaringen fanns bara i commit-meddelandet. Lärdom: skriv varför ett test är grönt före koden där resultatet redovisas |
 
 ## Nästa steg
@@ -103,4 +103,3 @@ Körda 2026-11-12 på `e01f69a` (merge av PR #118, veckostatus V8 torsdag), samm
 | --- | --- |
 | Markera slutversionen och länka den i Technigo#2 (KSP-56) | Mustafa |
 | Lämna in individuella redovisningar i Disco senast 13/11 kl. 23.59 | Alla |
-| Veckostatus V8: slutläget, med länken till slutversionen (KSP-55) | Azalea |
