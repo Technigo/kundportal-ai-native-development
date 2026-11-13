@@ -1,6 +1,7 @@
 # Veckostatus vecka 8: demo och slutleverans
 
-> Läget torsdag 2026-11-12 efter demon (Azalea). Slutläget fylls i fredag 13/11. Jämför med veckans förväntningar i
+> Läget torsdag 2026-11-12 efter demon (Azalea). *Verifierat* ifyllt torsdag kväll 2026-11-12 på `e01f69a`
+> (Mustafa, med Claude Code). Slutläget fylls i fredag 13/11. Jämför med veckans förväntningar i
 > Disco. Id förklaras kort: **KSP-xx** är ärenden i
 > [Linear: Kundserviceportalen](https://linear.app/grupp6/project/kundserviceportalen-be4a4840b5ef),
 > **CORE-xx** är kraven för kärnan ([SPEC-karna.md](../specs/SPEC-karna.md)) och **HIST-xx**
@@ -22,7 +23,7 @@ Teamets plan för veckan (enligt Linear):
 | Tidslinjen i detaljvyn (HIST-05) och felmeddelanden i UI (UI-delen av HIST-14) | KSP-37, KSP-38 | Amalia |
 | Header, gemensam bredd, sök och filter i listan | KSP-75, KSP-76, KSP-77 | Mustafa |
 | Demon: flöde, beslut och verifiering, cirka fem minuter | KSP-57 | Mustafa |
-| Demovideo | KSP-78 | Mustafa |
+| Demovideo till demon 2026-11-12. **Gjord** (Done i Linear 2026-11-12), ingår inte i slutleveransen | KSP-78 | Mustafa |
 | Kända begränsningar, risker och vidareutveckling | KSP-61 | Azalea samordnar, alla |
 | Utvärdering av arbetssättet | KSP-62 | Nicklas |
 | Verifieringsplanen: Verifierat för urvalet | KSP-47, KSP-48 | Nicklas, Azalea |
@@ -59,14 +60,41 @@ Teamets plan för veckan (enligt Linear):
 
 ## Verifierat
 
-- *(fylls i: körresultat för hela sviten på slutversionen, backend och frontend)*
-- *(fylls i: kontroll för hand av demoflödet, med commit)*
+Körda 2026-11-12 på `e01f69a` (merge av PR #118, veckostatus V8 torsdag), samma kommandon som CI:
+
+- **Backend:** `python -m pytest -q` gav 192 passed.
+- **Frontend:** `pnpm lint` utan fel, `pnpm build` lyckades och `pnpm test:run` gav 101 passed i 11 testfiler.
+- **CI på `main`:** `tests` grön för `e01f69a`.
+- **Demoflödet i webbläsaren** på `e01f69a`, backend på port 8010 med en tom tillfällig databas och
+  `pnpm dev`. Genomgånget av Claude Code via Playwright på Mustafas uppdrag, inte för hand av en människa:
+  1. Tom lista visar "Inga ärenden än" (CORE-15, tom lista är inget fel).
+  2. Tomt formulär ger "Rubrik måste fyllas i. Beskrivning måste fyllas i. Välj en giltig kategori. Välj en
+     giltig prioritet." (CORE-18, alla meddelanden i fältordning, och meddelandena för CORE-06 och CORE-07:
+     rubrik saknas, beskrivning saknas). Att inget ärende sparas kontrollerades inte i det här steget.
+  3. Ett påhittat ärende (Faktura och betalning, Hög) registreras och syns i listan som #1 med status Nytt
+     (CORE-01, ärendet skapas med status `new`).
+  4. Detaljvyn visar de sparade uppgifterna och tidslinjen med "Ärendet skapades" (CORE-04, ärendet
+     hämtas med sitt id).
+  5. Status Nytt till Pågående sparas. Tidslinjen visar "Nytt → Pågående" överst
+     (HIST-05, tidslinjen i detaljvyn).
+  6. `/tickets/999` visar "Ärendet finns inte." och en länk tillbaka (CORE-10, okänt ärende ger 404).
+  7. Efter omstart av backend mot samma databas ger API:t ärendet med `in_progress` och två
+     historikposter äldst först, `created` och `status_changed` (CORE-02, ärendet finns kvar efter omstart,
+     och HIST-03, historiken äldst först).
+
+  Webbläsarens konsol visade bara 422- och 404-svaren från steg 2 och 6, inga fel i appen.
+- **Kontroll för hand** av hela avsnitt 3 i [verifieringsplanen](../verifiering.md), Mustafa 2026-11-12 på
+  `319a3eb` (samma kod som `e01f69a`), den första efter KSP-79 (gemensam felhantering för API-anrop). Alla
+  punkter godkända: listan, felmeddelandena, svenska tecken och emoji, kontrasten i ljust och mörkt läge, en
+  backend som inte svarar, statusbytet med tidslinjen och omstarten. En iakttagelse: räknaren under rubriken
+  räknar mellanslag, men backenden räknar efter trimning (se Osäkert eller ofärdigt). Raden står i
+  verifieringsplanen, avsnitt 4.
 
 ## Osäkert eller ofärdigt
 
 | Vad | Varför | Plan |
 | --- | --- | --- |
-| Demovideon (KSP-78) | In Progress i Linear 2026-11-12 | Mustafa |
+| Räknaren under rubriken räknar mellanslag, backenden gör det inte (CORE-12, rubriken högst 100 tecken efter trimning) | Iakttaget vid kontrollen för hand 2026-11-12: sju mellanslag visar "7 / 100". En rubrik på 98 tecken och 3 mellanslag visar "101 / 100", men backenden godtar den | Ingen rättning före slutleveransen. Förs in som känd begränsning i `docs/begransningar-och-risker.md` (KSP-61) |
 | Frågan på demon varför 16 av 18 nya tester föll för KSP-37 (tidslinjen) | Vi hade inget tydligt svar direkt. Svaret: testerna skrevs före koden mot ett tomt skal (`9970983`), så 16 föll av rätt anledning. De 2 gröna var HIST-08-testerna (okänt ärende ger 404 och ingen historik), och mutationen TL1 visar att de skyddar 404-fallet (`docs/verifiering.md`, avsnitt 4 och 5) | Förklaringen fanns bara i commit-meddelandet. Lärdom: skriv varför ett test är grönt före koden där resultatet redovisas |
 
 ## Nästa steg
@@ -75,4 +103,4 @@ Teamets plan för veckan (enligt Linear):
 | --- | --- |
 | Markera slutversionen och länka den i Technigo#2 (KSP-56) | Mustafa |
 | Lämna in individuella redovisningar i Disco senast 13/11 kl. 23.59 | Alla |
-| Veckostatus V8: slutläget, körresultat på slutversionen (KSP-55) | Azalea |
+| Veckostatus V8: slutläget, med länken till slutversionen (KSP-55) | Azalea |
