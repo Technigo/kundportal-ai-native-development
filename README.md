@@ -5,6 +5,51 @@ Här samlar ni teamets arbete med Kundserviceportalen i kursen AI Native Develop
 **Uppgift, betygskriterier, veckoförväntningar och deadline finns under Kursexamination i Disco.** Börja där och återvänd dit under arbetet.
 [Länk till Disco](https://technigo.disco.co/p/fall-2026-ai-native-development/collection/Q29sbGVjdGlvbjozNzg3Ng==?u=25dab1f8-7abb-463e-a19e-d379efb7caae&drawerTab=comments)
 
+## Köra lösningen och testerna (Grupp 6)
+
+Kräver Python 3.11. Börja i repots rotmapp. Kommandona anropar Python i `.venv` direkt, så ingen aktivering behövs.
+
+**Backend, Windows (PowerShell)**
+
+```powershell
+cd backend
+py -3.11 -m venv .venv
+.\.venv\Scripts\python -m pip install -r requirements.txt
+.\.venv\Scripts\python -m pytest -q
+.\.venv\Scripts\python -m uvicorn app.main:app --reload --reload-dir app --port 8010
+```
+
+**Backend, macOS/Linux**
+
+```bash
+cd backend
+python3.11 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python -m pytest -q
+.venv/bin/python -m uvicorn app.main:app --reload --reload-dir app --port 8010
+```
+
+Projektet körs på **port 8010** (inte uvicorns standard 8000, som ofta används av andra lokala appar). Kontrollera att http://localhost:8010/health svarar `{"status": "ok", "database": "ok"}`, inte bara statuskod 200: svarar något annat är det ett annat program på porten. API-dokumentationen finns på http://localhost:8010/docs.
+
+Databasen är en SQLite-fil i `backend/data/app.db` som skapas vid första start. Sökvägen kan ändras med miljövariabeln `DATABASE_URL`.
+
+**Frontend** (kräver Node.js 22.19 eller senare och pnpm, i en egen terminal. pnpm 11 kräver 22.13, men `pnpm test:run` startar först med 22.19)
+
+```powershell
+cd frontend
+corepack enable          # en gång, ger kommandot pnpm (eller: npm install -g pnpm)
+pnpm install
+pnpm dev                 # http://localhost:5173
+pnpm lint
+pnpm build
+pnpm test:run             # vitest, en gång (pnpm test är watch-läge)
+```
+
+**Hela stacken:** starta backenden först (port 8010), sedan frontenden i en annan terminal.
+Öppna http://localhost:5173. Startsidan är ärendelistan. Frontenden anropar backenden via `/api/...`, som Vite skickar vidare till
+port 8010 (se `frontend/vite.config.ts`). Visas "Kundserviceportalen svarar inte just nu. Försök
+igen om en stund." är backenden inte igång.
+
 ## Kom igång
 
 Projektarbetet börjar vecka 5. Ni får börja frivilligt vecka 4; den veckans fristående kodövning finns kvar.

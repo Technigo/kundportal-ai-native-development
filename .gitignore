@@ -1,0 +1,22 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Lokal databas och miljövariabler
+*.db
+.env
+
+# Node
+node_modules/
+dist/
+
+# Editor och OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Claude Code, personliga inställningar
+.claude/settings.local.json
