@@ -96,14 +96,11 @@
 }
 
 .chip input:focus-visible + span {
-  outline: 2px solid var(--color-primary);
+  outline: 3px solid var(--color-primary);
   outline-offset: 2px;
 }
 
-/* Prioritet: samma färger som i ärendelistan, med fet text. Vald chip får en kraftigare kant i nivåns färg. */
-.choice[data-field='priority'] .chip span {
-  font-weight: 700;
-}
+/* Prioritet: samma färger som i ärendelistan, bara Hög är fet. Vald chip får en kraftigare kant i nivåns färg och en bock. */
 
 .choice[data-field='priority'] .chip[data-value='low'] span {
   color: var(--color-text-muted);
@@ -115,12 +112,18 @@
 
 .choice[data-field='priority'] .chip[data-value='high'] span {
   color: var(--color-priority-high);
+  font-weight: 700;
 }
 
 .choice[data-field='priority'] .chip input:checked + span {
   border-color: currentColor;
   background: var(--color-surface-muted);
   box-shadow: 0 0 0 1px currentColor;
+}
+
+/* Bocken är dekoration (tom alternativtext): skärmläsaren läser redan upp att radioknappen är vald */
+.choice[data-field='priority'] .chip input:checked + span::before {
+  content: '✓ ' / '';
 }
 
 .choice [aria-invalid='true'] + span {
