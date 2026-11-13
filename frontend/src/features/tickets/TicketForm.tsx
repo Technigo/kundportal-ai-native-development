@@ -86,6 +86,59 @@ function Field({ name, label, error, counter, children }: FieldProps) {
   )
 }
 
+type ChoiceFieldProps<Value extends string> = {
+  name: TicketField
+  label: string
+  options: readonly Value[]
+  labels: Record<Value, string>
+  value: Value | ''
+  error?: string
+  onChange: (value: Value) => void
+}
+
+// Radioknappar som visas som chips. Riktiga radioknappar ger piltangenter och skärmläsarstöd utan extra kod.
+function ChoiceField<Value extends string>({
+  name,
+  label,
+  options,
+  labels,
+  value,
+  error,
+  onChange,
+}: ChoiceFieldProps<Value>) {
+  const id = `ticket-${name}`
+  const errorId = `${id}-error`
+
+  return (
+    <fieldset className={styles.choice} data-field={name} aria-describedby={error ? errorId : undefined}>
+      <legend>{label}</legend>
+      <div className={styles.chips}>
+        {options.map((option, index) => (
+          <label key={option} className={styles.chip} data-value={option}>
+            <input
+              // Första alternativet får fältets id så att fokus kan flyttas hit vid fel
+              id={index === 0 ? id : undefined}
+              type="radio"
+              name={name}
+              value={option}
+              checked={value === option}
+              aria-invalid={Boolean(error)}
+              onChange={() => onChange(option)}
+            />
+            <span>{labels[option]}</span>
+          </label>
+        ))}
+      </div>
+      {error && (
+        <p id={errorId} className={styles.error}>
+          <span aria-hidden="true">⚠ </span>
+          {error}
+        </p>
+      )}
+    </fieldset>
+  )
+}
+
 export function TicketForm({ onCreated, onCancel }: TicketFormProps) {
   const [values, setValues] = useState<TicketFormValues>(EMPTY_VALUES)
   const [clientErrors, setClientErrors] = useState<FieldErrors>({})
@@ -203,43 +256,25 @@ export function TicketForm({ onCreated, onCancel }: TicketFormProps) {
         )}
       </Field>
 
-      <Field name="category" label="Kategori" error={errors.category}>
-        {(props) => (
-          <select
-            {...props}
-            value={values.category}
-            onChange={(event) =>
-              setField('category', event.target.value as TicketFormValues['category'])
-            }
-          >
-            <option value="">Välj kategori</option>
-            {CATEGORIES.map((category) => (
-              <option key={category} value={category}>
-                {CATEGORY_LABELS[category]}
-              </option>
-            ))}
-          </select>
-        )}
-      </Field>
+      <ChoiceField
+        name="category"
+        label="Kategori"
+        options={CATEGORIES}
+        labels={CATEGORY_LABELS}
+        value={values.category}
+        error={errors.category}
+        onChange={(value) => setField('category', value)}
+      />
 
-      <Field name="priority" label="Prioritet" error={errors.priority}>
-        {(props) => (
-          <select
-            {...props}
-            value={values.priority}
-            onChange={(event) =>
-              setField('priority', event.target.value as TicketFormValues['priority'])
-            }
-          >
-            <option value="">Välj prioritet</option>
-            {PRIORITIES.map((priority) => (
-              <option key={priority} value={priority}>
-                {PRIORITY_LABELS[priority]}
-              </option>
-            ))}
-          </select>
-        )}
-      </Field>
+      <ChoiceField
+        name="priority"
+        label="Prioritet"
+        options={PRIORITIES}
+        labels={PRIORITY_LABELS}
+        value={values.priority}
+        error={errors.priority}
+        onChange={(value) => setField('priority', value)}
+      />
 
       <div className={styles.actions}>
         <button type="submit" className={styles.primary} disabled={isSaving}>
