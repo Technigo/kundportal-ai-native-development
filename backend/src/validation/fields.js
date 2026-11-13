@@ -11,11 +11,20 @@
 //
 // OBS för anropare: rubrik och beskrivning längdkontrolleras UTAN blanktecken före och efter.
 // Spara därför `value.trim()`, annars kan en text med tusentals avslutande mellanslag sparas.
-import { KATEGORIER, STATUSAR, RUBRIK_MAX, BESKRIVNING_MAX, PRIORITET_MIN, PRIORITET_MAX } from '../constants.js';
+import {
+  KATEGORIER,
+  STATUSAR,
+  RUBRIK_MAX,
+  BESKRIVNING_MAX,
+  PRIORITET_MIN,
+  PRIORITET_MAX,
+} from '../constants.js';
 
 /** Saknat värde: undefined, null, eller en sträng med enbart blanktecken (AK2, AK5). */
 function isBlank(value) {
-  return value === undefined || value === null || (typeof value === 'string' && value.trim() === '');
+  return (
+    value === undefined || value === null || (typeof value === 'string' && value.trim() === '')
+  );
 }
 
 /**
@@ -62,7 +71,12 @@ export function validateBeskrivning(value) {
 
 /** AK2, AK15 – en av KATEGORIER. */
 export function validateKategori(value) {
-  return validateChoice(value, 'Kategori', KATEGORIER, 'Kategori måste vara en av kategorierna i listan');
+  return validateChoice(
+    value,
+    'Kategori',
+    KATEGORIER,
+    'Kategori måste vara en av kategorierna i listan',
+  );
 }
 
 /**
@@ -79,7 +93,12 @@ export function validatePrioritet(value) {
 
 /** AK2, AK13 – en av STATUSAR. */
 export function validateStatus(value) {
-  return validateChoice(value, 'Status', STATUSAR, `Status måste vara en av: ${STATUSAR.join(', ')}`);
+  return validateChoice(
+    value,
+    'Status',
+    STATUSAR,
+    `Status måste vara en av: ${STATUSAR.join(', ')}`,
+  );
 }
 
 /** Sant om `value` är exakt YYYY-MM-DD och ett datum som finns i kalendern (inte 2026-02-30). */
@@ -90,7 +109,9 @@ function isCalendarDate(value) {
   // setUTCFullYear i stället för Date.UTC: Date.UTC tolkar år 0–99 som 1900–1999.
   const date = new Date(0);
   date.setUTCFullYear(year, month - 1, day);
-  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+  return (
+    date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day
+  );
 }
 
 /**

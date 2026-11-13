@@ -3,7 +3,14 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { FIXED_NOW, TODAY, TOMORROW, YESTERDAY, startTestServer, validCase } from './helpers/testServer.js';
+import {
+  FIXED_NOW,
+  TODAY,
+  TOMORROW,
+  YESTERDAY,
+  startTestServer,
+  validCase,
+} from './helpers/testServer.js';
 
 const URL_ARENDE = '/api/arenden/2026-1';
 const URL_STATUS = `${URL_ARENDE}/status`;
@@ -71,7 +78,9 @@ describe('AK12: ändra status (happy path)', () => {
   it('okänt ärendenummer ger 404', async () => {
     server = await startTestServer();
 
-    const { status, body } = await server.api('PATCH', '/api/arenden/2026-99/status', { status: 'Pågående' });
+    const { status, body } = await server.api('PATCH', '/api/arenden/2026-99/status', {
+      status: 'Pågående',
+    });
 
     expect(status).toBe(404);
     expect(body).toEqual({ fel: 'Ärendet hittades inte.' });
@@ -85,7 +94,9 @@ describe('AK13: ogiltig status avvisas (error path)', () => {
     const { status, body } = await server.api('PATCH', URL_STATUS, { status: 'Klar' });
 
     expect(status).toBe(400);
-    expect(body.faltfel.status).toBe('Status måste vara en av: Nytt, Pågående, Väntar på kund, Avslutat');
+    expect(body.faltfel.status).toBe(
+      'Status måste vara en av: Nytt, Pågående, Väntar på kund, Avslutat',
+    );
     expect(await saved()).toEqual(fore);
   });
 
@@ -120,7 +131,10 @@ describe('AK14: ändra ett fält (happy path)', () => {
   it('rubrik och beskrivning sparas utan blanktecken före och efter', async () => {
     await startWithCase();
 
-    const { body } = await server.api('PATCH', URL_ARENDE, { rubrik: '  Ny rubrik  ', beskrivning: ' Ny text ' });
+    const { body } = await server.api('PATCH', URL_ARENDE, {
+      rubrik: '  Ny rubrik  ',
+      beskrivning: ' Ny text ',
+    });
 
     expect(body.rubrik).toBe('Ny rubrik');
     expect(body.beskrivning).toBe('Ny text');
@@ -159,11 +173,21 @@ describe('AK15: ogiltig ändring avvisas (error path)', () => {
   it.each([
     ['tom rubrik', { rubrik: '' }, 'rubrik', 'Rubrik måste fyllas i'],
     ['rubrik med enbart mellanslag', { rubrik: '   ' }, 'rubrik', 'Rubrik måste fyllas i'],
-    ['rubrik på 101 tecken', { rubrik: 'a'.repeat(101) }, 'rubrik', 'Rubrik får vara högst 100 tecken'],
+    [
+      'rubrik på 101 tecken',
+      { rubrik: 'a'.repeat(101) },
+      'rubrik',
+      'Rubrik får vara högst 100 tecken',
+    ],
     ['tom beskrivning', { beskrivning: '' }, 'beskrivning', 'Beskrivning måste fyllas i'],
     ['prioritet 6', { prioritet: 6 }, 'prioritet', 'Prioritet måste vara ett heltal från 1 till 5'],
     ['prioritet null', { prioritet: null }, 'prioritet', 'Prioritet måste fyllas i'],
-    ['kategori som inte finns', { kategori: 'Påhittad' }, 'kategori', 'Kategori måste vara en av kategorierna i listan'],
+    [
+      'kategori som inte finns',
+      { kategori: 'Påhittad' },
+      'kategori',
+      'Kategori måste vara en av kategorierna i listan',
+    ],
   ])('%s avvisas, sparade uppgifter oförändrade', async (_namn, andring, falt, meddelande) => {
     const fore = await startWithCase();
 
@@ -287,7 +311,10 @@ describe('deadline vid ändring', () => {
     const enVeckaSenare = new Date(FIXED_NOW.getTime() + 7 * 24 * 60 * 60 * 1000);
     await restart({ now: () => enVeckaSenare });
 
-    const { status, body } = await server.api('PATCH', URL_ARENDE, { deadline: TOMORROW, prioritet: 5 });
+    const { status, body } = await server.api('PATCH', URL_ARENDE, {
+      deadline: TOMORROW,
+      prioritet: 5,
+    });
 
     expect(status).toBe(200);
     expect(body).toEqual({ ...fore, prioritet: 5 });

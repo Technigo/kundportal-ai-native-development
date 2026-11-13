@@ -17,7 +17,8 @@ const INSERT_CASE = `
  */
 export function insertCase(db, arende) {
   // node:sqlite kastar fel på okända namngivna parametrar, så bara de åtta fälten skickas med.
-  const { arendenummer, rubrik, beskrivning, kategori, prioritet, status, skapad, deadline } = arende;
+  const { arendenummer, rubrik, beskrivning, kategori, prioritet, status, skapad, deadline } =
+    arende;
   // .all() och inte .get(): .get() läser första raden och avslutar sedan satsen utan att rapportera fel.
   // Kan sparandet inte slutföras (t.ex. "database is locked") blev svaret ändå 201 fast inget sparades.
   const [sparat] = db

@@ -101,9 +101,12 @@ describe('validateKategori', () => {
     expect(validateKategori(value)).toBe('Kategori måste fyllas i');
   });
 
-  it.each(['Finns inte', 'övrigt', ' Övrigt', 7])('AK15: kategori som inte finns i listan (%o) avvisas', (value) => {
-    expect(validateKategori(value)).toBe('Kategori måste vara en av kategorierna i listan');
-  });
+  it.each(['Finns inte', 'övrigt', ' Övrigt', 7])(
+    'AK15: kategori som inte finns i listan (%o) avvisas',
+    (value) => {
+      expect(validateKategori(value)).toBe('Kategori måste vara en av kategorierna i listan');
+    },
+  );
 });
 
 describe('validatePrioritet', () => {
@@ -133,9 +136,14 @@ describe('validateStatus', () => {
     expect(validateStatus(value)).toBe('Status måste fyllas i');
   });
 
-  it.each(['Stängd', 'nytt', 'Avslutad', 1])('AK13: ogiltig status (%o) avvisas med begripligt meddelande', (value) => {
-    expect(validateStatus(value)).toBe('Status måste vara en av: Nytt, Pågående, Väntar på kund, Avslutat');
-  });
+  it.each(['Stängd', 'nytt', 'Avslutad', 1])(
+    'AK13: ogiltig status (%o) avvisas med begripligt meddelande',
+    (value) => {
+      expect(validateStatus(value)).toBe(
+        'Status måste vara en av: Nytt, Pågående, Väntar på kund, Avslutat',
+      );
+    },
+  );
 });
 
 describe('validateDeadline', () => {
@@ -161,25 +169,38 @@ describe('validateDeadline', () => {
 
   it('AK8: över ett årsskifte jämförs datumen rätt', () => {
     expect(validateDeadline('2027-01-01', '2026-12-31')).toBeNull();
-    expect(validateDeadline('2026-12-31', '2027-01-01')).toBe('Deadline kan inte ligga före dagens datum');
+    expect(validateDeadline('2026-12-31', '2027-01-01')).toBe(
+      'Deadline kan inte ligga före dagens datum',
+    );
   });
 
   it('AK7: ett tvåsiffrigt årtal (0099) tolkas inte som 1999 utan avvisas som passerat', () => {
     expect(validateDeadline('0099-12-31', TODAY)).toBe('Deadline kan inte ligga före dagens datum');
   });
 
-  it.each(['2026-02-30', '2027-02-29', '2026-13-01', '2026-11-2', '03/11/2026', '2026-11-03T00:00', 'imorgon', 20261103])(
-    'ogiltigt datum (%o) avvisas',
-    (value) => {
-      expect(validateDeadline(value, TODAY)).toBe('Deadline måste vara ett giltigt datum (ÅÅÅÅ-MM-DD)');
-    },
-  );
+  it.each([
+    '2026-02-30',
+    '2027-02-29',
+    '2026-13-01',
+    '2026-11-2',
+    '03/11/2026',
+    '2026-11-03T00:00',
+    'imorgon',
+    20261103,
+  ])('ogiltigt datum (%o) avvisas', (value) => {
+    expect(validateDeadline(value, TODAY)).toBe(
+      'Deadline måste vara ett giltigt datum (ÅÅÅÅ-MM-DD)',
+    );
+  });
 
   it('skottdagen 2028-02-29 är ett giltigt datum', () => {
     expect(validateDeadline('2028-02-29', TODAY)).toBeNull();
   });
 
-  it.each([undefined, '', '2026-02-30'])('programmeringsfel: today = %o kastar i stället för att godta allt', (today) => {
-    expect(() => validateDeadline('1999-12-31', today)).toThrow('validateDeadline: today');
-  });
+  it.each([undefined, '', '2026-02-30'])(
+    'programmeringsfel: today = %o kastar i stället för att godta allt',
+    (today) => {
+      expect(() => validateDeadline('1999-12-31', today)).toThrow('validateDeadline: today');
+    },
+  );
 });
