@@ -1,52 +1,63 @@
-# Kundserviceportalen
+# Customer Service Portal
 
-Här samlar ni teamets arbete med Kundserviceportalen i kursen AI Native Development. Ni väljer teknik och bygger en mindre fullstacklösning med AI-stöd. Använd bara påhittade kunduppgifter.
+A small customer service portal where a case handler can register a ticket, see what it is about and follow it through a simple workflow. Built by Group 4 for the course AI-Native Development. All customer data is fictional.
 
-**Uppgift, betygskriterier, veckoförväntningar och deadline finns under Kursexamination i Disco.** Börja där och återvänd dit under arbetet.
-[Länk till Disco](https://technigo.disco.co/p/fall-2026-ai-native-development/collection/Q29sbGVjdGlvbjozNzg3Ng==?u=25dab1f8-7abb-463e-a19e-d379efb7caae&drawerTab=comments)
+> The original course README (assignment setup, fork and PR instructions) is kept in [`course-info/README.md`](course-info/README.md).
 
-## Kom igång
+See [docs/dx/gotchas.md](docs/dx/gotchas.md) for development gotchas and team conventions.
 
-Projektarbetet börjar vecka 5. Ni får börja frivilligt vecka 4; den veckans fristående kodövning finns kvar.
+## Team
 
-1. Läs uppgiften och veckans förväntningar i Disco.
-2. **En person i teamet skapar en publik fork** från [kursens repository](https://github.com/Technigo/kundportal-ai-native-development) på sitt GitHub-konto. Den personen bjuder in övriga teammedlemmar som **collaborators** via **Settings -> Collaborators -> Add people**. Alla accepterar sin inbjudan och kontrollerar att de kan pusha till teamets fork. Vi kan läsa koden och underlagen i den publika forken utan en separat inbjudan.
-3. Klona teamets fork till era datorer.
-4. Gör en första förändring: beskriv teamet och er första plan i er dokumentation. Committa och pusha förändringen till `main` i teamets fork. Körbar kod behövs inte för att öppna PR:n.
-5. Öppna teamets löpande PR enligt nästa avsnitt.
-6. Fortsätt med projektarbetet enligt vecka 5 i Disco.
+- Linus Huzell ([LinusHuzell](https://github.com/LinusHuzell))
+- Louice Borg ([Loisarn](https://github.com/Loisarn))
+- Carolina Hagman ([carolinahagman](https://github.com/carolinahagman))
+- Sebastian Bennett ([hecd](https://github.com/hecd))
 
-Ni arbetar i **samma fork** under projektet. Det räcker att en person skapar den. Se [GitHubs instruktion för att bjuda in collaborators](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/repository-access-and-collaboration/inviting-collaborators-to-a-personal-repository) om ni behöver hjälp.
 
-## Branches och pull requests
 
-Teamets löpande PR går **från `main` i teamets fork till `main` i kursens repository**.
+## Running the whole solution (frontend + backend)
+- Requires Docker + Docker Compose
+- Requires trusted dotnet dev-cert. See [HTTPS development certificate](backend/README.md#https-development-certificate)
 
-| Val i GitHub | Ange |
-|---|---|
-| Base repository | `Technigo/kundportal-ai-native-development` |
-| Base | `main` |
-| Head repository | Teamets fork |
-| Compare | `main` |
+```bash
+./scripts/setup-dev-cert.sh
+docker compose up -d
+```
 
-Välj **compare across forks** om båda repositories inte visas. Använd teamets namn i PR-rubriken. Kopiera innehållet i [PR-mallen för teamets projekt](.github/PULL_REQUEST_TEMPLATE/teamets-projekt.md) till beskrivningen och fyll i det som finns vid starten. Resten växer fram under projektet.
+### Navigate to:
+- Frontend: https://localhost:5173/tickets
+- Backend (Scalar): https://localhost:7289/scalar/v1
+- OpenAPI-specifikation: [docs/api/openapi.json](docs/api/openapi.json)
 
-Håll samma PR öppen under projektperioden. Den används för uppföljning och inlämning och ska inte mergas till kursens repository under arbetet. Nya commits på teamets `main` syns i samma PR.
+## Running the frontend
 
-Inom teamets fork kan ni använda separata branches för mindre uppgifter och granska dem i interna PR:er till **teamets egen `main`**. Kontrollera vilket repository som är mål innan ni öppnar en intern PR. Gör granskningen spårbar: vem granskade, vad kontrollerades och vad ledde återkopplingen till?
+Requires Node 22+.
 
-[GitHubs guide för PR från en fork](https://docs.github.com/en/pull-requests/how-tos/create-pull-requests/creating-a-pull-request-from-a-fork) beskriver valen i gränssnittet.
+```bash
+cd frontend
+cp .env.example .env   # optional
+npm install
+npm run dev
+```
 
-## Er dokumentation
+Open http://localhost:5173.
 
-Ni utformar själva dokumentationen och styrningen av era AI-verktyg utifrån uppgiften i Disco. Länka till teamets gemensamma underlag från den löpande PR:n, så att vi kan följa ert arbete.
+## Running the backend
 
-## Slutversion och inlämning
+- Requires .NET 10 SDK
+- Starts the application, but does not navigate to Scalar automatically. Navigate to https://localhost:7289/scalar/ after starting
+```bash
+cd backend/
+dotnet run --project src/CustomerService.Api/CustomerService.Api.csproj --launch-profile https
+```
 
-När gruppens kod, tester och gemensamma dokumentation är pushade kopierar ni länken till den commit som innehåller slutversionen. Lägg länken överst i teamets löpande PR-beskrivning under **Slutversion för examination**. Kontrollera att länkarna till underlagen visar den inlämnade versionen i teamets fork.
+## Running the tests
 
-Varje student lämnar sin individuella redovisning som en **Markdown-fil (.md) i sin egen inlämning i Disco**. Märk dokumentet med ditt namn och länka till teamets fork, löpande PR, markerade slutversion och det arbete som visar ditt eget bidrag.
+| What | Where | Command |
+|---|---|---|
+| Backend unit and integration (needs Docker) | `backend/` | `dotnet test CustomerService.slnx` |
+| Frontend lint, typecheck, unit, build | `frontend/` | `npm run lint`, `npm run typecheck`, `npm test`, `npm run build` |
+| End-to-end, mocked API (once: `npx playwright install chromium`) | `frontend/` | `npm run test:e2e:mocked` |
+| End-to-end, full stack (needs Docker; once: `./scripts/setup-dev-cert.sh`) | repo root | `docker compose -f compose.test.yaml run --build --rm e2e`, then `docker compose -f compose.test.yaml down` |
 
-Den individuella redovisningen ska inte läggas i teamets repository eller länkas från teamets PR. Du behöver inte dela dokumentet med dina klasskamrater. Gruppens kod, tester och gemensamma dokumentation finns fortsatt på GitHub.
-
-Följ den aktuella instruktionen och deadlinen i Disco.
+See [docs/teststrategi.md](docs/teststrategi.md) for which tests go where and why.

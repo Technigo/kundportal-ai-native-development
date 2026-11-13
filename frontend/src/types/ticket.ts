@@ -1,0 +1,65 @@
+// Domain model, derived from docs/avgränsningar.md.
+// NOTE: enum values are provisional until the backend API contract exists.
+
+export const TICKET_STATUSES = ['New', 'InProgress', 'WaitingForCustomer', 'Closed'] as const
+export type TicketStatus = (typeof TICKET_STATUSES)[number]
+
+export const TICKET_PRIORITIES = ['Low', 'Medium', 'High'] as const
+export type TicketPriority = (typeof TICKET_PRIORITIES)[number]
+
+export const TICKET_CATEGORIES = [
+  'OrdersDeliveries',
+  'Invoices',
+  'ReturnsComplaints',
+  'Other',
+] as const
+export type TicketCategory = (typeof TICKET_CATEGORIES)[number]
+
+export interface Ticket {
+  id: number
+  ticketNumber: string
+  title: string
+  description: string
+  category: TicketCategory
+  priority: TicketPriority
+  status: TicketStatus
+  customerName: string
+  customerEmail: string
+  createdAt: string // ISO 8601
+}
+
+export interface TicketHistoryEvent {
+  type: string
+  occurredAt: string // ISO 8601
+  // Swedish labels, only for StatusChanged.
+  fromStatus?: string
+  toStatus?: string
+}
+
+export type CreateTicketInput = Omit<Ticket, 'id' | 'ticketNumber' | 'status' | 'createdAt'>
+export type UpdateTicketInput = Partial<CreateTicketInput>
+
+// Swedish display labels, from docs/avgränsningar.md.
+export const CATEGORY_LABELS: Record<TicketCategory, string> = {
+  OrdersDeliveries: 'Beställningar/leveranser',
+  Invoices: 'Fakturor',
+  ReturnsComplaints: 'Returer/reklamation',
+  Other: 'Övrigt',
+}
+
+export const STATUS_LABELS: Record<TicketStatus, string> = {
+  New: 'Nytt',
+  InProgress: 'Pågående',
+  WaitingForCustomer: 'Väntar på kund',
+  Closed: 'Avslutat',
+}
+
+export const TICKET_HISTORY_EVENT_LABELS: Partial<Record<string, string>> = {
+  Created: 'Ärendet registrerades',
+}
+
+export const PRIORITY_LABELS: Record<TicketPriority, string> = {
+  Low: 'Låg',
+  Medium: 'Medel',
+  High: 'Hög',
+}

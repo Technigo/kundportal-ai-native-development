@@ -1,0 +1,303 @@
+# UI-specifikation
+
+## Designfilosofi
+
+ Ska kännas som en modern skandinavisk B2B-applikation.
+
+### Nyckelord
+
+- Professionell
+- Pålitlig
+- Minimalistisk
+- Tydlig informationshierarki
+- Anpassad för kontorspersonal som hanterar serviceärenden
+
+## Ikonografi
+
+- Ikoner skrivs som dekorativa inline-SVG:er i komponenterna. Tailwind används för storlek, färg och placering, inte som ikonkälla.
+- Ikonerna har inga externa ikonpaket eller andra beroenden.
+- Använd samma visuella symbol för samma fält i olika vyer, till exempel hash för ärendenummer, dokument för beskrivning, etikett för kategori, flagga för prioritet, person för namn och kuvert för e-post.
+- I ärendelistan visar statusikonen det aktuella värdet: Nytt har ett plus, Pågående en klocka, Väntar på kund en pratbubbla och Avslutat en bock i cirkel. I detaljpanelen är ikonen för fältet Status generell och densamma för alla värden. Visa alltid statusens textetikett tillsammans med ikonen.
+- Ikoner som bara förstärker en synlig textetikett ska döljas för hjälpmedel (`aria-hidden="true"`). Textetiketten är fortsatt fältets tillgängliga namn.
+
+---
+
+# Färgpalett
+
+## Primär bakgrund
+
+Mörk marinblå.
+
+**Färgkod:**
+
+```text
+#0F1C2E
+```
+
+**Används för:**
+
+- Navigationsfält
+- Huvudsakliga innehållspaneler
+- Ärendelista
+- Ärendedetaljer
+
+---
+
+## Sekundär bakgrund
+
+Mörkblå.
+
+**Färgkod:**
+
+```text
+#16283D
+```
+
+**Används för:**
+
+- Kort (Cards)
+- Formulärkontroller
+- Innehållssektioner
+
+---
+
+## Accentfärg
+
+Turkos.
+
+**Färgkod:**
+
+```text
+#2FB1A5
+```
+
+**Används för:**
+
+- Call-to-action-knappar
+- Länkar
+- Aktiva indikatorer
+- Statistik
+
+---
+
+## Textfärger
+
+### Primär text
+
+```text
+#FFFFFF
+```
+
+### Sekundär text
+
+```text
+#AAB6C5
+```
+
+### Nedtonad text
+
+```text
+#B8C4D2
+```
+
+## Kontrast
+
+- All vanlig text ska ha minst 4,5:1 i kontrast mot sin bakgrund; stor text minst 3:1.
+- Textfärger ska väljas efter den faktiska bakgrunden. Den nedtonade textfärgen får inte användas där den inte når kontrastkravet.
+- Ljus text används på de mörkblå ytorna. Text i formulärkontroller ska ha tillräcklig kontrast mot kontrollens bakgrund.
+
+---
+
+## Statusfärger
+
+| Status | Färg |
+|----------|----------|
+| Nytt | `#2563EB` |
+| Pågående | `#F59E0B` |
+| Väntar på kund | `#64748B` |
+| Stängt | `#16A34A` |
+
+---
+
+## Prioritetsfärger
+
+| Prioritet | Färg |
+|------------|----------|
+| Låg | `#64748B` |
+| Medel | `#F59E0B` |
+| Hög | `#DC2626` |
+
+---
+
+# Sidlayout
+
+Sidan består av tre huvudsektioner:
+
+1. Övre navigationsfält
+2. Sidhuvud (Header)
+3. Huvudsakligt innehållsområde
+
+---
+
+# Övre navigationsfält
+
+**Höjd:** cirka 60 px
+
+### Innehåll
+
+- Företagslogotyp
+- Företagsnamn
+- Knapp för att skapa arbetsorder
+
+### Bakgrund
+
+- Mörk marinblå (`#0F1C2E`)
+
+---
+
+# Huvudinnehåll
+
+- Centrerad container
+- Maxbredd: cirka 1200 px
+- Tvåkolumnslayout
+
+---
+
+# Vänster kolumn
+
+**Bredd:** cirka 40 %
+
+### Innehåller
+
+- Ärendelista
+
+### Beteende
+
+- Ärendelistan ska kunna scrollas vertikalt
+
+---
+
+# Höger kolumn
+
+**Bredd:** cirka 60 %
+
+### Innehåller
+
+- Detaljer för valt ärende
+- Beskrivningskort
+- Ärendemetadata
+- Kundinformation
+
+---
+
+# Objekt i ärendelistan
+
+Varje ärende ska visa:
+
+- Ärendenummer
+- Titel
+- Kundnamn
+- Prioritetsbadge
+- Statusbadge
+- Skapandedatum
+
+### Markerat ärende
+
+Valt ärende ska visas med:
+
+- Avvikande bakgrundsfärg
+- Markerad kantlinje
+
+---
+
+# Sökruta
+
+Placeras ovanför ärendelistan.
+
+### Innehåll
+
+- Sökningsikon
+- Platshållartext
+
+### Utseende
+
+- Rundade hörn
+- Mörk bakgrund
+
+---
+
+# Filtermeny (Dropdown)
+
+Placeras bredvid sökrutan.
+
+### Användningsområde
+
+Används för att filtrera:
+
+- Ärendekategorier
+- Ärendestatusar
+
+---
+
+### Visar sammanfattningar för
+
+- Totalt antal ärenden
+- Nya ärenden
+- Högprioriterade ärenden
+
+### Utseende
+
+- Horisontella statistik-kort (Cards)
+
+---
+
+# Kort (Cards)
+
+Alla kort ska ha:
+
+- Rundade hörn
+- Diskreta kantlinjer
+- Mjuka skuggor
+
+### Designprincip
+
+Undvik tunga visuella effekter.
+
+---
+
+# Typografi
+
+## Typsnitt
+
+**Inter** eller ett liknande modernt sans-serif-typsnitt.
+
+### Rubriker
+
+- Fet stil
+- Stor storlek
+- Hög kontrast
+
+### Brödtext
+
+- Medium tjocklek
+- God läsbarhet
+
+### Metadata
+
+- Liten textstorlek
+- Nedtonad färg
+
+---
+
+# Responsivitet
+
+Designen är i första hand anpassad för desktop.
+
+## På mindre skärmar
+
+- Kolumnerna staplas vertikalt
+- Ärendelistan visas före ärendedetaljerna
+- Statistiksektionen flyttas ovanför huvudinnehållet
+
+---
+

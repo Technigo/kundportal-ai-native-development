@@ -1,0 +1,446 @@
+import { useEffect, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
+import { useLocation } from 'react-router-dom'
+import { api } from '../api/client'
+import TicketDetailsPanel from '../components/TicketDetailsPanel'
+import TicketStatusIcon from '../components/TicketStatusIcon'
+import EditTicketForm, { type EditTicketFormHandle } from '../features/edit-ticket/EditTicketForm'
+import UnsavedChangesDialog from '../features/edit-ticket/UnsavedChangesDialog'
+import TicketHistory from '../features/ticket-detail/TicketHistory'
+import StatusForm from '../features/ticket-detail/StatusForm'
+import {
+  PRIORITY_LABELS,
+  STATUS_LABELS,
+  type Ticket,
+  type TicketPriority,
+  type TicketStatus,
+} from '../types/ticket'
+
+type TicketListState =
+  | { status: 'loading' }
+  | { status: 'error' }
+  | { status: 'loaded'; tickets: Ticket[] }
+
+type SelectedTicketResult = { id: number } & (
+  { status: 'loaded'; ticket: Ticket } | { status: 'failed' }
+)
+
+const createdDateFormatter = new Intl.DateTimeFormat('sv-SE', { dateStyle: 'medium' })
+const createdTimestampFormatter = new Intl.DateTimeFormat('sv-SE', {
+  dateStyle: 'long',
+  timeStyle: 'long',
+})
+const statusClassNames: Record<TicketStatus, string> = {
+  New: 'bg-blue-500/15 text-blue-300',
+  InProgress: 'bg-amber-500/15 text-amber-300',
+  WaitingForCustomer: 'bg-slate-500/20 text-slate-300',
+  Closed: 'bg-green-500/15 text-green-300',
+}
+const priorityClassNames: Record<TicketPriority, string> = {
+  Low: 'bg-slate-500/15 text-copy-muted',
+  Medium: 'bg-amber-500/15 text-amber-300',
+  High: 'bg-red-600/15 text-red-300',
+}
+
+export default function TicketListPage() {
+  const location = useLocation()
+  const requestedTicketId = (location.state as { selectedTicketId?: unknown } | null)
+    ?.selectedTicketId
+  const [state, setState] = useState<TicketListState>({ status: 'loading' })
+  const [selectedTicketId, setSelectedTicketId] = useState<number | null>(() =>
+    typeof requestedTicketId === 'number' && Number.isSafeInteger(requestedTicketId)
+      ? requestedTicketId
+      : null,
+  )
+  const [selectedTicketResult, setSelectedTicketResult] = useState<SelectedTicketResult>()
+  const [historyVersion, setHistoryVersion] = useState(0)
+  const [hoveredDateId, setHoveredDateId] = useState<number | null>(null)
+  const [focusedRowId, setFocusedRowId] = useState<number | null>(null)
+  const [dismissedTimestampId, setDismissedTimestampId] = useState<number | null>(null)
+  const activeTimestampId = hoveredDateId ?? focusedRowId
+
+  const [editing, setEditing] = useState(false)
+  const [isDirty, setIsDirty] = useState(false)
+  const [pendingTicketId, setPendingTicketId] = useState<number | null>(null)
+  const [editConfirmation, setEditConfirmation] = useState('')
+  const editButtonRef = useRef<HTMLButtonElement>(null)
+  const editFormRef = useRef<EditTicketFormHandle>(null)
+  const lastFocusedFieldRef = useRef<HTMLElement | null>(null)
+  // The ticket whose form is open, so a save that finishes after the form closed is recognised.
+  const editingTicketIdRef = useRef<number | null>(null)
+  // The ticket to show after a save started from the dialog's "Spara".
+  const selectAfterSaveRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    if (activeTimestampId === null) return
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setDismissedTimestampId(activeTimestampId)
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [activeTimestampId])
+
+  useEffect(() => {
+    let active = true
+
+    void api
+      .listTickets()
+      .then((tickets) => {
+        if (active) {
+          setState({ status: 'loaded', tickets })
+          setSelectedTicketId((current) =>
+            current !== null && tickets.some((ticket) => ticket.id === current)
+              ? current
+              : (tickets[0]?.id ?? null),
+          )
+        }
+      })
+      .catch(() => {
+        if (active) setState({ status: 'error' })
+      })
+
+    return () => {
+      active = false
+    }
+  }, [])
+
+  useEffect(() => {
+    if (selectedTicketId === null) return
+    let active = true
+
+    api.getTicket(selectedTicketId).then(
+      (ticket) => {
+        if (active) setSelectedTicketResult({ id: selectedTicketId, status: 'loaded', ticket })
+      },
+      () => {
+        if (active) setSelectedTicketResult({ id: selectedTicketId, status: 'failed' })
+      },
+    )
+
+    return () => {
+      active = false
+    }
+  }, [selectedTicketId])
+
+  const currentTicketResult = selectedTicketResult?.id === selectedTicketId
+    ? selectedTicketResult
+    : selectedTicketId === null
+      ? undefined
+      : { id: selectedTicketId, status: 'loading' as const }
+  const selectedTicket = currentTicketResult?.status === 'loaded' ? currentTicketResult.ticket : null
+
+  const handleStatusSaved = (updatedTicket: Ticket) => {
+    // Saving the same status is a no-op on the server and creates no history event.
+    if (selectedTicket?.id === updatedTicket.id && selectedTicket.status !== updatedTicket.status) {
+      setHistoryVersion((version) => version + 1)
+    }
+    setSelectedTicketResult({ id: updatedTicket.id, status: 'loaded', ticket: updatedTicket })
+    setState((current) =>
+      current.status === 'loaded'
+        ? {
+            ...current,
+            tickets: current.tickets.map((ticket) =>
+              ticket.id === updatedTicket.id ? updatedTicket : ticket,
+            ),
+          }
+        : current,
+    )
+  }
+
+  // Updates the list, and the panel only if it still shows the ticket.
+  const applySavedTicket = (savedTicket: Ticket) => {
+    setSelectedTicketResult((current) =>
+      current?.id === savedTicket.id
+        ? { id: savedTicket.id, status: 'loaded', ticket: savedTicket }
+        : current,
+    )
+    setState((current) =>
+      current.status === 'loaded'
+        ? {
+            ...current,
+            tickets: current.tickets.map((ticket) =>
+              ticket.id === savedTicket.id ? savedTicket : ticket,
+            ),
+          }
+        : current,
+    )
+  }
+
+  const closeEditor = () => {
+    editingTicketIdRef.current = null
+    setEditing(false)
+    setIsDirty(false)
+  }
+
+  const startEditing = (ticket: Ticket) => {
+    editingTicketIdRef.current = ticket.id
+    setEditConfirmation('')
+    setEditing(true)
+  }
+
+  const handleEditSaved = (savedTicket: Ticket) => {
+    if (editingTicketIdRef.current !== savedTicket.id) {
+      applySavedTicket(savedTicket) // The form was closed while saving.
+      return
+    }
+    const nextTicketId = selectAfterSaveRef.current
+    selectAfterSaveRef.current = null
+    flushSync(() => {
+      applySavedTicket(savedTicket)
+      closeEditor()
+      setEditConfirmation('Ärendet har uppdaterats.')
+      if (nextTicketId !== null) setSelectedTicketId(nextTicketId) // AK-10 "Spara".
+    })
+    if (nextTicketId === null) editButtonRef.current?.focus() // AK-9
+  }
+
+  const handleEditCancel = () => {
+    flushSync(closeEditor)
+    editButtonRef.current?.focus() // AK-8
+  }
+
+  const selectTicket = (ticketId: number) => {
+    if (ticketId === selectedTicketId) return
+    if (editing && isDirty) {
+      setPendingTicketId(ticketId) // AK-10: ask first.
+      return
+    }
+    if (editing) closeEditor() // AK-11
+    setEditConfirmation('')
+    setSelectedTicketId(ticketId)
+  }
+
+  const handleDialogSave = async () => {
+    const nextTicketId = pendingTicketId
+    setPendingTicketId(null)
+    selectAfterSaveRef.current = nextTicketId
+    const result = await editFormRef.current?.save()
+    // Not saved: stay on the old ticket in edit mode. The form shows the errors (AK-2, AK-12).
+    if (result?.kind !== 'saved') selectAfterSaveRef.current = null
+  }
+
+  const handleDialogDiscard = () => {
+    const nextTicketId = pendingTicketId
+    setPendingTicketId(null)
+    closeEditor()
+    setEditConfirmation('')
+    if (nextTicketId !== null) setSelectedTicketId(nextTicketId)
+  }
+
+  const handleDialogContinue = () => {
+    setPendingTicketId(null)
+    lastFocusedFieldRef.current?.focus()
+  }
+
+  return (
+    <div>
+      <h1 className="mb-5 text-2xl font-bold text-white" id="ticket-list-title">Ärenden</h1>
+      <div className="grid items-start gap-4 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+        <section
+          className="min-w-0 overflow-hidden rounded-[7px] border border-line bg-portal/80"
+          aria-labelledby="ticket-queue-title"
+        >
+          <h2 className="border-b border-line px-5 py-[18px] text-base font-semibold text-white" id="ticket-queue-title">
+            Alla ärenden{state.status === 'loaded' ? ` (${state.tickets.length})` : ''}
+          </h2>
+
+          {state.status === 'loading' && (
+            <p className="m-0 px-5 py-7 text-[13px] text-copy-muted" role="status">
+              Laddar ärenden…
+            </p>
+          )}
+          {state.status === 'error' && (
+            <p className="m-0 px-5 py-7 text-[13px] text-red-300" role="alert">
+              Kunde inte hämta ärenden. Försök igen.
+            </p>
+          )}
+          {state.status === 'loaded' && state.tickets.length === 0 && (
+            <p className="m-0 px-5 py-7 text-[13px] text-copy-muted">Inga ärenden hittades.</p>
+          )}
+          {state.status === 'loaded' && state.tickets.length > 0 && (
+            <div
+              className="max-h-[72vh] space-y-2 overflow-y-auto p-2 [scrollbar-color:#40546a_transparent] [scrollbar-width:thin] max-md:max-h-[52vh]"
+              aria-label="Ärenden"
+            >
+              {state.tickets.map((ticket) => {
+                const isSelected = ticket.id === selectedTicketId
+                const timestampId = `ticket-created-at-${ticket.id}`
+                const isTimestampVisible = activeTimestampId === ticket.id
+                  && dismissedTimestampId !== ticket.id
+
+                return (
+                  <button
+                    type="button"
+                    className={`relative block w-full rounded-md border p-[14px] text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal ${
+                      isSelected
+                        ? 'border-teal bg-[#1b3048] shadow-[inset_3px_0_0_#2fb1a5]'
+                        : 'border-white/10 bg-gradient-to-r from-panel to-[#14253a] hover:border-white/25'
+                    }`}
+                    key={ticket.id}
+                    aria-label={`${ticket.ticketNumber}: ${ticket.title}`}
+                    aria-describedby={timestampId}
+                    aria-pressed={isSelected}
+                    onFocus={() => {
+                      setFocusedRowId(ticket.id)
+                      setDismissedTimestampId(null)
+                    }}
+                    onBlur={() => setFocusedRowId(null)}
+                    onClick={() => selectTicket(ticket.id)}
+                  >
+                    <span className="flex items-center justify-between gap-2.5">
+                      <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-teal">
+                        <svg
+                          aria-hidden="true"
+                          className="size-3 shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="1.7"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M4 9h16M4 15h16M10 3 8 21m8-18-2 18" />
+                        </svg>
+                        {ticket.ticketNumber}
+                      </span>
+                      <span
+                        className={`inline-flex min-h-[22px] items-center gap-1.5 whitespace-nowrap rounded px-2 text-[10px] font-semibold ${priorityClassNames[ticket.priority]}`}
+                      >
+                        <svg
+                          aria-hidden="true"
+                          className="size-3.5 shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="1.7"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M5 21V4m0 1h14l-3 5 3 5H5" />
+                        </svg>
+                        {PRIORITY_LABELS[ticket.priority]}
+                      </span>
+                    </span>
+                    <span className="mt-2.5 block text-[13px] font-semibold leading-[1.45] text-white">
+                      {ticket.title}
+                    </span>
+                    <span className="mt-3.5 flex items-center justify-between gap-2.5">
+                      <span
+                        className={`inline-flex min-h-[22px] items-center gap-1.5 whitespace-nowrap rounded px-2 text-[10px] font-semibold ${statusClassNames[ticket.status]}`}
+                      >
+                        <TicketStatusIcon status={ticket.status} className="size-3.5 shrink-0" />
+                        {STATUS_LABELS[ticket.status]}
+                      </span>
+                      <time
+                        className="inline-flex items-center gap-1.5 whitespace-nowrap text-[10px] text-copy-dim"
+                        dateTime={ticket.createdAt}
+                        onMouseEnter={() => {
+                          setHoveredDateId(ticket.id)
+                          setDismissedTimestampId(null)
+                        }}
+                        onMouseLeave={() => setHoveredDateId(null)}
+                      >
+                        <svg
+                          aria-hidden="true"
+                          className="size-3.5 shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="1.7"
+                          viewBox="0 0 24 24"
+                        >
+                          <rect x="3" y="5" width="18" height="16" rx="2" />
+                          <path d="M16 3v4M8 3v4M3 11h18" />
+                        </svg>
+                        <span>{createdDateFormatter.format(new Date(ticket.createdAt))}</span>
+                        <span
+                          id={timestampId}
+                          role="tooltip"
+                          hidden={!isTimestampVisible}
+                          className="absolute right-3 bottom-10 z-10 w-[calc(100%-1.5rem)] max-w-64 whitespace-normal rounded border border-line bg-portal px-3 py-2 text-xs leading-relaxed text-white shadow-lg"
+                        >
+                          {createdTimestampFormatter.format(new Date(ticket.createdAt))}
+                        </span>
+                      </time>
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          )}
+        </section>
+
+        <aside
+          className="min-w-0 overflow-hidden rounded-[7px] border border-line bg-portal/80"
+          aria-labelledby="ticket-details-title"
+        >
+          {/* Always rendered, so screen readers announce the confirmation (AK-9). */}
+          <p
+            role="status"
+            className={editConfirmation ? 'border-b border-line px-5 py-3 text-sm text-[#86EFAC]' : ''}
+          >
+            {editConfirmation}
+          </p>
+          <TicketDetailsPanel
+            ticket={selectedTicket}
+            emptyMessageRole={currentTicketResult?.status === 'failed' ? 'alert' : 'status'}
+            emptyMessage={
+              currentTicketResult?.status === 'loading' || state.status === 'loading'
+                ? 'Laddar ärendedetaljer…'
+                : currentTicketResult?.status === 'failed' || state.status === 'error'
+                  ? 'Ärendedetaljerna är inte tillgängliga.'
+                  : 'Inget ärende valt.'
+            }
+            onEdit={selectedTicket ? () => startEditing(selectedTicket) : undefined}
+            editButtonRef={editButtonRef}
+            editForm={
+              editing && selectedTicket ? (
+                <div
+                  onFocus={(event) => {
+                    lastFocusedFieldRef.current = event.target
+                  }}
+                >
+                  <EditTicketForm
+                    key={selectedTicket.id}
+                    ref={editFormRef}
+                    ticket={selectedTicket}
+                    onSaved={handleEditSaved}
+                    onCancel={handleEditCancel}
+                    onDirtyChange={setIsDirty}
+                  />
+                </div>
+              ) : undefined
+            }
+          >
+            {selectedTicket && (
+              <>
+                {!editing && (
+                <section aria-labelledby="ticket-status-title">
+                  <h2 id="ticket-status-title" className="text-sm font-semibold text-white">
+                    Ändra status
+                  </h2>
+                  <StatusForm
+                    key={selectedTicket.id}
+                    ticket={selectedTicket}
+                    onSaved={handleStatusSaved}
+                  />
+                </section>
+                )}
+                <TicketHistory ticketId={selectedTicket.id} refreshKey={historyVersion} />
+              </>
+            )}
+          </TicketDetailsPanel>
+        </aside>
+        {pendingTicketId !== null && (
+          <UnsavedChangesDialog
+            onSave={() => void handleDialogSave()}
+            onDiscard={handleDialogDiscard}
+            onContinue={handleDialogContinue}
+          />
+        )}
+      </div>
+    </div>
+  )
+}

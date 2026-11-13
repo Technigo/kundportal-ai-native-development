@@ -1,0 +1,85 @@
+# Customer Service API
+
+ASP.NET Core API for the Customer Service Portal. The ticket endpoints are defined according to [docs/api/kontrakt.md](../docs/api/kontrakt.md). All handlers are implemented and store data in Postgres through EF Core.
+
+## Requirements
+
+- .NET 10 SDK
+- PostgreSQL (or Docker Compose from the repository root)
+
+Check your SDK installation with:
+
+```bash
+dotnet --info
+```
+
+## Run locally
+
+From the `backend` directory, start the API:
+
+```bash
+dotnet run --project src/CustomerService.Api/CustomerService.Api.csproj --launch-profile https
+```
+
+The API listens on https://localhost:7289 only. There is no HTTP profile, and `UseHttpsRedirection` (plus HSTS outside Development) is enabled. We always run HTTPS, including locally, so that development matches production behavior (secure cookies, HSTS, mixed-content rules) and customer data such as names and email addresses is never sent in clear text. Run `dotnet dev-certs https --trust` first (see below).
+
+## Database
+
+The API uses PostgreSQL through Entity Framework Core and the Npgsql provider. The Development connection string is configured in `src/CustomerService.Api/appsettings.Development.json`; other environments must provide `ConnectionStrings__DefaultConnection` through configuration or an environment variable. The root `compose.yaml` starts PostgreSQL with a persistent Docker volume and configures the backend to connect to it.
+
+At startup, the API applies pending migrations and seeds five example tickets only when the ticket table is empty. The seed operation does not add more tickets on subsequent starts.
+
+Create a migration from the repository root with:
+
+```bash
+dotnet ef migrations add MigrationName --project backend/src/CustomerService.Api/CustomerService.Api.csproj --startup-project backend/src/CustomerService.Api/CustomerService.Api.csproj --output-dir Data/Migrations
+```
+
+Endpoints live under `/api/tickets`. In the Development environment:
+
+- The OpenAPI document is served at `/openapi/v1.json`.
+- The interactive API reference (Scalar) is at `/scalar/v1`, e.g. https://localhost:7289/scalar/v1, and opens automatically in the browser on start. See "Teknikval" in [docs/avgränsningar.md](../docs/avgränsningar.md) for why Scalar was chosen.
+
+## Generate the OpenAPI specification
+
+The specification is generated from the code (endpoints and request/response types in `src/CustomerService.Api/Features/`). From the `backend` directory, run:
+
+```bash
+dotnet build src/CustomerService.Api -p:GenerateOpenApi=true
+```
+
+This writes `docs/api/openapi.json`. Regenerate and commit it whenever the API changes, and keep `docs/api/kontrakt.md` in sync.
+
+## HTTPS development certificate
+
+ASP.NET Core uses a local development certificate for HTTPS. Create and trust it with:
+
+```bash
+dotnet dev-certs https --trust
+```
+
+On Linux, the CLI may report that OpenSSL needs the certificate trust directory in `SSL_CERT_DIR`. In that case, add the directory shown in the CLI output while preserving the system certificate directory, then run the trust command again:
+
+```bash
+export SSL_CERT_DIR="$HOME/.aspnet/dev-certs/trust:/etc/ssl/certs"
+dotnet dev-certs https --trust
+```
+
+This `export` applies to the current shell. Add it to `~/.zshrc` or `~/.bashrc` if you need it in future terminal sessions.
+
+## Tests
+
+Run the solution's tests from the `backend` directory:
+
+```bash
+dotnet test CustomerService.slnx
+```
+
+The solution contains a unit-test project and an integration-test project. See the [integration test README](tests/CustomerService.Api.IntegrationTests/README.md) for its focused run command and Testcontainers setup. Shared testing rules are documented in [AGENTS.md](../AGENTS.md) and [docs/teststrategi.md](../docs/teststrategi.md).
+
+## Project layout
+
+- `src/CustomerService.Api/` - ASP.NET Core API
+  - `Features/<Feature>/` - vertical slices; each use case has one file with its request type, route mapping and handler (e.g. `Features/Tickets/CreateTicket.cs`). Shared feature types live in `TicketModels.cs`, and `TicketsEndpoints.cs` registers the slices.
+- `tests/CustomerService.Api.UnitTests/` - unit tests
+- `tests/CustomerService.Api.IntegrationTests/` - API integration tests
