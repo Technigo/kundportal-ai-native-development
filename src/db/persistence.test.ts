@@ -21,9 +21,11 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  // Close every connection first: Windows cannot delete a file that is still open (EBUSY).
+  // Close every connection first: Windows cannot delete a file that is still open.
   for (const db of openDbs) db.$client.close();
-  rmSync(dir, { recursive: true, force: true });
+  // Windows can release the file a moment after close() and then reports EPERM or EBUSY. Retry up to 5 times,
+  // waiting 100 ms longer each time (about 1.5 s in total at most).
+  rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
 });
 
 /** Opens a connection to the test file and remembers it so afterEach can close it. */

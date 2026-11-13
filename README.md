@@ -4,6 +4,7 @@ Kundserviceportalen is a customer service portal where case handlers register su
 
 ## Documentation
 
+- [Run and demo guide](docs/demo.md): install, start and try the app step by step, written for people with no software background
 - [Project brief and spec](docs/project-brief.md): workflows, acceptance criteria, scope
 - [Verification plan](docs/verification.md): test selection, results, limits
 - [Limitations and next steps](docs/limitations.md)
@@ -23,6 +24,8 @@ Quickstart and commands are in the app section below.
 - Google Chrome, for the end-to-end tests run locally
 
 ### Getting started
+
+No developer tools? Follow the [run and demo guide](docs/demo.md) instead.
 
 ```bash
 npm install

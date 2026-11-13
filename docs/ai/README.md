@@ -55,7 +55,7 @@ Version 1 gave tables too wide for the terminal and sometimes asked about things
 **Internal notes (AC6.1–AC6.10), 2026-11-10 to 2026-11-11, owner Marie Flem Honningdalnes, reviewer Alexandra Petersson**
 
 - Criterion: section 6 of [project-brief.md](../project-brief.md).
-- Plan: [internal-notes.md](../specs/internal-notes.md), nine steps, each approved separately. Decision: [08](../decisions/08-internal-notes.md).
+- Plan: [internal-notes.md](../specs/internal-notes.md), nine steps, each approved separately. Decision: [09](../decisions/09-internal-notes.md).
 - Each criterion first went through `/test-cases`. The owner chose the cases, then `ticket-change` built them test-first: the agent showed the exact test code, the owner approved it, the test was run and shown failing, then the minimal code was approved and written.
   - Schemas, repository, server actions and components (note form, comments toggle, delete) in `src/tickets/`, `src/app/(portal)/tickets/` and `src/components/`, with Vitest tests next to the code.
   - Tables in `src/db/schema.ts`. The owner ran `npm run db:generate`; the agent did not touch `drizzle/`.

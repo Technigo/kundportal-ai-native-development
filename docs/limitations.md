@@ -7,7 +7,7 @@
 - No email is sent to the requester.
 - Data is stored in a local SQLite file. The app is meant to run locally only.
 - End-to-end tests run in Chrome only.
-- The persistence test (`src/db/persistence.test.ts`) has not been run on Windows. Windows cannot delete a file that is still open (EBUSY), so the test closes each database client before it deletes its temporary folder. This fix is untested on Windows: it has only run on macOS and in CI on Linux.
+- The persistence test (`src/db/persistence.test.ts`) failed on Windows. The test itself passed, but the cleanup that deletes its temporary folder failed with EPERM, even though each database client is closed first (run by Jessica Swahn on 2026-11-11). It passes on macOS and in CI on Linux. A fix is applied (the cleanup now retries deleting the folder, `maxRetries: 5, retryDelay: 100`), but it has not been run on Windows yet.
 - No pagination: the ticket list loads every ticket.
 - The category is only entered in the New ticket form. It is not shown in the ticket list or on the ticket details page yet.
 - The manual check of the save error message (AC1.8) was done in Firefox with VoiceOver on macOS, and on Windows (`attrib`) by Jessica Swahn on 2026-11-11 without a screen reader. Other browsers and screen readers have not been tried.
@@ -32,7 +32,7 @@
 | Next.js 16 differs from AI training data | Agents suggest outdated APIs | CLAUDE.md requires reading `node_modules/next/dist/docs/` first |
 | AI-generated code merged without review | Bugs, security issues | Owners review every diff and make every commit; see [ai/README.md](ai/README.md) |
 | e2e tests depend on seed data | Flaky or wrong failures after seed changes | Reset `data/e2e.db` before each run (already done by `npm run test:e2e`) |
-| Hard delete of notes | A misclick on "Confirm delete" loses the note and its comments for good | Two-step button with a warning; see [decision 08](decisions/08-internal-notes.md) |
+| Hard delete of notes | A misclick on "Confirm delete" loses the note and its comments for good | Two-step button with a warning; see [decision 09](decisions/09-internal-notes.md) |
 
 ## Proposed further development
 
