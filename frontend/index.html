@@ -803,6 +803,28 @@
         color: var(--muted);
         font-size: 0.95rem;
       }
+            /* Detaljvyn: samma rundade former och gröna stil som i registreringsformuläret */
+      .detail-dialog {
+        border: 0;
+        border-radius: 20px;
+      }
+      .detail-edit-form input,
+      .detail-edit-form textarea,
+      .detail-edit-form select,
+      .detail-status-form select {
+        border: 1.5px solid #a9cbbd;
+        border-radius: 12px;
+        background-color: #fafdfb;
+      }
+      .detail-edit-submit,
+      .detail-status-submit {
+        padding: 0.5rem 1.4rem;
+        border-radius: 999px;
+        font-weight: 700;
+      }
+      .detail-edit-submit {
+        border-color: #a9cbbd;
+      }
     </style>
   </head>
   <body>
@@ -1394,6 +1416,12 @@
         for (const value of PORTAL_CONFIG.PRIORITETER) {
           prioritet.append(new Option(String(value), String(value)));
         }
+                const prioritetHint = document.createElement('span');
+        prioritetHint.className = 'field-hint';
+        prioritetHint.id = 'detail-hint-prioritet';
+        prioritetHint.textContent = '1 = lägst, 5 = högst';
+        prioritet.setAttribute('aria-describedby', prioritetHint.id);
+        prioritet.after(prioritetHint);
         prioritet.value = String(saved.prioritet);
         return { form, rubrik, beskrivning, kategori, prioritet };
       }
